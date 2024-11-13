@@ -1,8 +1,8 @@
-package net.einself.reader;
+package net.einself.mu.reader;
 
-import net.einself.dto.Attribute;
-import net.einself.dto.Attributes;
-import net.einself.dto.Key;
+import net.einself.mu.dto.Attribute;
+import net.einself.mu.dto.Attributes;
+import net.einself.mu.dto.Key;
 
 import java.io.IOException;
 import java.nio.file.Files;

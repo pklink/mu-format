@@ -1,9 +1,9 @@
-package net.einself.reader;
+package net.einself.mu.reader;
 
-import net.einself.dto.Attribute;
-import net.einself.dto.Attributes;
-import net.einself.dto.MuFolder;
-import net.einself.dto.Release;
+import net.einself.mu.dto.Attribute;
+import net.einself.mu.dto.Attributes;
+import net.einself.mu.dto.MuFolder;
+import net.einself.mu.dto.Release;
 
 import java.nio.file.Path;
 import java.util.List;

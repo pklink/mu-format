@@ -1,6 +1,6 @@
-package net.einself.reader;
+package net.einself.mu.reader;
 
-import net.einself.MuInfo;
+import net.einself.mu.MuInfo;
 
 import java.io.File;
 

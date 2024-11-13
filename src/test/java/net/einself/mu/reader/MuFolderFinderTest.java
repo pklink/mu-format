@@ -1,6 +1,6 @@
-package net.einself.reader;
+package net.einself.mu.reader;
 
-import net.einself.dto.MuFolder;
+import net.einself.mu.dto.MuFolder;
 import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;

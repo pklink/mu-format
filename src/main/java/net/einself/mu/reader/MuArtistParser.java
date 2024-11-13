@@ -1,7 +1,7 @@
-package net.einself.reader;
+package net.einself.mu.reader;
 
-import net.einself.dto.Artist;
-import net.einself.dto.MuFolder;
+import net.einself.mu.dto.Artist;
+import net.einself.mu.dto.MuFolder;
 
 public class MuArtistParser implements MuParser<Artist> {
 

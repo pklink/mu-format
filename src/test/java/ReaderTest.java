@@ -1,7 +1,7 @@
-import net.einself.reader.AttributeKeyExtractor;
-import net.einself.reader.AttributeReader;
-import net.einself.reader.MuFolderFinder;
-import net.einself.reader.MuReleaseParser;
+import net.einself.mu.reader.AttributeKeyExtractor;
+import net.einself.mu.reader.AttributeReader;
+import net.einself.mu.reader.MuFolderFinder;
+import net.einself.mu.reader.MuReleaseParser;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
