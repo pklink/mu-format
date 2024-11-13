@@ -1,4 +1,4 @@
-package net.einself.dto;
+package net.einself.mu.dto;
 
 import java.nio.file.Path;
 import java.util.List;

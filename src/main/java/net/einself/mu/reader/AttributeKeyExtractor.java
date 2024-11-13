@@ -1,6 +1,6 @@
-package net.einself.reader;
+package net.einself.mu.reader;
 
-import net.einself.dto.Key;
+import net.einself.mu.dto.Key;
 
 import java.util.Optional;
 import java.util.function.Function;

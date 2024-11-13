@@ -1,4 +1,4 @@
-package net.einself.reader;
+package net.einself.mu.reader;
 
 public class MuArtistFinder {
 }

@@ -1,4 +1,4 @@
-package net.einself;
+package net.einself.mu;
 
 import java.util.Arrays;
 import java.util.Optional;
