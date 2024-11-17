@@ -32,11 +32,49 @@ manage your music collection without touching any media files
 
 ### Release Attributes
 * `title`
+* `bit-depth`
+* `bitrate`
+* `discogs-master-id`
+* `discogs-release-id`
+* `release-year`
+* `release-year-medium`
+* `rip-result`
+* `source-medium`
+* `source-store`
+* `sample-rate`
+* `title`
+
+### =shadow example
+
+```
+Kuhn Fu
+└── Katastrofik Kink Machine [2023, BC]
+    ├── =mu
+    │   ├── =shadow.mu
+    │   └── KUHN FU - Katastrofik Kink Machine
+    │       ├── =release.mu
+    │       ├── bit-depth=24.mu
+    │       ├── discogs-master-id=3631851.mu
+    │       ├── release-year=2023.mu
+    │       ├── sample-rate=44100.mu
+    │       ├── source-medium=File.mu
+    │       ├── source-store=Bandcamp.mu
+    │       └── title=Katastrofik Kink Machine.mu
+    └── KUHN FU - Katastrofik Kink Machine
+        ├── KUHN FU - Katastrofik Kink Machine - 01 Waffle House.m4a
+        ├── KUHN FU - Katastrofik Kink Machine - 02 Low and Slow.m4a
+        ├── KUHN FU - Katastrofik Kink Machine - 03 Grande False.m4a
+        ├── KUHN FU - Katastrofik Kink Machine - 04 Die ID.m4a
+        ├── KUHN FU - Katastrofik Kink Machine - 05 Kink.m4a
+        ├── KUHN FU - Katastrofik Kink Machine - 06 Enigma.m4a
+        ├── KUHN FU - Katastrofik Kink Machine - 07 Simple & Charming.m4a
+        └── cover.jpg
+```
 
 ### `tree .`
 
 ```
-.
+Overmono
 ├── =mu
 │   ├── =artist.mu
 │   └── name=Overmono.mu
