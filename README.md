@@ -19,6 +19,7 @@ manage your music collection without touching any media files
     * `album-title` name of containing directory
 * `=wrapper`
 * `=shadow`
+* `=reference`
 
 ###  Artist Attributes
 * `name`
@@ -31,7 +32,8 @@ manage your music collection without touching any media files
   * *multiple*
 
 ### Release Attributes
-* `title`
+* `album-artist`
+* `artist`
 * `bit-depth`
 * `bitrate`
 * `discogs-master-id`
@@ -43,6 +45,59 @@ manage your music collection without touching any media files
 * `source-store`
 * `sample-rate`
 * `title`
+
+### Reference Attributes
+* `local`
+* `remote`
+
+### =reference example
+
+```
+├── Eloquent
+│   ├── =mu
+│   │   └── =artist.mu
+│   └── Fussballprofi + Was Wenn [2015, Vinyl]
+│       └── =mu
+│           ├── =reference.mu
+│           └── local.mu.txt
+├── Eloquent & Hulk Hodn
+│   └── Fussballprofi + Was Wenn [2015, Vinyl]
+│       ├── =mu
+│       │   ├── =release.mu
+│       │   ├── artist-1=Eloquent.mu
+│       │   ├── artist-2=Hulk Hodn.mu
+│       │   ├── bit-depth=24.mu
+│       │   ├── discogs-master-id=3105012.mu
+│       │   ├── discogs-release-id=7267830.mu
+│       │   ├── release-year-medium=2015.mu
+│       │   ├── release-year=2015.mu
+│       │   ├── sample-rate=96000.mu
+│       │   ├── source-medium=vinyl.mu
+│       │   └── title=Fussballprofi + Was Wenn.mu.txt
+│       ├── A1 Fußballprofi.m4a
+│       ├── A2 Fußballprofi (Instrumental).m4a
+│       ├── B3 Was Wenn.m4a
+│       └── B4 Was Wenn (Instrumental).m4a
+├── Hulk Hodn
+│   ├── =mu
+│   │   └── =artist.mu
+│   └── Fussballprofi + Was Wenn [2015, Vinyl]
+│       └── =mu
+│           ├── =reference.mu
+│           └── local.mu.txt
+```
+
+```
+❯ cat Eloquent/Fussballprofi\ +\ Was\ Wenn\ \[2015,\ Vinyl\]/=mu/local.mu.txt 
+/Eloquent & Hulk Hodn/Fussballprofi + Was Wenn [2015, Vinyl]⏎ 
+```
+
+```
+❯ cat Hulk\ Hodn/Fussballprofi\ +\ Was\ Wenn\ \[2015,\ Vinyl\]/=mu/local.mu.txt 
+/Eloquent & Hulk Hodn/Fussballprofi + Was Wenn [2015, Vinyl]⏎ 
+```
+
+
 
 ### =shadow example
 
