@@ -73,7 +73,7 @@ manage your music collection without touching any media files
 │       │   ├── release-year=2015.mu
 │       │   ├── sample-rate=96000.mu
 │       │   ├── source-medium=vinyl.mu
-│       │   └── title=Fussballprofi + Was Wenn.mu.txt
+│       │   └── title=Fussballprofi + Was Wenn.mu
 │       ├── A1 Fußballprofi.m4a
 │       ├── A2 Fußballprofi (Instrumental).m4a
 │       ├── B3 Was Wenn.m4a
