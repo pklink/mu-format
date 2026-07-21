@@ -11,6 +11,10 @@ public class Attributes {
         this.attributes = attributes;
     }
 
+    public List<Attribute> getAll() {
+        return attributes;
+    }
+
     public Optional<Attribute> getAttribute(String key) {
         return attributes.stream()
                 .filter(attribute -> attribute.key().name().equals(key))
