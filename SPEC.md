@@ -4,7 +4,7 @@ This document is the **normative specification** of the mu content-addressed mus
 
 It is deliberately implementation-neutral. It prescribes no programming language, no libraries and no command-line interface. For the reference implementation of the `mu` tool see [IMPLEMENTATION.md](IMPLEMENTATION.md).
 
-The key words **must**, **must not**, **should** and **may** are used in their usual normative sense.
+The keywords **must**, **must not**, **should** and **may** are used in their usual normative sense.
 
 ## 1. Model
 
@@ -30,7 +30,7 @@ Three layers:
 music/
 ├── .gitignore
 ├── store/
-│   ├── .tmp/                                  # import staging, always empty at rest
+│   ├── .tmp/                                  # import staging, cleared on next run
 │   ├── .trash/                                # blobs set aside by garbage collection
 │   ├── ab/
 │   │   ├── abcd3f…64hex….flac
@@ -40,6 +40,7 @@ music/
 │
 ├── meta/
 │   ├── .lock                                  # write lock, not in git
+│   ├── .mu                                    # collection format version file
 │   ├── artists/
 │   │   └── 9f2b4a1d-6c31-4f8e-9a02-1d7c4b5e8a90.mu
 │   │
@@ -52,14 +53,14 @@ music/
     │       └── Good Lies [2023]/
     │           ├── 01 Feeling Plain.flac -> ../../../../store/ab/abcd3f….flac
     │           └── cover.jpg             -> ../../../../store/3f/3f0a91….jpg
-    ├── by-year/
+    ├── by-release-year-original/
     │   └── 2023/
     │       └── Overmono - Good Lies -> ../../by-artist/Overmono/Good Lies [2023]
-    └── by-medium/
+    └── by-source-medium/
         └── vinyl/…
 ```
 
-The collection root is the directory containing both `store/` and `meta/`.
+The collection root is the directory containing `meta/.mu` (and the `store/` and `meta/` subdirectories).
 
 ## 3. Store
 
@@ -75,7 +76,8 @@ store/<hash[0:2]>/<hash>.<ext>
 ```
 
 - Sharded by the first two hex characters → 256 buckets.
-- `<ext>`: extension of the original file, lowercase, only if it matches `[a-z0-9]{1,8}`; otherwise omitted. The extension is **not part of the content identity** — the hash alone identifies the content — but it **is** part of the store path and of every reference to the blob (section 4.5). It is therefore fixed at import time and must never be changed afterwards.
+- `<ext>`: the substring after the **last** `.` in the source file's base name, lower-cased with ASCII rules, used only if it matches `[a-z0-9]{1,8}`; otherwise the blob is stored without an extension. A leading dot does not start an extension (`.gitignore` has none).
+- The extension is **not part of the content identity** — the hash alone identifies the content — but it **is** part of the store path and of every reference to the blob (section 4.5). It is therefore fixed at import time and must never be changed afterwards.
 - Filename length: 64 + 1 + at most 8 = 73 characters.
 
 ### 3.3 Immutability
@@ -103,7 +105,19 @@ If the operation aborts before step 4, all that remains is garbage in `.tmp/`, w
 
 ## 4. Meta
 
-Every entity is **one TOML file**, named `<uuid>.mu`, encoded as UTF-8 without BOM. The entity type is determined by the path (`artists/` vs. `releases/`).
+Every entity is **one TOML file**, named `<uuid>.mu`, encoded as UTF-8 without BOM, with **LF** line endings. The entity type is determined by the path (`artists/` vs. `releases/`).
+
+### 4.0 Collection marker
+
+`meta/.mu` marks the collection root and carries the format version:
+
+```toml
+format = 1
+```
+
+- `format` is an **integer**, required. This specification defines version `1`.
+- A tool that encounters a `format` value **higher** than the version it implements must refuse to write and should refuse to read, rather than silently degrade.
+- The names `.mu` and `.lock` are **reserved** directly under `meta/`; they must not be used as entity filenames.
 
 ### 4.1 Entities
 
@@ -118,7 +132,7 @@ Tracks are not separate files but `[[track]]` tables inside the release file (se
 
 ### 4.2 Value conventions
 
-- All attribute values are **strings** (`title = "Good Lies"`, `release-year = "2023"`), except flags and the small set of **integer-typed** attributes explicitly marked in the schema (`track.number`, `track.duration`). Everything descriptive stays a string, including `release-year`, `bit-depth`, `sample-rate` and `bitrate`.
+- All attribute values are **strings** (`title = "Good Lies"`, `release-year-original = "2023"`), except flags and the small set of **integer-typed** attributes explicitly marked in the schema (`track.number`, `track.duration`). Everything descriptive stays a string, including `release-year-original`, `release-year-medium`, `bit-depth`, `sample-rate` and `bitrate`.
 - **Flag** = boolean `true` (`is-group = true`).
 - **Dual-typed**: `track.disc` is the only attribute that accepts two types — an integer for numbered discs, a string for medium sides (`"A"`, `"B"`). Section 4.7.
 - **Multiple value** = string array, inherently ordered (`member = ["uuid1", "uuid2"]`). There is no ordered/unordered distinction; arrays are always ordered.
@@ -154,6 +168,8 @@ All references are string values, without a path component:
 
 Blob references carry hash **and** extension so the store path is computable without scanning a directory. No path ever appears in a reference. `asset.blob` (section 4.8) uses the same notation and the same resolution.
 
+A blob stored without an extension (section 3.2) is referenced by its bare hash: `blob = "<hash>"` resolves to `store/<hash[0:2]>/<hash>`.
+
 ### 4.6 Credits and roles
 
 Artist participation is expressed through **credits**. A credit is a TOML table:
@@ -174,7 +190,7 @@ A credit therefore bridges two layers: `artist` is the entity (queryable, linkab
 2. **No `artist` attribute at entity level.** A release has no `artist = [...]`; participation lives exclusively in credits.
 3. **Requirement.** Every release has at least one credit with `role = "main"`.
 4. **Order is authoritative.** The file order of credits determines the order of the billing line. The builder does **not** reorder credits (unlike `[[track]]`, section 4.7).
-5. **Billing line.** It is reconstructed from all credits with `role = "main"`, in file order: for each credit `as` (falling back to the `name` of the referenced artist), followed by `join` if present. The `join` of the last `main` credit is ignored.
+5. **Billing line.** It is reconstructed from all credits with `role = "main"`, in file order: for each credit `as` (falling back to the `name` of the referenced artist), followed by `join` if present. If `join` is absent and a further `main` credit follows, `", "` is used. The `join` of the last `main` credit is ignored.
 6. **Inheritance applies to `main` only.** If a track contains no credit with `role = "main"`, the release's `main` credits apply. All other roles apply exclusively at the level where they appear: release credits describe the release as a whole, track credits describe the track. There is no merging, no per-role overriding, and no empty list to disable an inherited role.
 7. **`join` only on `main`.** On other roles it is meaningless and should not be used.
 8. **`title` stays untouched.** The builder **never** synthesizes credit information into a title. If `(feat. …)` is part of the printed title, it lives in `title`; if it is not, it does not appear in the view either. Credits are additional information, never a replacement.
@@ -199,7 +215,7 @@ The vocabulary is **open**. Unknown roles are valid and are preserved verbatim.
 ```toml
 title = "Fussballprofi + Was Wenn"
 type = "single"
-release-year = "2015"
+release-year-original = "2015"
 source-medium = "vinyl"
 
 [[credit]]
@@ -246,21 +262,21 @@ blob = "beef01….flac"
 title = "Kink"
 ```
 
-- `number` (integer): required. `disc`: optional, defaults to the integer `1`. `disc` accepts an **integer** for numbered discs or a **string** for medium sides (`disc = "A"` for vinyl).
+- `number` (integer): required, **must be ≥ 1**. `disc`: optional, defaults to the integer `1`; an integer `disc` must also be ≥ 1. `disc` accepts an **integer** for numbered discs or a **string** for medium sides (`disc = "A"` for vinyl).
 - Ordering: by `(disc, number)`. Integer discs sort numerically and always sort **before** string discs; string discs sort by NFC code point. `number` is always compared numerically. The file order of the `[[track]]` tables is **not authoritative** — the builder sorts them itself. (Credits behave the opposite way, section 4.6, rule 4.)
 - Position and disc live exclusively in the `disc`/`number` keys; there is no sort-key string.
 - `number` is unique per `disc`.
 
 Track attributes:
 
-| Attribute  | Cardinality           | Required       | Meaning                                |
-|------------|-----------------------|----------------|----------------------------------------|
-| `number`   | single (int)          | yes            | track number                           |
-| `disc`     | single (int / string) | no (default 1) | disc number, or medium side for vinyl  |
-| `blob`     | single                | yes            | reference to the audio file            |
-| `title`    | single                | yes            | track name, as printed                 |
-| `duration` | single (int)          | no             | length in seconds                      |
-| `isrc`     | single                | no             |                                        |
+| Attribute  | Cardinality            | Required       | Meaning                               |
+|------------|------------------------|----------------|---------------------------------------|
+| `number`   | single (int)           | yes            | track number                          |
+| `disc`     | single (int or string) | no (default 1) | disc number, or medium side for vinyl |
+| `blob`     | single                 | yes            | reference to the audio file           |
+| `title`    | single                 | yes            | track name, as printed                |
+| `duration` | single (int)           | no             | length in seconds                     |
+| `isrc`     | single                 | no             |                                       |
 
 Participating artists are not stored in an attribute but in `[[track.credit]]` tables (section 4.6).
 
@@ -274,6 +290,7 @@ Participating artists are not stored in an attribute but in `[[track.credit]]` t
 | `alias`             | multiple              | no       |
 | `is-group`          | flag                  | no       |
 | `member`            | multiple (ref artist) | no       |
+| `notes`             | single (multi-line)   | no       |
 | `sort-name`         | single                | no       |
 | `discogs-artist-id` | single                | no       |
 
@@ -284,7 +301,7 @@ Participating artists are not stored in an attribute but in `[[track.credit]]` t
 | `title`                                               | single                                                  | yes                            |
 | `credit`                                              | credit tables                                           | yes (≥ 1 with `role = "main"`) |
 | `type`                                                | single (`album`, `ep`, `single`, `compilation`, `live`) | no                             |
-| `release-year`                                        | single                                                  | no                             |
+| `release-year-original`                               | single                                                  | no                             |
 | `release-year-medium`                                 | single                                                  | no                             |
 | `source-medium`                                       | single (`cd`, `vinyl`, `file`, `web`, `tape`)           | no                             |
 | `source-store`                                        | single                                                  | no                             |
@@ -293,8 +310,13 @@ Participating artists are not stored in an attribute but in `[[track.credit]]` t
 | `discogs-master-id`, `discogs-release-id`             | single                                                  | no                             |
 | `cover-front`, `cover-back`                           | single (ref blob)                                       | no                             |
 | `asset`                                               | asset tables                                            | no                             |
+| `notes`                                               | single (multi-line)                                     | no                             |
 
-Unknown attributes are **allowed** and preserved verbatim.
+`release-year-original` is the year the release was **first** published; `release-year-medium` is the year of the edition actually held. `release-year-medium` is set **only if it differs** from `release-year-original` — a first pressing carries `release-year-original` alone. Views derive the edition year from the two (section 5.3).
+
+The value lists given for `type` and `source-medium` are **open vocabularies**, like `role` (section 4.6) and `asset.kind`. Unknown values are valid and are preserved verbatim; a tool may warn but must not reject them.
+
+Unknown attributes are **allowed** and preserved verbatim; they are ignored when sorting for deterministic builds.
 
 #### Assets
 
@@ -321,7 +343,7 @@ Assets attach to the release, not to individual tracks: rip logs and booklets de
 ```toml
 title = "Good Lies"
 type = "album"
-release-year = "2023"
+release-year-original = "2023"
 source-medium = "cd"
 bit-depth = "16"
 sample-rate = "44100"
@@ -388,7 +410,7 @@ Filesystem names are derived from attribute values with the following sanitizati
 2. `/` → `_` (U+005F).
 3. Strip control characters (U+0000–U+001F).
 4. Trim leading and trailing spaces and dots.
-5. Truncate to 200 bytes (respecting UTF-8 character boundaries, never mid-codepoint).
+5. Truncate to 200 bytes (respecting UTF-8 character boundaries, never mid-codepoint). Truncation occurs after trimming spaces.
 6. If the result is empty, use `_`.
 
 ### 5.3 Collisions
@@ -396,19 +418,30 @@ Filesystem names are derived from attribute values with the following sanitizati
 Two releases by the same artist with the same title produce the same view path. Resolved in this order until unique:
 
 1. `Title`
-2. `Title [<release-year>]`
-3. `Title [<release-year>, <source-medium>]`
-4. `Title [<release-year>, <source-medium>] (<uuid[0:8]>)`
+2. `Title [<edition-year>]`
+3. `Title [<edition-year>, <source-medium>]`
+4. `Title [<edition-year>, <source-medium>] (<uuid[0:8]>)`
+
+`<edition-year>` is the **derived edition year**: `release-year-medium` if present, otherwise `release-year-original`.
 
 Step 4 is guaranteed unique. Colliding releases are sorted by UUID and processed in that order.
 
+#### Collisions in the other views
+
+`by-release-year-original` and `by-source-medium` key on `<billing> - <title>`, which can collide independently of `by-artist` — two different releases may share a billing line, a title and a year. Resolved in two steps:
+
+1. `<billing> - <title>`
+2. `<billing> - <title> (<uuid[0:8]>)`
+
+Step 2 is guaranteed unique. As above, colliding releases are sorted by UUID and processed in that order. This ladder is independent of the one above; the `by-artist` name is not reused here.
+
 ### 5.4 Standard views
 
-| View        | Structure                                                                                                                                                                  |
-|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `by-artist` | `by-artist/<artist-name>/<release-name>/<NN Title.ext>` — the only view with symlinks directly into the store; a release appears under **every** one of its `main` artists |
-| `by-year`   | `by-year/<year>/<billing> - <title>` → symlink to the `by-artist` directory                                                                                                |
-| `by-medium` | `by-medium/<medium>/<billing> - <title>` → symlink to the `by-artist` directory                                                                                            |
+| View                       | Structure                                                                                                                                                                  |
+|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `by-artist`                | `by-artist/<artist-name>/<release-name>/<NN Title.ext>` — the only view with symlinks directly into the store; a release appears under **every** one of its `main` artists |
+| `by-release-year-original` | `by-release-year-original/<release-year-original>/<billing> - <title>` → symlink to the `by-artist` directory                                                              |
+| `by-source-medium`         | `by-source-medium/<source-medium>/<billing> - <title>` → symlink to the `by-artist` directory                                                                              |
 
 Only `by-artist` creates track symlinks; all other views link to its directories.
 
@@ -416,11 +449,12 @@ Only `by-artist` creates track symlinks; all other views link to its directories
 
 - **Grouping** is based exclusively on credits with `role = "main"`. An artist who participates only as `feat`, `remixer`, `producer` or similar does **not** get their own `by-artist` directory in V1. A `by-credit/<role>/<artist>/` view is deliberately **not** part of V1.
 - `by-artist/<artist-name>` uses the `name` attribute of the **artist entity**, not `as`. The directory represents the artist, not a single billing.
-- `<billing>` in `by-year` and `by-medium` is the **reconstructed billing line** of the release (section 4.6, rule 5), i.e. including `as` names and `join` phrases — not a join of entity names.
+- `<billing>` in `by-release-year-original` and `by-source-medium` is the **reconstructed billing line** of the release (section 4.6, rule 5), i.e. including `as` names and `join` phrases — not a join of entity names.
+- A release lacking the attribute a view is keyed on is **omitted from that view** — no `unknown/` bucket, no `_` placeholder. It stays reachable through `by-artist/`.
 
 #### Track filenames
 
-`<sortkey> <sanitized track-title>.<ext of the blob>`, e.g. `01 Feeling Plain.flac`, or `2-05 Kink.m4a` for multi-disc releases. The sort key is derived by the builder from `disc`/`number` (`[<disc>-]<number>`, number zero-padded to two digits). A string `disc` is inserted verbatim after sanitization (section 5.2), so a vinyl side yields `A-01 Feeling Plain.flac`; zero-padding applies to `number` only.
+`<sortkey> <sanitized track-title>.<ext of the blob>`, e.g. `01 Feeling Plain.flac`, or `2-05 Kink.m4a` for multi-disc releases. The sort key is derived by the builder from `disc`/`number` (`[<disc>-]<number>`, number zero-padded to **at least** two digits — a `number` of 100 or more keeps all its digits and is not truncated). A string `disc` is inserted verbatim after sanitization (section 5.2), so a vinyl side yields `A-01 Feeling Plain.flac`; zero-padding applies to `number` only.
 
 Assets (section 4.8) are **not** materialized in `views/` in V1. They live in the store and are reachable through `meta/` alone.
 
@@ -460,6 +494,12 @@ Only `meta/` is versioned. `.gitignore` in the collection root:
 /views/
 /meta/.lock
 .DS_Store
+```
+
+To keep the LF line endings of section 4 stable across platforms, add a `.gitattributes` in the collection root:
+
+```
+*.mu text eol=lf
 ```
 
 The repository must be configured for precomposed Unicode, matching the NFC rule in section 4.3:

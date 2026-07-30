@@ -38,7 +38,7 @@ mu gc [--dry-run]          move unreferenced blobs to store/.trash/
 mu migrate <source>        adopt an existing collection
 ```
 
-Global option: `--root <path>` (default: search upwards for a directory containing `store/` and `meta/`, the way `git` does).
+Global option: `--root <path>` (default: search upwards for a directory containing `meta/.mu`, the way `git` does; SPEC.md §4.0).
 
 ### 2.1 `mu import`
 
@@ -65,10 +65,12 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 
 | Check                                                                             | Severity                       |
 |-----------------------------------------------------------------------------------|--------------------------------|
+| `meta/.mu` present, `format` an integer not higher than implemented              | error                          |
 | entity file is valid TOML                                                         | error                          |
 | required attributes present (`name`, `title`, `blob`, `number`)                   | error                          |
 | cardinality respected (no `title` as an array)                                    | error                          |
 | `disc`/`number` well-typed (`number` integer, `disc` integer or non-empty string) | error                          |
+| `number` ≥ 1, and an integer `disc` ≥ 1                                          | error                          |
 | `number` unique per disc                                                          | error                          |
 | release has ≥ 1 credit with `role = "main"`                                       | error                          |
 | `role` and `artist` present in every credit                                       | error                          |
@@ -80,9 +82,9 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 | duplicate `(role, artist)` at the same level                                      | warning                        |
 | string values NFC-normalized (including `as`)                                     | warning (fixable with `--fix`) |
 | release without tracks                                                            | warning                        |
+| `release-year-medium` equal to `release-year-original` (redundant, §4.8)          | warning (fixable with `--fix`) |
 | attribute names not in the schema                                                 | notice                         |
-| role not in the V1 vocabulary                                                     | notice                         |
-| `asset.kind` not in the V1 vocabulary                                             | notice                         |
+| `role`, `asset.kind`, `type`, `source-medium` not in the V1 vocabulary            | notice                         |
 
 `--strict` turns warnings into errors.
 
@@ -92,7 +94,7 @@ Unreferenced blobs are **not** a lint concern — that is a store question, repo
 
 Regenerates `views/` from `meta/` + `store/` using the atomic rebuild of SPEC.md §5.5, and must satisfy the determinism requirement of §5.6.
 
-> **Open question.** `mu build <view>` rebuilds a single view, but §5.5 replaces `views/` as a whole. A selective build must carry the untouched views over into `views.new/`, otherwise `mu build by-year` deletes every other view. Not yet specified.
+> **Open question.** `mu build <view>` rebuilds a single view, but §5.5 replaces `views/` as a whole. A selective build must carry the untouched views over into `views.new/`, otherwise `mu build by-release-year-original` deletes every other view. Not yet specified.
 
 ### 2.4 `mu verify`
 
@@ -130,8 +132,7 @@ Read-only commands (`lint`, `verify`) do not lock.
 
 Points raised in review that the specification does not yet answer. Section references are to [SPEC.md](SPEC.md).
 
-- **View target ambiguity.** A release with two `main` credits appears under two `by-artist` directories, but has only one `by-year` entry. Which one it links to is undefined (SPEC.md §5.4).
-- **Collisions outside `by-artist`.** §5.3 only resolves collisions for `<artist>/<title>`. `by-year/<billing> - <title>` can still collide.
+- **View target ambiguity.** A release with two `main` credits appears under two `by-artist` directories, but has only one entry in `by-release-year-original` and `by-source-medium`. Which one it links to is undefined (SPEC.md §5.4).
 - **Sanitization order.** §5.2 trims before truncating, so truncation can reintroduce a trailing space or dot.
 - **Composite name length.** The 200-byte limit is per attribute value; `<billing> - <title>` can exceed the 255-byte limit of common filesystems.
 - **`uuid[0:8]` uniqueness.** 32 bits, described as "guaranteed unique" in §5.3. Practically collision-free at collection scale, but not guaranteed; no fallback is defined.
