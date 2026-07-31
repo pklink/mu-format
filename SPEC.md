@@ -473,18 +473,11 @@ Compilation exception: if a track's `main` credits differ from the release's, th
 
 e.g. `03 Kuhn Fu - Waffle House.m4a`. Without that prefix a compilation directory would be unusable. If the track inherits the release credits, the prefix is omitted.
 
-### 5.5 Atomic rebuild
+### 5.5 Disposability
 
-A rebuild must never leave `views/` in a half-written state:
+`views/` is **optional**. A collection without it is valid, and the tree may be deleted or regenerated at any time without loss — it carries nothing that is not already derivable from `meta/` and `store/` (section 5.1), and nothing ever resolves through it.
 
-```
-1. build views.new/ (completely)
-2. views/ → views.old/   (rename, if present)
-3. views.new/ → views/   (rename)
-4. delete views.old/ recursively
-```
-
-An aborted build leaves `views.new/` or `views.old/` behind; both are removed on the next run.
+How a builder produces the tree, and whether it rebuilds from scratch or updates an existing tree in place, is **not specified**. Section 5.6 constrains the result, not the procedure: any builder whose output satisfies it conforms.
 
 ### 5.6 Determinism
 

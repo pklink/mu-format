@@ -15,18 +15,18 @@ The on-disk format itself is defined in [SPEC.md](SPEC.md) and is independent of
 | TOML        | a TOML 1.0 parser, e.g. `org.tomlj:tomlj` (not yet a dependency) |
 | Tests       | JUnit 5 + AssertJ                                                |
 
-Mapping of the spec's platform-neutral requirements onto the JDK:
+Mapping onto the JDK. A `SPEC.md §` reference marks a requirement of the format; the remaining rows are decisions of this tool, described in the sections given.
 
-| SPEC.md requirement          | Java API                                                  |
-|------------------------------|-----------------------------------------------------------|
-| NFC normalization (§4.3)     | `java.text.Normalizer.normalize(s, Form.NFC)`             |
-| SHA-256 (§3.1)               | `MessageDigest.getInstance("SHA-256")`, streamed          |
-| atomic publication (§3.4)    | `Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE)` |
-| atomic rebuild (§5.5)        | `Files.move(…, StandardCopyOption.ATOMIC_MOVE)`           |
-| read-only blobs (§2.1 below) | `Files.setPosixFilePermissions(…, r--r--r--)`             |
-| write lock (section 3 below) | `FileChannel.tryLock()` on `meta/.lock`                   |
+| Requirement                       | Java API                                                  |
+|-----------------------------------|-----------------------------------------------------------|
+| NFC normalization (SPEC.md §4.3)  | `java.text.Normalizer.normalize(s, Form.NFC)`             |
+| SHA-256 (SPEC.md §3.1)            | `MessageDigest.getInstance("SHA-256")`, streamed          |
+| atomic publication (SPEC.md §3.4) | `Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE)` |
+| view swap (§2.3)                  | `Files.move(…, StandardCopyOption.ATOMIC_MOVE)`           |
+| read-only blobs (§2.1)            | `Files.setPosixFilePermissions(…, r--r--r--)`             |
+| write lock (§3)                   | `FileChannel.tryLock()` on `meta/.lock`                   |
 
-SPEC.md §3.4 requires only that a blob become visible as a whole; it prescribes no mechanism. This implementation satisfies that with a rename, and `ATOMIC_MOVE` requires source and target on the same filesystem. The staging directory `store/.tmp/` therefore lives inside the store, and `views.new/` beside `views/`. Both names are choices of this tool, not part of the format — SPEC.md §3.2 leaves any entry under `store/` that is not a `<hash[0:2]>/<hash>` pair without meaning.
+Only the first three are obligations. SPEC.md §3.4 requires that a blob become visible as a whole but prescribes no mechanism; this implementation uses a rename, and `ATOMIC_MOVE` requires source and target on the same filesystem. The staging directory `store/.tmp/` therefore lives inside the store, and `views.new/` beside `views/`. Neither name is part of the format: SPEC.md §3.2 leaves any entry under `store/` that is not a `<hash[0:2]>/<hash>` pair without meaning, and SPEC.md §5.5 leaves the build procedure open entirely.
 
 Blob permissions are likewise a tool decision. `0444` is best-effort: on filesystems without POSIX permissions (exFAT, SMB) the call fails and is ignored, since nothing in the format depends on it.
 
@@ -121,9 +121,22 @@ Unreferenced blobs are **not** a lint concern — that is a store question, repo
 
 ### 2.3 `mu build`
 
-Regenerates `views/` from `meta/` + `store/` using the atomic rebuild of SPEC.md §5.5, and must satisfy the determinism requirement of §5.6.
+Regenerates `views/` from `meta/` + `store/`, satisfying the determinism requirement of SPEC.md §5.6. The format constrains only the resulting tree (SPEC.md §5.5); the procedure below belongs to this tool.
 
-> **Open question.** `mu build <view>` rebuilds a single view, but §5.5 replaces `views/` as a whole. A selective build must carry the untouched views over into `views.new/`, otherwise `mu build by-release-year-original` deletes every other view. Not yet specified.
+`build` never edits `views/` in place:
+
+```
+1. build views.new/ (completely)
+2. views/ → views.old/   (rename, if present)
+3. views.new/ → views/   (rename)
+4. delete views.old/ recursively
+```
+
+An aborted build leaves `views.new/` or `views.old/` behind; both are removed at the start of the next run. `views.new/` sits beside `views/` so that step 3 is an `ATOMIC_MOVE` (section 1).
+
+This is **not** a swap. Between steps 2 and 3 there is a window in which `views/` does not exist at all: an observer sees the old tree, then nothing, then the new tree — never a half-built one. Atomic directory swapping is not portable (`RENAME_EXCHANGE` is Linux-only, `RENAME_SWAP` macOS-only) and the JDK exposes neither, so the gap is accepted. It is harmless because nothing reads `views/` (SPEC.md §5.1); a player pointed at the tree during a rebuild sees it vanish and reappear.
+
+> **Open question.** `mu build <view>` rebuilds a single view, but step 1 produces a complete `views.new/`. A selective build must carry the untouched views over before the swap, otherwise `mu build by-release-year-original` deletes every other view. Whether they are copied, hardlinked or rebuilt is not yet decided.
 
 ### 2.4 `mu verify`
 
