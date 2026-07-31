@@ -33,10 +33,10 @@ music/
 │   ├── .tmp/                                  # import staging, cleared on next run
 │   ├── .trash/                                # blobs set aside by garbage collection
 │   ├── ab/
-│   │   ├── abcd3f…64hex….flac
-│   │   └── ab77e1…64hex….m4a
+│   │   ├── abcd3f…64hex…
+│   │   └── ab77e1…64hex…
 │   └── 3f/
-│       └── 3f0a91…64hex….jpg
+│       └── 3f0a91…64hex…
 │
 ├── meta/
 │   ├── .lock                                  # write lock, not in git
@@ -51,8 +51,8 @@ music/
     ├── by-artist/
     │   └── Overmono/
     │       └── Good Lies [2023]/
-    │           ├── 01 Feeling Plain.flac -> ../../../../store/ab/abcd3f….flac
-    │           └── cover.jpg             -> ../../../../store/3f/3f0a91….jpg
+    │           ├── 01 Feeling Plain.flac -> ../../../../store/ab/abcd3f…
+    │           └── cover.jpg             -> ../../../../store/3f/3f0a91…
     ├── by-release-year-original/
     │   └── 2023/
     │       └── Overmono - Good Lies -> ../../by-artist/Overmono/Good Lies [2023]
@@ -72,27 +72,26 @@ The collection root is the directory containing `meta/.mu` (and the `store/` and
 ### 3.2 Layout
 
 ```
-store/<hash[0:2]>/<hash>.<ext>
+store/<hash[0:2]>/<hash>
 ```
 
 - Sharded by the first two hex characters → 256 buckets.
-- `<ext>`: the substring after the **last** `.` in the source file's base name, lower-cased with ASCII rules, used only if it matches `[a-z0-9]{1,8}`; otherwise the blob is stored without an extension. A leading dot does not start an extension (`.gitignore` has none).
-- The extension is **not part of the content identity** — the hash alone identifies the content — but it **is** part of the store path and of every reference to the blob (section 4.5). It is therefore fixed at import time and must never be changed afterwards.
-- Filename length: 64 + 1 + at most 8 = 73 characters.
+- The blob filename is the bare hash: exactly 64 characters, **no extension**. The store path is a pure function of the content and of nothing else.
+- File type information is deliberately **not** kept here. It is metadata, not identity, and therefore lives in `meta/` as part of the blob reference (section 4.5), where it stays correctable.
 
 ### 3.3 Immutability
 
 - Blobs are set to `0444` (read-only) after import.
 - Blobs are **never** deleted. Garbage collection may only move them to `store/.trash/`.
 - An existing blob is **never** overwritten. If the target path already exists, the content is identical by definition → the import is a no-op.
-- Because the extension is part of the path, identical content imported under two different extensions yields two store entries. This is accepted: the extension is part of the reference, so both must remain resolvable.
+- Identical content yields exactly **one** blob, no matter what the source files were named. Deduplication does not depend on filenames, extensions or letter case.
 
 ### 3.4 Atomic import
 
 Taking a file into the store must be atomic: an observer must never see a partially written blob at its final path. Per file:
 
 1. Copy the source into `store/.tmp/<random>`, hashing it in the same pass.
-2. Compute the target path `store/<h[0:2]>/<h>.<ext>`.
+2. Compute the target path `store/<h[0:2]>/<h>`.
 3. If the target exists → discard the temp file, count it as a dedup, done.
 4. Otherwise: create the target directory and **rename** the temp file onto the target path atomically.
 5. Set `0444`.
@@ -163,12 +162,14 @@ All references are string values, without a path component:
 | Reference type | Notation                                                | Resolution                       |
 |----------------|---------------------------------------------------------|----------------------------------|
 | to an artist   | `artist = "<uuid>"` (only inside a credit, section 4.6) | `meta/artists/<uuid>.mu`         |
-| to a blob      | `blob = "<hash>.<ext>"`                                 | `store/<hash[0:2]>/<hash>.<ext>` |
-| to cover art   | `cover-front = "<hash>.<ext>"`                          | same as blob                     |
+| to a blob      | `blob = "<hash>[.<ext>]"`                               | `store/<hash[0:2]>/<hash>`       |
+| to cover art   | `cover-front = "<hash>[.<ext>]"`                        | same as blob                     |
 
-Blob references carry hash **and** extension so the store path is computable without scanning a directory. No path ever appears in a reference. `asset.blob` (section 4.8) uses the same notation and the same resolution.
+A blob reference is the 64-character hash, optionally followed by `.` and an extension. **Resolution uses the hash alone**: everything from the first `.` onward is ignored when computing the store path, which is therefore always computable without scanning a directory. No path ever appears in a reference. `asset.blob` (section 4.8) uses the same notation and the same resolution.
 
-A blob stored without an extension (section 3.2) is referenced by its bare hash: `blob = "<hash>"` resolves to `store/<hash[0:2]>/<hash>`.
+The extension is **not** part of the blob's identity and has no effect on resolution. It is a rendering hint for the builder, which uses it as the file suffix in `views/` (section 5.4). It should describe the content (`flac`, `m4a`, `jpg`) and should match `[a-z0-9]{1,8}`; a tool may warn about other values but must not reject them and must preserve them verbatim. Because the extension lives in `meta/`, a wrong one is corrected by editing the entity file — the store is never touched.
+
+The extension may be omitted: `blob = "<hash>"` is a valid reference (section 5.4 defines the resulting view filename). Two references to the same blob may carry different extensions; this is valid and yields different view filenames for the same content.
 
 ### 4.6 Credits and roles
 
@@ -454,7 +455,7 @@ Only `by-artist` creates track symlinks; all other views link to its directories
 
 #### Track filenames
 
-`<sortkey> <sanitized track-title>.<ext of the blob>`, e.g. `01 Feeling Plain.flac`, or `2-05 Kink.m4a` for multi-disc releases. The sort key is derived by the builder from `disc`/`number` (`[<disc>-]<number>`, number zero-padded to **at least** two digits — a `number` of 100 or more keeps all its digits and is not truncated). A string `disc` is inserted verbatim after sanitization (section 5.2), so a vinyl side yields `A-01 Feeling Plain.flac`; zero-padding applies to `number` only.
+`<sortkey> <sanitized track-title>.<ext of the blob reference>`, e.g. `01 Feeling Plain.flac`, or `2-05 Kink.m4a` for multi-disc releases. If the reference carries no extension (section 4.5), the name is written without a suffix and **without** a trailing dot: `01 Feeling Plain`. The sort key is derived by the builder from `disc`/`number` (`[<disc>-]<number>`, number zero-padded to **at least** two digits — a `number` of 100 or more keeps all its digits and is not truncated). A string `disc` is inserted verbatim after sanitization (section 5.2), so a vinyl side yields `A-01 Feeling Plain.flac`; zero-padding applies to `number` only.
 
 Assets (section 4.8) are **not** materialized in `views/` in V1. They live in the store and are reachable through `meta/` alone.
 
