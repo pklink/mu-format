@@ -38,8 +38,6 @@ Three layers:
 music/
 ├── .gitignore
 ├── store/
-│   ├── .tmp/                                  # import staging, cleared on next run
-│   ├── .trash/                                # blobs set aside by garbage collection
 │   ├── ab/
 │   │   ├── abcd3f…64hex…
 │   │   └── ab77e1…64hex…
@@ -85,26 +83,21 @@ store/<hash[0:2]>/<hash>
 
 - Sharded by the first two hex characters → 256 buckets.
 - The blob filename is the bare hash: exactly 64 characters, **no extension**. The store path is a pure function of the content and of nothing else.
+- Resolution **is** this path formula and nothing else. `store/` is never scanned to locate a blob, and a blob is never discovered by listing a directory. Entries under `store/` that do not match `<hash[0:2]>/<hash>` therefore have no effect on resolution; the format assigns them no meaning and a tool may use them for its own purposes.
 - File type information is deliberately **not** kept here. It is metadata, not identity, and therefore lives in `meta/` as part of the blob reference (section 4.5), where it stays correctable.
 
 ### 3.3 Immutability
 
-- Blobs are set to `0444` (read-only) after import.
-- Blobs are **never** deleted. Garbage collection may only move them to `store/.trash/`.
-- An existing blob is **never** overwritten. If the target path already exists, the content is identical by definition → the import is a no-op.
+- An existing blob is **never** overwritten. If the target path already exists, the content is identical by definition → writing it again is a no-op.
 - Identical content yields exactly **one** blob, no matter what the source files were named. Deduplication does not depend on filenames, extensions or letter case.
 
-### 3.4 Atomic import
+### 3.4 Atomicity
 
-Taking a file into the store must be atomic: an observer must never see a partially written blob at its final path. Per file:
+A blob becomes visible at its final path only as a whole. Every path `store/<h[0:2]>/<h>` that exists holds complete content whose SHA-256 is `<h>`; an observer never sees a partially written blob, and a writer interrupted at any point never leaves one behind.
 
-1. Copy the source into `store/.tmp/<random>`, hashing it in the same pass.
-2. Compute the target path `store/<h[0:2]>/<h>`.
-3. If the target exists → discard the temp file, count it as a dedup, done.
-4. Otherwise: create the target directory and **rename** the temp file onto the target path atomically.
-5. Set `0444`.
+This is the guarantee a reader relies on: a blob that resolves can be used without verifying it first.
 
-If the operation aborts before step 4, all that remains is garbage in `.tmp/`, which the next run cleans up. `store/.tmp/` and the store live on the same filesystem so that the rename in step 4 is atomic.
+How a writer achieves this is **not specified**. The staging location, the ordering of operations and the cleanup of anything left over from an interrupted write are the writer's business, as long as the guarantee above holds.
 
 ### 3.5 What belongs in the store
 

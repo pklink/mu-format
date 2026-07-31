@@ -22,7 +22,7 @@ Media files go into the store under the SHA-256 of their content and are never w
 
 ```
 music/
-├── store/ab/abcd3f…64hex…               # content-addressed, read-only
+├── store/ab/abcd3f…64hex…               # content-addressed, never modified
 ├── meta/releases/b27e3c80-….mu          # one TOML file per entity, in git
 └── views/by-artist/Overmono/Good Lies [2023]/
         └── 01 Feeling Plain.flac -> ../../../../store/ab/abcd3f…
