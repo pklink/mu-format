@@ -82,6 +82,7 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 | `disc`/`number` well-typed (`number` integer, `disc` integer or non-empty string) | error                          |
 | `number` ≥ 1, and an integer `disc` ≥ 1                                          | error                          |
 | `number` unique per disc                                                          | error                          |
+| `bit-depth` and `sample-rate` integers ≥ 1 (§4.2)                                 | error                          |
 | release has ≥ 1 credit with `role = "main"`                                       | error                          |
 | `role` and `artist` present in every credit                                       | error                          |
 | `credit.artist` points to an existing UUID                                        | error                          |

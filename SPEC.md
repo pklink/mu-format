@@ -1,10 +1,18 @@
 # mu format — specification
 
+**Version 1.0.0 — Draft.**
+
 This document is the **normative specification** of the mu content-addressed music collection. It defines the on-disk format only: what a valid collection looks like, and how the layers relate.
 
 It is deliberately implementation-neutral. It prescribes no programming language, no libraries and no command-line interface. For the reference implementation of the `mu` tool see [IMPLEMENTATION.md](IMPLEMENTATION.md).
 
 The keywords **must**, **must not**, **should** and **may** are used in their usual normative sense.
+
+## Status
+
+This document carries its own version, independent of the on-disk `format` value in `meta/.mu` (section 4.0): the version identifies the state of the text, `format` identifies the layout on disk. Version 1.0.0 describes `format = 1`.
+
+It is a **draft**. While the specification is in draft status, `format = 1` may still change incompatibly and the text may change without the version being raised. Collections written against a draft are not guaranteed to be readable by the first stable release. From the first non-draft version onward the usual rule applies: an incompatible change to the on-disk layout requires `format = 2`, and the document version follows semantic versioning — major for incompatible format changes, minor for compatible additions, patch for clarifications that leave the format untouched.
 
 ## 1. Model
 
@@ -114,7 +122,7 @@ Every entity is **one TOML file**, named `<uuid>.mu`, encoded as UTF-8 without B
 format = 1
 ```
 
-- `format` is an **integer**, required. This specification defines version `1`.
+- `format` is an **integer**, required. This specification (version 1.0.0, draft) defines version `1`.
 - A tool that encounters a `format` value **higher** than the version it implements must refuse to write and should refuse to read, rather than silently degrade.
 - The names `.mu` and `.lock` are **reserved** directly under `meta/`; they must not be used as entity filenames.
 
@@ -131,7 +139,8 @@ Tracks are not separate files but `[[track]]` tables inside the release file (se
 
 ### 4.2 Value conventions
 
-- All attribute values are **strings** (`title = "Good Lies"`, `release-year-original = "2023"`), except flags and the small set of **integer-typed** attributes explicitly marked in the schema (`track.number`, `track.duration`). Everything descriptive stays a string, including `release-year-original`, `release-year-medium`, `bit-depth`, `sample-rate` and `bitrate`.
+- A value is an **integer** when it is a count, or a quantity in a fixed implied unit that admits exactly one spelling: `track.number`, `track.duration` (seconds), `bit-depth` (bits), `sample-rate` (hertz). The point is that such a fact must not be expressible in two ways — with an integer the TOML parser enforces the canonical form, whereas a string would accept `"44100"`, `"44.1 kHz"` and `"44,1kHz"` as three distinct values for one sample rate.
+- All other attribute values are **strings**, apart from flags. Descriptive values stay strings even when they look numeric: `release-year-original` and `release-year-medium` (incomplete years such as `"197?"` occur in practice, and the value is used verbatim as a path segment, section 5.4), `bitrate` (VBR presets such as `"V0"`, averages such as `"~245"`, or `"lossless"`) and `channel-mode`.
 - **Flag** = boolean `true` (`is-group = true`).
 - **Dual-typed**: `track.disc` is the only attribute that accepts two types — an integer for numbered discs, a string for medium sides (`"A"`, `"B"`). Section 4.7.
 - **Multiple value** = string array, inherently ordered (`member = ["uuid1", "uuid2"]`). There is no ordered/unordered distinction; arrays are always ordered.
@@ -307,13 +316,17 @@ Participating artists are not stored in an attribute but in `[[track.credit]]` t
 | `source-medium`                                       | single (`cd`, `vinyl`, `file`, `web`, `tape`)           | no                             |
 | `source-store`                                        | single                                                  | no                             |
 | `rip-result`                                          | single                                                  | no                             |
-| `bit-depth`, `sample-rate`, `bitrate`, `channel-mode` | single                                                  | no                             |
+| `bit-depth`                                           | single (int)                                            | no                             |
+| `sample-rate`                                         | single (int)                                            | no                             |
+| `bitrate`, `channel-mode`                             | single                                                  | no                             |
 | `discogs-master-id`, `discogs-release-id`             | single                                                  | no                             |
 | `cover-front`, `cover-back`                           | single (ref blob)                                       | no                             |
 | `asset`                                               | asset tables                                            | no                             |
 | `notes`                                               | single (multi-line)                                     | no                             |
 
 `release-year-original` is the year the release was **first** published; `release-year-medium` is the year of the edition actually held. `release-year-medium` is set **only if it differs** from `release-year-original` — a first pressing carries `release-year-original` alone. Views derive the edition year from the two (section 5.3).
+
+`bit-depth` and `sample-rate` are integers and **must be ≥ 1**. `sample-rate` is given in hertz (`44100`, not `44.1`), `bit-depth` in bits. `bitrate` stays a string because it is not always a number: VBR encoders record presets (`"V0"`) or averages (`"~245"`), and a lossless source has no meaningful single value.
 
 The value lists given for `type` and `source-medium` are **open vocabularies**, like `role` (section 4.6) and `asset.kind`. Unknown values are valid and are preserved verbatim; a tool may warn but must not reject them.
 
@@ -346,8 +359,8 @@ title = "Good Lies"
 type = "album"
 release-year-original = "2023"
 source-medium = "cd"
-bit-depth = "16"
-sample-rate = "44100"
+bit-depth = 16
+sample-rate = 44100
 cover-front = "3f0a91….jpg"
 
 notes = """
