@@ -129,7 +129,7 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 | `origin-dir` set, but a track, asset or cover without `origin-path`               | warning                        |
 | `origin-path` set on a release without `origin-dir`                               | warning                        |
 | attribute names not in the schema                                                 | notice                         |
-| `role`, `asset.kind`, `type`, `source-medium` not in the V1 vocabulary            | notice                         |
+| `role`, `asset.kind`, `type`, `source-medium` not in the listed vocabulary        | notice                         |
 | blob reference extension not matching `[a-z0-9]{1,8}` (§4.5)                      | notice                         |
 
 `--strict` turns warnings into errors.

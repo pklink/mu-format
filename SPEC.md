@@ -231,7 +231,7 @@ A credit therefore bridges two layers: `artist` is the entity (queryable, linkab
 8. **`title` stays untouched.** The builder **never** synthesizes credit information into a title. If `(feat. …)` is part of the printed title, it lives in `title`; if it is not, it does not appear in the view either. Credits are additional information, never a replacement.
 9. **Write form.** The canonical write form is the block table (`[[credit]]`). Inline tables are additionally accepted on read, since TOML defines them as equivalent.
 
-#### Role vocabulary V1
+#### Role vocabulary
 
 | Role          | Meaning                                       |
 |---------------|-----------------------------------------------|
@@ -316,7 +316,7 @@ Track attributes:
 
 Participating artists are not stored in an attribute but in `[[track.credit]]` tables (section 4.6).
 
-### 4.8 Schema V1
+### 4.8 Schema
 
 **Artist** (`meta/artists/<id>.mu`)
 
@@ -379,7 +379,7 @@ blob = "1a2b3c….txt"
 | `title`       | single            | no       | display name, e.g. `"Booklet page 3"`; becomes the view filename (section 5.4) |
 | `origin-path` | single            | no       | original path of the file, section 4.9   |
 
-Kind vocabulary V1: `log`, `booklet`, `scan`, `cue`, `other`. The vocabulary is **open**; unknown kinds are valid and preserved verbatim (same handling as `role`, section 4.6).
+Kind vocabulary: `log`, `booklet`, `scan`, `cue`, `other`. The vocabulary is **open**; unknown kinds are valid and preserved verbatim (same handling as `role`, section 4.6).
 
 Assets attach to the release, not to individual tracks: rip logs and booklets describe the medium as a whole. They are materialized in `views/` alongside the tracks of the release (section 5.4).
 
@@ -508,7 +508,7 @@ title = "Feeling Plain"
 origin-path = "01 Overmono - Feeling Plain.flac"
 ```
 
-The `kind` values `playlist` and `checksums` are not in the V1 vocabulary of section 4.8 and do not need to be — that vocabulary is open, like `role` and `type`.
+The `kind` values `playlist` and `checksums` are not in the vocabulary listed in section 4.8 and do not need to be — that vocabulary is open, like `role` and `type`.
 
 Nothing here changes how the release is presented anywhere else: `title` stays the curated title, `[[track]]` keeps its own numbering, and `by-artist` names its files as section 5.4 prescribes. The origin tree is a second, parallel presentation of the same blobs, not a replacement for the first.
 
