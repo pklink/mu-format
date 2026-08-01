@@ -24,9 +24,9 @@ Mapping onto the JDK. A `SPEC.md §` reference marks a requirement of the format
 | atomic publication (SPEC.md §3.4) | `Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE)` |
 | view swap (§2.3)                  | `Files.move(…, StandardCopyOption.ATOMIC_MOVE)`           |
 | read-only blobs (§2.1)            | `Files.setPosixFilePermissions(…, r--r--r--)`             |
-| write lock (SPEC.md §4.0)         | `FileChannel.tryLock()` on `meta/.lock`                   |
+| write lock (§3)                   | `FileChannel.tryLock()` on `meta/.lock`                   |
 
-Only the rows carrying a `SPEC.md §` reference are obligations, and two of them fix only the goal, not the means. SPEC.md §3.4 requires that a blob become visible as a whole but prescribes no mechanism; this implementation uses a rename, and `ATOMIC_MOVE` requires source and target on the same filesystem. SPEC.md §4.0 likewise requires writers to exclude one another but leaves the mechanism open; this implementation uses an advisory lock (section 3). The staging directory `store/.tmp/` therefore lives inside the store, and `views.new/` beside `views/`. Neither name is part of the format: SPEC.md §3.2 leaves any entry under `store/` that is not a `<hash[0:2]>/<hash>` pair without meaning, and SPEC.md §5.5 leaves the build procedure open entirely.
+Only the rows carrying a `SPEC.md §` reference are obligations, and one of them fixes only the goal, not the means. SPEC.md §3.4 requires that a blob become visible as a whole but prescribes no mechanism; this implementation uses a rename, and `ATOMIC_MOVE` requires source and target on the same filesystem. The staging directory `store/.tmp/` therefore lives inside the store, and `views.new/` beside `views/`. Neither name is part of the format, and neither is `meta/.lock`: SPEC.md §3.2 leaves any entry under `store/` that is not a `<hash[0:2]>/<hash>` pair without meaning, SPEC.md §4.0 does the same for entries under `meta/` that are not `.mu`, `artists/` or `releases/`, and SPEC.md §5.5 leaves the build procedure open entirely.
 
 Blob permissions are likewise a tool decision. `0444` is best-effort: on filesystems without POSIX permissions (exFAT, SMB) the call fails and is ignored, since nothing in the format depends on it.
 
@@ -172,9 +172,11 @@ Adopts an existing collection. Not yet specified.
 
 ## 3. Locking
 
-SPEC.md §4.0 requires a writer of `meta/` to hold `meta/.lock` exclusively and leaves the mechanism open. All writing commands take that lock via `FileChannel.tryLock()`, which is advisory: it excludes other processes using the same call, not a tool that ignores the file altogether. A second `mu` process aborts immediately with exit code 3 rather than waiting.
+The format defines no write lock. SPEC.md §4.0 leaves entries directly under `meta/` that are not `.mu`, `artists/` or `releases/` to the tool, and this implementation places `meta/.lock` there.
 
-Read-only commands (`lint`, `verify`) do not lock, as §4.0 permits.
+All writing commands take that lock via `FileChannel.tryLock()`, which is advisory: it excludes other processes using the same call, not a tool that ignores the file altogether. A second `mu` process aborts immediately with exit code 3 rather than waiting. Read-only commands (`lint`, `verify`) do not lock.
+
+The lock carries no content that anything interprets, it is never versioned (SPEC.md §6), and a collection in which the file is absent is valid — it exists only while, or because, a `mu` process has written. Deleting it while none is running has no effect.
 
 ## 4. Exit codes
 
@@ -197,4 +199,5 @@ Points raised in review that the specification does not yet answer. Section refe
 - **Reserved characters.** Only `/` is replaced. Names break on SMB/exFAT targets, which reject `\ : * ? " < > |`. Only relevant if cross-platform mirroring becomes a goal. Since §4.1 constrains identifiers by the same list — it forbids only what §5.2 rewrites — the gap now reaches `meta/` too: an identifier containing `?` or `:` is valid per the format and still cannot be checked out on Windows.
 - **Extension vs. content.** Since the extension moved out of the store path into the reference (§3.2, §4.5), a reference can resolve correctly and still carry the wrong extension — a FLAC linked as `.jpg` in `views/`. `lint` only checks the shape of the extension, not whether it matches the bytes; detecting that needs content sniffing, which is not specified and not implemented.
 - **Atomicity is stated, not enforceable.** §3.4 lets a reader trust a blob that resolves, but nothing on disk proves the guarantee was honoured. A foreign tool that writes blobs in place leaves a store whose paths may hold truncated content, and no reader can tell without re-hashing — which is exactly what §3.4 exists to make unnecessary. `mu verify` is the only remedy, and it is not free.
+- **`meta/` has no atomicity guarantee.** §3.4 gives one for blobs: every store path that exists holds complete content, so a reader may trust it without checking. Nothing states the equivalent for entity files, so a reader may observe a `.mu` file mid-write and parse half a TOML document — or, with a non-atomic writer, find one truncated after a crash. Unlike the write lock, which §4.0 no longer mentions because it constrains processes rather than the artefact, this one is a property of the on-disk state and would be checkable. This document does not fix how `import` publishes an entity file either; section 2.1 specifies the mechanism for blobs only.
 - **No shared staging convention.** With `store/.tmp/` removed from the format (§3.2), two implementations cannot clean up after each other's interrupted writes. Orphaned staging files accumulate until the tool that created them runs again. Harmless for correctness, since they never resolve, but the space is only reclaimable by hand.

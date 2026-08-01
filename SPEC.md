@@ -45,7 +45,6 @@ music/
 │       └── 3f0a91…64hex…
 │
 ├── meta/
-│   ├── .lock                                  # write lock, not in git
 │   ├── .mu                                    # collection format version file
 │   ├── artists/
 │   │   └── overmono.mu
@@ -122,13 +121,8 @@ format = 1
 
 - `format` is an **integer**, required. This specification (version 1.0.0, draft) defines version `1`.
 - A tool that encounters a `format` value **higher** than the version it implements must refuse to write and should refuse to read, rather than silently degrade.
-- The names `.mu` and `.lock` are **reserved** directly under `meta/`; they must not be used as entity filenames.
 
-`meta/.lock` is the **write lock**. A tool that modifies `meta/` must hold it exclusively for the duration of the modification; readers do not take it. It exists so that two writers cannot interleave, which would leave `meta/` in a state neither of them wrote.
-
-The lock is not part of the collection's state: it carries no content that anything interprets, it is never versioned (section 6), and a collection in which the file is absent is valid — the file exists only while, or because, someone has written. Deleting it while no writer is running has no effect.
-
-The locking mechanism is **not specified**, for the same reason as in section 3.4: whether a tool uses an advisory lock on the file, its exclusive creation, or something else is its own business, as long as writers of the same collection exclude one another.
+Within `meta/`, the format knows `.mu`, `artists/` and `releases/`. Entries directly under `meta/` that are none of these have no meaning; the format assigns them none, and a tool may use them for its own purposes — for a write lock, for staging, for a cache. This mirrors section 3.2: what the format does not define, it does not claim.
 
 ### 4.1 Entities
 
@@ -566,6 +560,8 @@ Only `meta/` is versioned. `.gitignore` in the collection root:
 /meta/.lock
 .DS_Store
 ```
+
+`/meta/.lock` is not required by the format. It is the scratch entry the reference implementation places under `meta/` (section 4.0); a tool using a different name adds its own line.
 
 To keep the LF line endings of section 4 stable across platforms, add a `.gitattributes` in the collection root:
 
