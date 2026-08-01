@@ -51,7 +51,7 @@ mu import ~/rips/Overmono\ -\ Good\ Lies/
 
 1. Collect files recursively, classify by extension into audio / image / other.
 2. Hash each file while streaming and take it into the store (see below).
-3. Generate a release identifier, create `meta/releases/<id>.mu` as TOML with exactly one `[[credit]]` of role `main`. SPEC.md §4.1 requires only a unique, filesystem-safe identifier and recommends an opaque one; this tool generates a UUIDv4.
+3. Generate a release identifier, create `meta/releases/<id>.mu` as TOML with exactly one `[[credit]]` of role `main`. SPEC.md §4.1 accepts a readable or an opaque identifier; this tool generates a UUIDv4, because at this point it has no title it could derive a readable one from — `import` does not read tags (below), and the directory name is not trustworthy enough to become an identity that must never change.
 4. Add audio files in filename order as `[[track]]` tables, each with `number`/`disc` (parsed from a leading prefix in the original name such as `01 `, `A1 `, `1-05 `) and a `blob` reference; the remainder of the name becomes `title`. A letter prefix maps to a string `disc` (`A1 ` → `disc = "A"`, `number = 1`), matching SPEC.md §4.7.
 5. Reference images named `cover|front|folder` as `cover-front = "<hash>.<ext>"`.
 6. Trigger `mu build`.
@@ -116,7 +116,6 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 | attribute names not in the schema                                                 | notice                         |
 | `role`, `asset.kind`, `type`, `source-medium` not in the V1 vocabulary            | notice                         |
 | blob reference extension not matching `[a-z0-9]{1,8}` (§4.5)                      | notice                         |
-| entity identifier is not a UUID (§4.1 recommends an opaque one)                   | notice                         |
 
 `--strict` turns warnings into errors.
 

@@ -27,7 +27,7 @@ Three layers:
 ### Core principles
 
 1. **Content determines identity.** A media file is addressed by the hash of its content, not by its path.
-2. **Entities have stable IDs.** Releases and artists carry an opaque identifier. Names are attributes, not keys.
+2. **Entities have stable IDs.** Releases and artists carry an identifier that never changes. Names are attributes, not keys.
 3. **Nothing is ever written into media files.** No tags, no renaming, no conversion. The store is bit-identical to what was imported.
 4. **Views are pure functions of `meta` + `store`.** Every view is reproducible from the other two layers.
 5. **A release has no location.** It has attributes. Where it shows up is the view's decision.
@@ -48,10 +48,10 @@ music/
 │   ├── .lock                                  # write lock, not in git
 │   ├── .mu                                    # collection format version file
 │   ├── artists/
-│   │   └── 9f2b4a1d-6c31-4f8e-9a02-1d7c4b5e8a90.mu
+│   │   └── overmono.mu
 │   │
 │   └── releases/
-│       └── b27e3c80-5d44-4a1f-8f6b-2e9c07a3d115.mu
+│       └── good-lies.mu
 │
 └── views/
     ├── by-artist/
@@ -151,9 +151,14 @@ An identifier **must**:
 
 Rules 1, 3 and 4 are exactly the transformations of section 5.2, so a valid identifier passes name construction unchanged — which is what makes the last step of the collision ladder guaranteed unique (section 5.3). Rule 5 names case folding because widely used filesystems (APFS, NTFS) are case-insensitive by default, where `Abc.mu` and `abc.mu` would be **one** file. An artist and a release may carry the same identifier; the path determines the type.
 
-An identifier **should** be opaque and randomly generated; **UUIDv4 or UUIDv7 are recommended**. The reason is section 6: independent writers and git branches create entities without coordination, and merging two colliding identifiers would silently fuse two distinct entities — a failure that does not surface as a merge conflict. A name-derived identifier also defeats principle 2 of section 1: it invites renaming the file when the name changes, which breaks every reference to it.
+An identifier is **stable**: once assigned it **must not** be changed, and it **must not** be reused for a different entity. In particular it does not track the entity's `name` or `title` — an artist who changes their name keeps their identifier. Renaming an entity file changes the entity's identity and invalidates every reference to it (section 4.5). This is principle 2 of section 1: names are attributes, not keys.
 
-An identifier is **never reused** for a different entity. Renaming an entity file changes the entity's identity and invalidates every reference to it (section 4.5).
+Two forms satisfy this equally, and the choice is the writer's:
+
+- A **readable identifier**, derived from the name when the entity is created (`overmono`, `good-lies`). Diffs and hand edits stay legible, which matters because `meta/` is meant to be editable by hand (section 1). The cost is that two writers can derive the same identifier for two different entities, and that a later rename tempts one into changing it — which the rule above forbids.
+- An **opaque identifier**, randomly generated; UUIDv4 and UUIDv7 are the obvious choices. Collision-free without coordination, which matters for section 6: independent branches create entities without talking to each other, and merging two colliding identifiers would fuse two distinct entities without raising a conflict. The cost is that every reference becomes unreadable.
+
+A collection may mix both. The examples in this document use readable identifiers because they are easier to follow.
 
 ### 4.2 Value conventions
 
@@ -248,17 +253,17 @@ source-medium = "vinyl"
 
 [[credit]]
 role = "main"
-artist = "3d1e8f02-4a77-4c19-b8d3-51ac9e6f2b04"
-as = "Eloquenz"                                   # as printed
+artist = "eloquenz"
+as = "Eloquenz"            # as printed
 join = " & "
 
 [[credit]]
 role = "main"
-artist = "8b42c711-9e05-4d3a-a6f8-0c14bd7e3392"
+artist = "hulk-hodn"
 
 [[credit]]
 role = "producer"
-artist = "8b42c711-9e05-4d3a-a6f8-0c14bd7e3392"
+artist = "hulk-hodn"
 detail = "additional"
 
 [[track]]
@@ -273,7 +278,7 @@ title = "Was Wenn (feat. Umse)"
 
 [[track.credit]]
 role = "feat"
-artist = "c907a4b1-2f68-4e50-9d17-b3ea85c6014f"
+artist = "umse"
 ```
 
 Reconstructed billing line: `Eloquenz & Hulk Hodn`. Track 2 inherits both `main` credits and adds a `feat` credit; its `title` stays exactly as printed on the record.
@@ -390,7 +395,7 @@ AccurateRip ok.
 
 [[credit]]
 role = "main"
-artist = "9f2b4a1d-6c31-4f8e-9a02-1d7c4b5e8a90"
+artist = "overmono"
 
 [[asset]]
 kind = "log"
@@ -417,7 +422,7 @@ title = "Kink"
 
 [[track.credit]]
 role = "feat"
-artist = "7a11c3d8-0b52-4e67-9f14-a8d206c3b571"
+artist = "anz"
 ```
 
 #### Example artist
@@ -425,7 +430,7 @@ artist = "7a11c3d8-0b52-4e67-9f14-a8d206c3b571"
 ```toml
 name = "Overmono"
 is-group = true
-member = ["4c8e…uuid…", "7a11…uuid…"]
+member = ["tom-russell", "ed-russell"]
 sort-name = "Overmono"
 discogs-artist-id = "1234567"
 ```
