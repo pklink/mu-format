@@ -27,7 +27,7 @@ Three layers:
 ### Core principles
 
 1. **Content determines identity.** A media file is addressed by the hash of its content, not by its path.
-2. **Entities have stable IDs.** Releases and artists are UUIDs. Names are attributes, not keys.
+2. **Entities have stable IDs.** Releases and artists carry an opaque identifier. Names are attributes, not keys.
 3. **Nothing is ever written into media files.** No tags, no renaming, no conversion. The store is bit-identical to what was imported.
 4. **Views are pure functions of `meta` + `store`.** Every view is reproducible from the other two layers.
 5. **A release has no location.** It has attributes. Where it shows up is the view's decision.
@@ -110,7 +110,7 @@ How a writer achieves this is **not specified**. The staging location, the order
 
 ## 4. Meta
 
-Every entity is **one TOML file**, named `<uuid>.mu`, encoded as UTF-8 without BOM, with **LF** line endings. The entity type is determined by the path (`artists/` vs. `releases/`).
+Every entity is **one TOML file**, named `<id>.mu`, encoded as UTF-8 without BOM, with **LF** line endings. The entity type is determined by the path (`artists/` vs. `releases/`).
 
 ### 4.0 Collection marker
 
@@ -132,14 +132,28 @@ The locking mechanism is **not specified**, for the same reason as in section 3.
 
 ### 4.1 Entities
 
-| Entity  | Path                      |
-|---------|---------------------------|
-| Artist  | `meta/artists/<uuid>.mu`  |
-| Release | `meta/releases/<uuid>.mu` |
+| Entity  | Path                    |
+|---------|-------------------------|
+| Artist  | `meta/artists/<id>.mu`  |
+| Release | `meta/releases/<id>.mu` |
 
 Tracks are not separate files but `[[track]]` tables inside the release file (section 4.7).
 
-`<uuid>`: UUID v4, lowercase, with hyphens (36 characters). The filename stem is the entity's identity; the UUID is not repeated inside the file.
+`<id>` is the entity's **identifier**. The filename stem is the entity's identity; the identifier is not repeated inside the file.
+
+An identifier **must**:
+
+1. be non-empty and at most **200 bytes** long when encoded as UTF-8;
+2. be NFC-normalized (section 4.3);
+3. contain neither `/` (U+002F) nor control characters (U+0000–U+001F);
+4. neither begin nor end with a space or a dot;
+5. be unique within its directory, compared after NFC normalization **and** case folding.
+
+Rules 1, 3 and 4 are exactly the transformations of section 5.2, so a valid identifier passes name construction unchanged — which is what makes the last step of the collision ladder guaranteed unique (section 5.3). Rule 5 names case folding because widely used filesystems (APFS, NTFS) are case-insensitive by default, where `Abc.mu` and `abc.mu` would be **one** file. An artist and a release may carry the same identifier; the path determines the type.
+
+An identifier **should** be opaque and randomly generated; **UUIDv4 or UUIDv7 are recommended**. The reason is section 6: independent writers and git branches create entities without coordination, and merging two colliding identifiers would silently fuse two distinct entities — a failure that does not surface as a merge conflict. A name-derived identifier also defeats principle 2 of section 1: it invites renaming the file when the name changes, which breaks every reference to it.
+
+An identifier is **never reused** for a different entity. Renaming an entity file changes the entity's identity and invalidates every reference to it (section 4.5).
 
 ### 4.2 Value conventions
 
@@ -147,7 +161,7 @@ Tracks are not separate files but `[[track]]` tables inside the release file (se
 - All other attribute values are **strings**, apart from flags. Descriptive values stay strings even when they look numeric: `release-year-original` and `release-year-medium` (incomplete years such as `"197?"` occur in practice, and the value is used verbatim as a path segment, section 5.4), `bitrate` (VBR presets such as `"V0"`, averages such as `"~245"`, or `"lossless"`) and `channel-mode`.
 - **Flag** = boolean `true` (`is-group = true`).
 - **Dual-typed**: `track.disc` is the only attribute that accepts two types — an integer for numbered discs, a string for medium sides (`"A"`, `"B"`). Section 4.7.
-- **Multiple value** = string array, inherently ordered (`member = ["uuid1", "uuid2"]`). There is no ordered/unordered distinction; arrays are always ordered.
+- **Multiple value** = string array, inherently ordered (`member = ["id1", "id2"]`). There is no ordered/unordered distinction; arrays are always ordered.
 - **Multi-line value** = TOML multi-line string (`notes = """ … """`).
 - **Credit** = table (`[[credit]]`, `[[track.credit]]`), section 4.6. Credits are the only structure that is neither scalar nor array.
 - References are strings without any path component (section 4.5).
@@ -162,7 +176,7 @@ String values are normalized to NFC on write and normalized to NFC again on read
 |------------------|-----------------------------------|
 | Single value     | `title = "Good Lies"`             |
 | Flag             | `is-group = true`                 |
-| Multiple value   | `member = ["uuid1", "uuid2"]`     |
+| Multiple value   | `member = ["id1", "id2"]`         |
 | Multi-line value | `notes = """` … `"""`             |
 | Credit           | `[[credit]]` / `[[track.credit]]` |
 
@@ -174,7 +188,7 @@ All references are string values, without a path component:
 
 | Reference type | Notation                                                | Resolution                       |
 |----------------|---------------------------------------------------------|----------------------------------|
-| to an artist   | `artist = "<uuid>"` (only inside a credit, section 4.6) | `meta/artists/<uuid>.mu`         |
+| to an artist   | `artist = "<id>"` (only inside a credit, section 4.6)   | `meta/artists/<id>.mu`           |
 | to a blob      | `blob = "<hash>[.<ext>]"`                               | `store/<hash[0:2]>/<hash>`       |
 | to cover art   | `cover-front = "<hash>[.<ext>]"`                        | same as blob                     |
 
@@ -191,7 +205,7 @@ Artist participation is expressed through **credits**. A credit is a TOML table:
 | Field    | Cardinality         | Required | Meaning                                                   |
 |----------|---------------------|----------|-----------------------------------------------------------|
 | `role`   | single              | yes      | role, lowercase, words separated by `-`                   |
-| `artist` | single (ref artist) | yes      | reference to `meta/artists/<uuid>.mu`                     |
+| `artist` | single (ref artist) | yes      | reference to `meta/artists/<id>.mu`                       |
 | `as`     | single              | no       | name as printed on **this** release                       |
 | `join`   | single              | no       | join phrase that follows **after** this name              |
 | `detail` | single              | no       | free-form role qualifier (`"additional"`, `"uncredited"`) |
@@ -296,7 +310,7 @@ Participating artists are not stored in an attribute but in `[[track.credit]]` t
 
 ### 4.8 Schema V1
 
-**Artist** (`meta/artists/<uuid>.mu`)
+**Artist** (`meta/artists/<id>.mu`)
 
 | Attribute           | Cardinality           | Required |
 |---------------------|-----------------------|----------|
@@ -308,7 +322,7 @@ Participating artists are not stored in an attribute but in `[[track.credit]]` t
 | `sort-name`         | single                | no       |
 | `discogs-artist-id` | single                | no       |
 
-**Release** (`meta/releases/<uuid>.mu`)
+**Release** (`meta/releases/<id>.mu`)
 
 | Attribute                                             | Cardinality                                             | Required                       |
 |-------------------------------------------------------|---------------------------------------------------------|--------------------------------|
@@ -440,20 +454,22 @@ Two releases by the same artist with the same title produce the same view path. 
 1. `Title`
 2. `Title [<edition-year>]`
 3. `Title [<edition-year>, <source-medium>]`
-4. `Title [<edition-year>, <source-medium>] (<uuid[0:8]>)`
+4. `Title [<edition-year>, <source-medium>] (<id-prefix>)`
 
 `<edition-year>` is the **derived edition year**: `release-year-medium` if present, otherwise `release-year-original`.
 
-Step 4 is guaranteed unique. Colliding releases are sorted by UUID and processed in that order.
+`<id-prefix>` is the shortest prefix of the release identifier that is at least **8 codepoints** long — or the whole identifier, if it is shorter — never splitting a codepoint, and long enough that the prefixes of all releases colliding at this step in this directory are pairwise distinct under the comparison of section 4.1, rule 5. One length is used for the entire colliding group, so all its entries carry a prefix of the same length.
+
+Step 4 is guaranteed unique: the identifiers of one directory are pairwise distinct, an identifier is at most 200 bytes and section 5.2 leaves it unchanged (section 4.1), so the full identifier is always an available fallback. Colliding releases are sorted by identifier in NFC code point order and processed in that order.
 
 #### Collisions in the other views
 
 `by-credit`, `by-release-year-original` and `by-source-medium` key on `<billing> - <title>`, which can collide independently of `by-artist` — two different releases may share a billing line, a title and a year. Resolved in two steps:
 
 1. `<billing> - <title>`
-2. `<billing> - <title> (<uuid[0:8]>)`
+2. `<billing> - <title> (<id-prefix>)`
 
-Step 2 is guaranteed unique. As above, colliding releases are sorted by UUID and processed in that order. This ladder is independent of the one above; the `by-artist` name is not reused here.
+Step 2 is guaranteed unique, for the reason given above, and `<id-prefix>` is formed the same way — over the releases colliding at this step in this directory. As above, colliding releases are sorted by identifier in NFC code point order and processed in that order. This ladder is independent of the one above; the `by-artist` name is not reused here.
 
 The ladder is applied **per directory**, not per view: the collision scope is the single year directory, medium directory or `<role>/<artist-name>` directory in which the entry is created. Two releases that collide under one role but not under another therefore carry the suffix only where it is needed.
 
@@ -484,7 +500,7 @@ Only `by-artist` creates track symlinks; all other views link to its directories
 3. **Multiple roles.** An artist credited on one release under two roles gets an entry under each of them.
 4. **Inheritance does not apply.** Section 4.6, rule 6 inherits `main` credits only, and `main` is out of scope here — a track never inherits a `feat` or `remixer` credit, so nothing is materialized that is not written down.
 5. **`<role>`** is the credit's `role` value, sanitized per section 5.2. Since the vocabulary is open (section 4.6), an unknown role yields a directory just like a known one.
-6. **Ordering.** Roles are iterated by NFC code point, artists by NFC-normalized `name`, releases by UUID (section 5.6).
+6. **Ordering.** Roles are iterated by NFC code point, artists by NFC-normalized `name`, releases by identifier (section 5.6).
 
 #### Track filenames
 
@@ -531,7 +547,7 @@ How a builder produces the tree, and whether it rebuilds from scratch or updates
 
 ### 5.6 Determinism
 
-Building twice against the same meta state must produce byte-identical trees. All directory iteration is explicitly sorted (by UUID or by NFC-normalized name); directory-listing order is never inherited from the filesystem.
+Building twice against the same meta state must produce byte-identical trees. All directory iteration is explicitly sorted (by identifier or by NFC-normalized name, in NFC code point order); directory-listing order is never inherited from the filesystem.
 
 Credits and assets are exempt: their order comes from the file (section 4.6, rule 4; section 4.8) and is therefore already deterministic.
 

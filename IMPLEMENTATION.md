@@ -51,12 +51,12 @@ mu import ~/rips/Overmono\ -\ Good\ Lies/
 
 1. Collect files recursively, classify by extension into audio / image / other.
 2. Hash each file while streaming and take it into the store (see below).
-3. Generate a release UUID, create `meta/releases/<uuid>.mu` as TOML with exactly one `[[credit]]` of role `main`.
+3. Generate a release identifier, create `meta/releases/<id>.mu` as TOML with exactly one `[[credit]]` of role `main`. SPEC.md §4.1 requires only a unique, filesystem-safe identifier and recommends an opaque one; this tool generates a UUIDv4.
 4. Add audio files in filename order as `[[track]]` tables, each with `number`/`disc` (parsed from a leading prefix in the original name such as `01 `, `A1 `, `1-05 `) and a `blob` reference; the remainder of the name becomes `title`. A letter prefix maps to a string `disc` (`A1 ` → `disc = "A"`, `number = 1`), matching SPEC.md §4.7.
 5. Reference images named `cover|front|folder` as `cover-front = "<hash>.<ext>"`.
 6. Trigger `mu build`.
 
-Options: `--release <uuid>` (import into an existing release), `--artist <uuid>` (sets the `main` credit), `--dry-run`.
+Options: `--release <id>` (import into an existing release), `--artist <id>` (sets the `main` credit), `--dry-run`.
 
 `import` does not read tags from media files.
 
@@ -84,7 +84,7 @@ The store path is the bare hash (SPEC.md §3.2); the extension appears only in t
 
 This is a heuristic, not a guarantee: it trusts the source filename. Because the result lives in `meta/`, a wrong extension is fixed by editing the entity file — no re-import, no change to the store.
 
-> **Open question.** Without `--artist` there is no artist UUID for the required `main` credit, so the result fails `mu lint`. It is not yet decided whether `import` creates an artist stub (and from which name) or whether `--artist` becomes mandatory.
+> **Open question.** Without `--artist` there is no artist identifier for the required `main` credit, so the result fails `mu lint`. It is not yet decided whether `import` creates an artist stub (and from which name) or whether `--artist` becomes mandatory.
 
 ### 2.2 `mu lint`
 
@@ -93,6 +93,8 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 | Check                                                                             | Severity                       |
 |-----------------------------------------------------------------------------------|--------------------------------|
 | `meta/.mu` present, `format` an integer not higher than implemented              | error                          |
+| entity identifier valid per §4.1 (length, NFC, forbidden characters, edges)      | error                          |
+| entity identifiers unique per directory under NFC and case folding (§4.1)        | error                          |
 | entity file is valid TOML                                                         | error                          |
 | required attributes present (`name`, `title`, `blob`, `number`)                   | error                          |
 | cardinality respected (no `title` as an array)                                    | error                          |
@@ -102,7 +104,7 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 | `bit-depth` and `sample-rate` integers ≥ 1 (§4.2)                                 | error                          |
 | release has ≥ 1 credit with `role = "main"`                                       | error                          |
 | `role` and `artist` present in every credit                                       | error                          |
-| `credit.artist` points to an existing UUID                                        | error                          |
+| `credit.artist` points to an existing artist identifier                          | error                          |
 | blob reference exists in the store                                                | error                          |
 | `kind` and `blob` present in every asset                                          | error                          |
 | `asset.blob` exists in the store                                                  | error                          |
@@ -114,8 +116,11 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 | attribute names not in the schema                                                 | notice                         |
 | `role`, `asset.kind`, `type`, `source-medium` not in the V1 vocabulary            | notice                         |
 | blob reference extension not matching `[a-z0-9]{1,8}` (§4.5)                      | notice                         |
+| entity identifier is not a UUID (§4.1 recommends an opaque one)                   | notice                         |
 
 `--strict` turns warnings into errors.
+
+The case-folded uniqueness check only ever fires on a case-sensitive filesystem: elsewhere the two files are one, so the collection cannot reach that state locally. It is worth running anyway, because such a pair can be created on ext4 and committed, and the repository is then unusable on macOS or Windows — where a checkout produces one file, silently dropping an entity.
 
 Unreferenced blobs are **not** a lint concern — that is a store question, reported by `mu gc`.
 
@@ -189,9 +194,8 @@ Points raised in review that the specification does not yet answer. Section refe
 - **View target ambiguity.** A release with two `main` credits appears under two `by-artist` directories, but has only one entry in `by-credit`, `by-release-year-original` and `by-source-medium`. Which one those link to is undefined (SPEC.md §5.4).
 - **Cover art in views is unspecified.** The tree in SPEC.md §2 shows `cover.jpg` in the `by-artist` release directory, but §5.4 defines filenames for tracks and assets only. The name a `cover-front`/`cover-back` reference produces is left to the tool, which also makes the asset collision rule (§5.4) depend on an undefined name.
 - **Sanitization order.** §5.2 trims before truncating, so truncation can reintroduce a trailing space or dot.
-- **Composite name length.** The 200-byte limit is per attribute value; `<billing> - <title>` can exceed the 255-byte limit of common filesystems.
-- **`uuid[0:8]` uniqueness.** 32 bits, described as "guaranteed unique" in §5.3. Practically collision-free at collection scale, but not guaranteed; no fallback is defined.
-- **Reserved characters.** Only `/` is replaced. Names break on SMB/exFAT targets, which reject `\ : * ? " < > |`. Only relevant if cross-platform mirroring becomes a goal.
+- **Composite name length.** The 200-byte limit is per attribute value; `<billing> - <title>` can exceed the 255-byte limit of common filesystems. Should this ever be closed by truncating the composite, the truncation must not reach the `(<id-prefix>)` suffix of §5.3 — the uniqueness guarantee of that step rests on the suffix surviving intact.
+- **Reserved characters.** Only `/` is replaced. Names break on SMB/exFAT targets, which reject `\ : * ? " < > |`. Only relevant if cross-platform mirroring becomes a goal. Since §4.1 constrains identifiers by the same list — it forbids only what §5.2 rewrites — the gap now reaches `meta/` too: an identifier containing `?` or `:` is valid per the format and still cannot be checked out on Windows.
 - **Extension vs. content.** Since the extension moved out of the store path into the reference (§3.2, §4.5), a reference can resolve correctly and still carry the wrong extension — a FLAC linked as `.jpg` in `views/`. `lint` only checks the shape of the extension, not whether it matches the bytes; detecting that needs content sniffing, which is not specified and not implemented.
 - **Atomicity is stated, not enforceable.** §3.4 lets a reader trust a blob that resolves, but nothing on disk proves the guarantee was honoured. A foreign tool that writes blobs in place leaves a store whose paths may hold truncated content, and no reader can tell without re-hashing — which is exactly what §3.4 exists to make unnecessary. `mu verify` is the only remedy, and it is not free.
 - **No shared staging convention.** With `store/.tmp/` removed from the format (§3.2), two implementations cannot clean up after each other's interrupted writes. Orphaned staging files accumulate until the tool that created them runs again. Harmless for correctness, since they never resolve, but the space is only reclaimable by hand.
