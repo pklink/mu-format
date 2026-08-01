@@ -56,9 +56,20 @@ mu import ~/rips/Overmono\ -\ Good\ Lies/
 5. Reference images named `cover|front|folder` as `cover-front = "<hash>.<ext>"`.
 6. Trigger `mu build`.
 
-Options: `--release <id>` (import into an existing release), `--artist <id>` (sets the `main` credit), `--dry-run`.
+Options: `--release <id>` (import into an existing release), `--artist <id>` (sets the `main` credit), `--origin` (record the source tree, below), `--dry-run`.
 
 `import` does not read tags from media files.
+
+#### Recording the origin tree
+
+`--origin` fills in what SPEC.md §4.9 defines: the base name of the imported directory becomes `origin-dir`, and every file gets the path it had relative to that directory as `origin-path` — on its `[[track]]` or `[[asset]]` table, or as `cover-front-origin-path` for the image picked in step 5.
+
+It is **off by default**. Most imports are a loose directory whose name carries nothing worth keeping, and a recorded path nobody wants is still a value `lint` has to check and a tree `build` has to materialize. It is worth turning on where the directory *is* the artefact — a release that arrived as a unit, with a playlist or a checksum file that only resolves against the original names.
+
+Two restrictions follow from the format:
+
+- `--origin` takes **exactly one** directory argument. With several paths, or with a file, there is no single directory whose name could become `origin-dir`; that is a usage error (exit 2).
+- Every path segment must satisfy §4.9, i.e. survive SPEC.md §5.2 unchanged. If any does not, `import` aborts **before** writing anything and lists every offending path (exit 1). Dropping the offenders and importing the rest would produce exactly the half-tree the option exists to prevent — a checksum file in a tree that is missing two of its files verifies no better than one whose files were renamed. The format does permit a partial tree (§4.9), because a hand-written entity file may legitimately be incomplete; this tool does not produce one.
 
 #### Taking a file into the store
 
@@ -108,11 +119,15 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 | blob reference exists in the store                                                | error                          |
 | `kind` and `blob` present in every asset                                          | error                          |
 | `asset.blob` exists in the store                                                  | error                          |
+| `origin-dir` and every `origin-path` segment valid per §4.9                       | error                          |
+| `origin-path` unique per release under NFC and case folding (§4.9)                | error                          |
 | `join` on a role other than `main`                                                | warning                        |
 | duplicate `(role, artist)` at the same level                                      | warning                        |
 | string values NFC-normalized (including `as`)                                     | warning (fixable with `--fix`) |
 | release without tracks                                                            | warning                        |
 | `release-year-medium` equal to `release-year-original` (redundant, §4.8)          | warning (fixable with `--fix`) |
+| `origin-dir` set, but a track, asset or cover without `origin-path`               | warning                        |
+| `origin-path` set on a release without `origin-dir`                               | warning                        |
 | attribute names not in the schema                                                 | notice                         |
 | `role`, `asset.kind`, `type`, `source-medium` not in the V1 vocabulary            | notice                         |
 | blob reference extension not matching `[a-z0-9]{1,8}` (§4.5)                      | notice                         |
@@ -120,6 +135,8 @@ Validates `meta/` against SPEC.md and classifies each finding. Checks, in this o
 `--strict` turns warnings into errors.
 
 The case-folded uniqueness check only ever fires on a case-sensitive filesystem: elsewhere the two files are one, so the collection cannot reach that state locally. It is worth running anyway, because such a pair can be created on ext4 and committed, and the repository is then unusable on macOS or Windows — where a checkout produces one file, silently dropping an entity.
+
+The two `origin-*` warnings are the two halves of an incomplete record. `origin-dir` without an `origin-path` on every file produces a `by-origin` tree with holes — permitted by §4.9, and precisely the state in which a checksum file shipped inside that tree stops verifying. `origin-path` without `origin-dir` is the mirror image: correct data that no view will ever show. Neither is an error, because both are reachable by hand-editing an entity file that is on its way somewhere.
 
 Unreferenced blobs are **not** a lint concern — that is a store question, reported by `mu gc`.
 
@@ -139,6 +156,8 @@ Regenerates `views/` from `meta/` + `store/`, satisfying the determinism require
 An aborted build leaves `views.new/` or `views.old/` behind; both are removed at the start of the next run. `views.new/` sits beside `views/` so that step 3 is an `ATOMIC_MOVE` (section 1).
 
 This is **not** a swap. Between steps 2 and 3 there is a window in which `views/` does not exist at all: an observer sees the old tree, then nothing, then the new tree — never a half-built one. Atomic directory swapping is not portable (`RENAME_EXCHANGE` is Linux-only, `RENAME_SWAP` macOS-only) and the JDK exposes neither, so the gap is accepted. It is harmless because nothing reads `views/` (SPEC.md §5.1); a player pointed at the tree during a rebuild sees it vanish and reappear.
+
+`by-origin` is built in the same pass as the other views. It is the second one that symlinks into the store (SPEC.md §5.4) and the only one whose names the builder does not construct: each segment is written out exactly as recorded, and `lint` has already checked it against §4.9. The builder must not re-sanitize — passing those names through SPEC.md §5.2 again would be a no-op on valid data and a silent corruption on anything else, and either way it would defeat the guarantee the view exists for.
 
 > **Open question.** `mu build <view>` rebuilds a single view, but step 1 produces a complete `views.new/`. A selective build must carry the untouched views over before the swap, otherwise `mu build by-release-year-original` deletes every other view. Whether they are copied, hardlinked or rebuilt is not yet decided.
 
@@ -165,6 +184,8 @@ Collects all `blob`, `cover-front`/`cover-back` and `asset.blob` references from
 Not deleting is a policy of this tool, not a rule of the format: SPEC.md §3.3 forbids overwriting a blob, but says nothing about removal. A blob under `store/.trash/` no longer resolves — it is outside the path formula — so trashing one referenced by `meta/` breaks that reference just as deleting it would. `gc` is therefore only as safe as its reference collection is complete.
 
 Every reference must be reduced to its hash before the comparison — everything from the first `.` onward is not part of the store path (SPEC.md §4.5). Comparing reference strings against filenames verbatim would leave no reference matching any blob and send the entire store to the trash.
+
+`origin-path` and `origin-dir` are not references and contribute nothing here (SPEC.md §4.9). A file recorded in an origin tree is reachable only through the `blob` value beside it, so the reference collection above is already complete — recording origin paths neither protects a blob from `gc` nor exposes one to it.
 
 ### 2.6 `mu migrate`
 
@@ -193,10 +214,10 @@ The lock carries no content that anything interprets, it is never versioned (SPE
 Points raised in review that the specification does not yet answer. Section references are to [SPEC.md](SPEC.md).
 
 - **View target ambiguity.** A release with two `main` credits appears under two `by-artist` directories, but has only one entry in `by-credit`, `by-release-year-original` and `by-source-medium`. Which one those link to is undefined (SPEC.md §5.4).
-- **Cover art in views is unspecified.** The tree in SPEC.md §2 shows `cover.jpg` in the `by-artist` release directory, but §5.4 defines filenames for tracks and assets only. The name a `cover-front`/`cover-back` reference produces is left to the tool, which also makes the asset collision rule (§5.4) depend on an undefined name.
+- **Cover art in views is unspecified.** The tree in SPEC.md §2 shows `cover.jpg` in the `by-artist` release directory, but §5.4 defines filenames for tracks and assets only. The name a `cover-front`/`cover-back` reference produces is left to the tool, which also makes the asset collision rule (§5.4) depend on an undefined name. §4.9 closes this for `by-origin`, where a cover carries the name it was received with, and leaves it exactly as open for `by-artist`.
 - **Sanitization order.** §5.2 trims before truncating, so truncation can reintroduce a trailing space or dot.
 - **Composite name length.** The 200-byte limit is per attribute value; `<billing> - <title>` can exceed the 255-byte limit of common filesystems. Should this ever be closed by truncating the composite, the truncation must not reach the `(<id-prefix>)` suffix of §5.3 — the uniqueness guarantee of that step rests on the suffix surviving intact.
-- **Reserved characters.** Only `/` is replaced. Names break on SMB/exFAT targets, which reject `\ : * ? " < > |`. Only relevant if cross-platform mirroring becomes a goal. Since §4.1 constrains identifiers by the same list — it forbids only what §5.2 rewrites — the gap now reaches `meta/` too: an identifier containing `?` or `:` is valid per the format and still cannot be checked out on Windows.
+- **Reserved characters.** Only `/` is replaced. Names break on SMB/exFAT targets, which reject `\ : * ? " < > |`. Only relevant if cross-platform mirroring becomes a goal. Since §4.1 constrains identifiers by the same list — it forbids only what §5.2 rewrites — the gap now reaches `meta/` too: an identifier containing `?` or `:` is valid per the format and still cannot be checked out on Windows. §4.9 inherits it once more and makes it sharper: a received filename containing `?` is a valid `origin-path`, and because §4.9 forbids rewriting the name, a builder targeting such a filesystem has no legal fallback — it can only leave the file out or fail.
 - **Extension vs. content.** Since the extension moved out of the store path into the reference (§3.2, §4.5), a reference can resolve correctly and still carry the wrong extension — a FLAC linked as `.jpg` in `views/`. `lint` only checks the shape of the extension, not whether it matches the bytes; detecting that needs content sniffing, which is not specified and not implemented.
 - **Atomicity is stated, not enforceable.** §3.4 lets a reader trust a blob that resolves, but nothing on disk proves the guarantee was honoured. A foreign tool that writes blobs in place leaves a store whose paths may hold truncated content, and no reader can tell without re-hashing — which is exactly what §3.4 exists to make unnecessary. `mu verify` is the only remedy, and it is not free.
 - **`meta/` has no atomicity guarantee.** §3.4 gives one for blobs: every store path that exists holds complete content, so a reader may trust it without checking. Nothing states the equivalent for entity files, so a reader may observe a `.mu` file mid-write and parse half a TOML document — or, with a non-atomic writer, find one truncated after a crash. Unlike the write lock, which §4.0 no longer mentions because it constrains processes rather than the artefact, this one is a property of the on-disk state and would be checkable. This document does not fix how `import` publishes an entity file either; section 2.1 specifies the mechanism for blobs only.

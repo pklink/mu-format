@@ -66,8 +66,12 @@ music/
     ├── by-release-year-original/
     │   └── 2023/
     │       └── Overmono - Good Lies -> ../../by-artist/Overmono/Good Lies [2023]
-    └── by-source-medium/
-        └── vinyl/…
+    ├── by-source-medium/
+    │   └── vinyl/…
+    └── by-origin/
+        └── Overmono - Good Lies (2023) [FLAC]/
+            ├── 01 Overmono - Feeling Plain.flac -> ../../../store/7d/7d44e2…
+            └── Good Lies.m3u                    -> ../../../store/9c/9c1d7a…
 ```
 
 The collection root is the directory containing `meta/.mu` (and the `store/` and `meta/` subdirectories).
@@ -77,7 +81,9 @@ The collection root is the directory containing `meta/.mu` (and the `store/` and
 ### 3.1 Addressing
 
 - Hash: **SHA-256** over the unmodified file content, hex, **lowercase**, 64 characters.
-- The hash addresses **the file content only**. Two identical rips of the same CD produce the same blob, regardless of filenames or tags.
+- The hash addresses **the file content only**. Two byte-identical files produce the same blob, no matter what they were named.
+- Tags are part of that content. Two rips of the same CD whose files carry different tags therefore differ in content and are **two distinct blobs**. That is the intended consequence of principle 3 (section 1): the store keeps what was imported, tags included, and never normalizes them away.
+- What content addressing does discard is the file's **name** and its position in a directory tree. Both are metadata, not identity, and live in `meta/` alongside the blob reference (sections 4.5, 4.9) — the same move the file type makes below, and for the same reason.
 
 ### 3.2 Layout
 
@@ -197,6 +203,8 @@ The extension is **not** part of the blob's identity and has no effect on resolu
 
 The extension may be omitted: `blob = "<hash>"` is a valid reference (section 5.4 defines the resulting view filename). Two references to the same blob may carry different extensions; this is valid and yields different view filenames for the same content.
 
+The extension is the smallest piece of the original filename that a reference can carry. A reference may additionally record the **whole** original path through `origin-path`, which is an attribute beside the reference rather than part of it; section 4.9.
+
 ### 4.6 Credits and roles
 
 Artist participation is expressed through **credits**. A credit is a TOML table:
@@ -296,14 +304,15 @@ title = "Kink"
 
 Track attributes:
 
-| Attribute  | Cardinality            | Required       | Meaning                               |
-|------------|------------------------|----------------|---------------------------------------|
-| `number`   | single (int)           | yes            | track number                          |
-| `disc`     | single (int or string) | no (default 1) | disc number, or medium side for vinyl |
-| `blob`     | single                 | yes            | reference to the audio file           |
-| `title`    | single                 | yes            | track name, as printed                |
-| `duration` | single (int)           | no             | length in seconds                     |
-| `isrc`     | single                 | no             |                                       |
+| Attribute     | Cardinality            | Required       | Meaning                                |
+|---------------|------------------------|----------------|----------------------------------------|
+| `number`      | single (int)           | yes            | track number                           |
+| `disc`        | single (int or string) | no (default 1) | disc number, or medium side for vinyl  |
+| `blob`        | single                 | yes            | reference to the audio file            |
+| `title`       | single                 | yes            | track name, as printed                 |
+| `duration`    | single (int)           | no             | length in seconds                      |
+| `isrc`        | single                 | no             |                                        |
+| `origin-path` | single                 | no             | original path of the file, section 4.9 |
 
 Participating artists are not stored in an attribute but in `[[track.credit]]` tables (section 4.6).
 
@@ -338,12 +347,16 @@ Participating artists are not stored in an attribute but in `[[track.credit]]` t
 | `bitrate`, `channel-mode`                             | single                                                  | no                             |
 | `discogs-master-id`, `discogs-release-id`             | single                                                  | no                             |
 | `cover-front`, `cover-back`                           | single (ref blob)                                       | no                             |
+| `cover-front-origin-path`, `cover-back-origin-path`   | single                                                  | no                             |
+| `origin-dir`                                          | single                                                  | no                             |
 | `asset`                                               | asset tables                                            | no                             |
 | `notes`                                               | single (multi-line)                                     | no                             |
 
 `release-year-original` is the year the release was **first** published; `release-year-medium` is the year of the edition actually held. `release-year-medium` is set **only if it differs** from `release-year-original` — a first pressing carries `release-year-original` alone. Views derive the edition year from the two (section 5.3).
 
 `bit-depth` and `sample-rate` are integers and **must be ≥ 1**. `sample-rate` is given in hertz (`44100`, not `44.1`), `bit-depth` in bits. `bitrate` stays a string because it is not always a number: VBR encoders record presets (`"V0"`) or averages (`"~245"`), and a lossless source has no meaningful single value.
+
+`origin-dir` and the two `cover-*-origin-path` keys record the artefact the release was received as. Section 4.9 defines them, together with the constraints their values must satisfy.
 
 The value lists given for `type` and `source-medium` are **open vocabularies**, like `role` (section 4.6) and `asset.kind`. Unknown values are valid and are preserved verbatim; a tool may warn but must not reject them.
 
@@ -359,11 +372,12 @@ kind = "log"
 blob = "1a2b3c….txt"
 ```
 
-| Attribute | Cardinality       | Required | Meaning                                  |
-|-----------|-------------------|----------|------------------------------------------|
-| `kind`    | single            | yes      | asset category, see vocabulary below     |
-| `blob`    | single (ref blob) | yes      | reference to the file in the store       |
-| `title`   | single            | no       | display name, e.g. `"Booklet page 3"`; becomes the view filename (section 5.4) |
+| Attribute     | Cardinality       | Required | Meaning                                  |
+|---------------|-------------------|----------|------------------------------------------|
+| `kind`        | single            | yes      | asset category, see vocabulary below     |
+| `blob`        | single (ref blob) | yes      | reference to the file in the store       |
+| `title`       | single            | no       | display name, e.g. `"Booklet page 3"`; becomes the view filename (section 5.4) |
+| `origin-path` | single            | no       | original path of the file, section 4.9   |
 
 Kind vocabulary V1: `log`, `booklet`, `scan`, `cue`, `other`. The vocabulary is **open**; unknown kinds are valid and preserved verbatim (same handling as `role`, section 4.6).
 
@@ -429,6 +443,77 @@ sort-name = "Overmono"
 discogs-artist-id = "1234567"
 ```
 
+### 4.9 Origin paths
+
+Content addressing keeps a file's bytes and discards its name (section 3.1). Usually that is the point: the name was noise, and section 5.4 builds a better one out of metadata. For an artefact that arrived **as a whole** — a purchased download, an archived bundle, any directory that came with a playlist or a checksum file — the names are not noise. They are part of what was received, the files shipped alongside refer to them, and once dropped they cannot be recovered from the store.
+
+Two optional attributes record them:
+
+- `origin-dir` on the release: the name of the directory the release arrived as, a **single** path segment.
+- `origin-path` beside a blob reference: that file's path within the directory, relative to it, `/` as separator.
+
+`origin-path` sits on `[[track]]` (section 4.7) and `[[asset]]` (section 4.8). `cover-front` and `cover-back` are scalars with no room for a companion key, so they take theirs from the release-level `cover-front-origin-path` and `cover-back-origin-path`.
+
+#### Constraints
+
+Split at `/`, every segment of an `origin-path` — and `origin-dir`, which is one segment — must:
+
+1. be non-empty, and be neither `.` nor `..`;
+2. pass the name construction of section 5.2 **unchanged**: NFC, no `/`, no control characters, no leading or trailing space or dot, at most 200 bytes.
+
+A path therefore never begins or ends with `/` and never contains `//`.
+
+Rule 2 is the device section 4.1 already applies to identifiers: a value that survives sanitization untouched can be written to the filesystem verbatim. That is what makes the guarantee in section 5.4 possible — the view reproduces the recorded names exactly, so a checksum file or playlist that shipped with the release still resolves inside the view. A value that would have to be rewritten is invalid rather than quietly sanitized, because a rewritten name no longer matches the artefact it claims to reproduce.
+
+`origin-path` is **not a reference** and takes no part in resolution: the store path comes from the hash in the `blob` value and from nothing else (section 4.5). A wrong `origin-path` misplaces a file in one view and has no other effect.
+
+#### Uniqueness and pairing
+
+Within one release, `origin-path` values are unique, compared after NFC normalization **and** case folding, for the reason given in section 4.1, rule 5. There is no collision ladder here: two files claiming the same original path contradict each other about what was received, which is not a naming accident. Unlike an asset title (section 5.4), an origin path must never be decorated to make it fit.
+
+The two attributes are independent and either may stand alone:
+
+- `origin-path` without `origin-dir`: the release has no origin tree, so nothing is materialized (section 5.4). The value is preserved and stays a correct record of where the file came from.
+- `origin-dir` without an `origin-path` on every file: the tree is materialized from those files that carry one, and the rest are left out. The format never invents a name to fill a gap — a synthesized name would misrepresent the artefact, and section 5.4 already provides synthesized names in `by-artist`.
+
+#### Example
+
+```toml
+title = "Good Lies"
+type = "album"
+release-year-original = "2023"
+source-medium = "web"
+origin-dir = "Overmono - Good Lies (2023) [FLAC]"
+cover-front = "c4b8e0….jpg"
+cover-front-origin-path = "artwork/front.jpg"
+
+[[credit]]
+role = "main"
+artist = "overmono"
+
+[[asset]]
+kind = "playlist"
+blob = "9c1d7a….m3u"
+origin-path = "Good Lies.m3u"
+
+[[asset]]
+kind = "checksums"
+blob = "5e21b0….sha256"
+origin-path = "checksums.sha256"
+
+[[track]]
+number = 1
+blob = "7d44e2….flac"
+title = "Feeling Plain"
+origin-path = "01 Overmono - Feeling Plain.flac"
+```
+
+The `kind` values `playlist` and `checksums` are not in the V1 vocabulary of section 4.8 and do not need to be — that vocabulary is open, like `role` and `type`.
+
+Nothing here changes how the release is presented anywhere else: `title` stays the curated title, `[[track]]` keeps its own numbering, and `by-artist` names its files as section 5.4 prescribes. The origin tree is a second, parallel presentation of the same blobs, not a replacement for the first.
+
+One artefact is one release. The album above is the same one as in section 4.8, held a second time: different bytes, different blobs, a different medium, and therefore a **second** entity with an identifier of its own — `good-lies` and `good-lies-web`, not one file trying to describe both. Section 5.3 tells the two apart in `by-artist` by their `source-medium`, which is what the third step of its ladder exists for.
+
 ## 5. Views
 
 ### 5.1 Principle
@@ -472,16 +557,28 @@ Step 2 is guaranteed unique, for the reason given above, and `<id-prefix>` is fo
 
 The ladder is applied **per directory**, not per view: the collision scope is the single year directory, medium directory or `<role>/<artist-name>` directory in which the entry is created. Two releases that collide under one role but not under another therefore carry the suffix only where it is needed.
 
+#### Collisions in `by-origin`
+
+`by-origin` keys on `origin-dir` (section 4.9), which is neither of the names above, and two releases may well carry the same one — the same bundle taken in twice, or two artefacts a source named identically. Two steps:
+
+1. `<origin-dir>`
+2. `<origin-dir> (<id-prefix>)`
+
+Step 2 is guaranteed unique for the reason given above, `<id-prefix>` is formed the same way, and the colliding releases are sorted by identifier in NFC code point order. The collision scope is `by-origin/` itself, which has only one level of directories.
+
+The suffix lands on the **directory** and never on a file inside it. That is the point of putting it there: a checksum file or playlist refers to the names beside it, not to the name of the directory it sits in, so decorating the directory keeps the tree usable while renaming a file would not.
+
 ### 5.4 Standard views
 
 | View                       | Structure                                                                                                                                                                  |
 |----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `by-artist`                | `by-artist/<artist-name>/<release-name>/<NN Title.ext>` — the only view with symlinks directly into the store; a release appears under **every** one of its `main` artists |
+| `by-artist`                | `by-artist/<artist-name>/<release-name>/<NN Title.ext>` — names built from metadata; a release appears under **every** one of its `main` artists                           |
 | `by-credit`                | `by-credit/<role>/<artist-name>/<billing> - <title>` → symlink to the `by-artist` directory                                                                                |
 | `by-release-year-original` | `by-release-year-original/<release-year-original>/<billing> - <title>` → symlink to the `by-artist` directory                                                              |
 | `by-source-medium`         | `by-source-medium/<source-medium>/<billing> - <title>` → symlink to the `by-artist` directory                                                                              |
+| `by-origin`                | `by-origin/<origin-dir>/<origin-path>` — the release as it was received, names verbatim (section 4.9)                                                                      |
 
-Only `by-artist` creates track symlinks; all other views link to its directories.
+`by-artist` and `by-origin` are the two views that symlink directly into the store, and they are complements: `by-artist` names every file from metadata, `by-origin` names none of them. The remaining three views link to `by-artist` directories and create no file symlinks of their own.
 
 #### Credits in views
 
@@ -536,7 +633,20 @@ The counter is unbounded, so a free name is always reached. Two rules make the o
 1. **An asset never displaces a track or cover art.** In a collision with either, the asset is the one that gets the suffix.
 2. **Among assets, file order decides.** The asset that appears earlier in the release file keeps the undecorated name; later ones are suffixed in file order (section 4.8).
 
-Assets appear in `by-artist` only. The other views link to its directories and therefore carry the assets with them.
+Of the views that build filenames, `by-artist` is the only one that materializes assets; the other three link to its directories and therefore carry the assets with them. `by-origin` builds no filenames at all — there an asset is simply another file at its recorded path, under the name it was received with.
+
+#### `by-origin`
+
+`by-origin` reproduces the artefact a release was received as (section 4.9). It is the one view that contributes no naming of its own.
+
+1. **Scope.** A release appears if and only if it carries `origin-dir`; one that does not is omitted, like any release lacking the attribute a view keys on. A file appears if and only if it carries an `origin-path` — for cover art, if the release carries the matching `cover-front-origin-path` or `cover-back-origin-path`.
+2. **Names verbatim.** Every path segment is used exactly as recorded. Section 5.2 is **not** applied here, and not applying it changes nothing: section 4.9 already requires each segment to pass it unchanged. That is the whole point of the constraint — a checksum file or playlist carried along in the tree still resolves against the names beside it.
+3. **Structure.** All segments but the last become real directories, created as needed. Only the last segment is a symlink, and it points into the store, relative like every other link (section 5.1).
+4. **No suffixes, no ladder.** Origin paths are unique within a release (section 4.9), so nothing can collide. The ` (2)` rule for asset names above does not apply: in this view assets hold no privilege over tracks and take no penalty against them.
+5. **The two filename rules above do not apply.** No sort key, no compilation prefix, no asset title, and no extension taken from the blob reference — the recorded path already carries whatever suffix the file had.
+6. **Ordering.** Releases by `origin-dir`, files by `origin-path`, both in NFC code point order (section 5.6).
+
+Two releases carrying the same `origin-dir` collide in this view; section 5.3 resolves it.
 
 ### 5.5 Disposability
 
@@ -547,6 +657,8 @@ How a builder produces the tree, and whether it rebuilds from scratch or updates
 ### 5.6 Determinism
 
 Building twice against the same meta state must produce byte-identical trees. All directory iteration is explicitly sorted (by identifier or by NFC-normalized name, in NFC code point order); directory-listing order is never inherited from the filesystem.
+
+In `by-origin` the sort keys are `origin-dir` for releases and `origin-path` for files, again in NFC code point order. Both are total orders, because origin paths are unique within a release and colliding `origin-dir` values are separated by section 5.3 before the tree is written.
 
 Credits and assets are exempt: their order comes from the file (section 4.6, rule 4; section 4.8) and is therefore already deterministic.
 
