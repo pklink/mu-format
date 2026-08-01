@@ -24,9 +24,9 @@ Mapping onto the JDK. A `SPEC.md §` reference marks a requirement of the format
 | atomic publication (SPEC.md §3.4) | `Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE)` |
 | view swap (§2.3)                  | `Files.move(…, StandardCopyOption.ATOMIC_MOVE)`           |
 | read-only blobs (§2.1)            | `Files.setPosixFilePermissions(…, r--r--r--)`             |
-| write lock (§3)                   | `FileChannel.tryLock()` on `meta/.lock`                   |
+| write lock (SPEC.md §4.0)         | `FileChannel.tryLock()` on `meta/.lock`                   |
 
-Only the first three are obligations. SPEC.md §3.4 requires that a blob become visible as a whole but prescribes no mechanism; this implementation uses a rename, and `ATOMIC_MOVE` requires source and target on the same filesystem. The staging directory `store/.tmp/` therefore lives inside the store, and `views.new/` beside `views/`. Neither name is part of the format: SPEC.md §3.2 leaves any entry under `store/` that is not a `<hash[0:2]>/<hash>` pair without meaning, and SPEC.md §5.5 leaves the build procedure open entirely.
+Only the rows carrying a `SPEC.md §` reference are obligations, and two of them fix only the goal, not the means. SPEC.md §3.4 requires that a blob become visible as a whole but prescribes no mechanism; this implementation uses a rename, and `ATOMIC_MOVE` requires source and target on the same filesystem. SPEC.md §4.0 likewise requires writers to exclude one another but leaves the mechanism open; this implementation uses an advisory lock (section 3). The staging directory `store/.tmp/` therefore lives inside the store, and `views.new/` beside `views/`. Neither name is part of the format: SPEC.md §3.2 leaves any entry under `store/` that is not a `<hash[0:2]>/<hash>` pair without meaning, and SPEC.md §5.5 leaves the build procedure open entirely.
 
 Blob permissions are likewise a tool decision. `0444` is best-effort: on filesystems without POSIX permissions (exFAT, SMB) the call fails and is ignored, since nothing in the format depends on it.
 
@@ -168,9 +168,9 @@ Adopts an existing collection. Not yet specified.
 
 ## 3. Locking
 
-All writing commands take an exclusive lock on `meta/.lock` via `FileChannel.tryLock()`. A second process aborts immediately with exit code 3.
+SPEC.md §4.0 requires a writer of `meta/` to hold `meta/.lock` exclusively and leaves the mechanism open. All writing commands take that lock via `FileChannel.tryLock()`, which is advisory: it excludes other processes using the same call, not a tool that ignores the file altogether. A second `mu` process aborts immediately with exit code 3 rather than waiting.
 
-Read-only commands (`lint`, `verify`) do not lock.
+Read-only commands (`lint`, `verify`) do not lock, as §4.0 permits.
 
 ## 4. Exit codes
 
@@ -186,7 +186,8 @@ Read-only commands (`lint`, `verify`) do not lock.
 
 Points raised in review that the specification does not yet answer. Section references are to [SPEC.md](SPEC.md).
 
-- **View target ambiguity.** A release with two `main` credits appears under two `by-artist` directories, but has only one entry in `by-release-year-original` and `by-source-medium`. Which one it links to is undefined (SPEC.md §5.4).
+- **View target ambiguity.** A release with two `main` credits appears under two `by-artist` directories, but has only one entry in `by-credit`, `by-release-year-original` and `by-source-medium`. Which one those link to is undefined (SPEC.md §5.4).
+- **Cover art in views is unspecified.** The tree in SPEC.md §2 shows `cover.jpg` in the `by-artist` release directory, but §5.4 defines filenames for tracks and assets only. The name a `cover-front`/`cover-back` reference produces is left to the tool, which also makes the asset collision rule (§5.4) depend on an undefined name.
 - **Sanitization order.** §5.2 trims before truncating, so truncation can reintroduce a trailing space or dot.
 - **Composite name length.** The 200-byte limit is per attribute value; `<billing> - <title>` can exceed the 255-byte limit of common filesystems.
 - **`uuid[0:8]` uniqueness.** 32 bits, described as "guaranteed unique" in §5.3. Practically collision-free at collection scale, but not guaranteed; no fallback is defined.

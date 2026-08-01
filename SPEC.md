@@ -58,7 +58,12 @@ music/
     │   └── Overmono/
     │       └── Good Lies [2023]/
     │           ├── 01 Feeling Plain.flac -> ../../../../store/ab/abcd3f…
-    │           └── cover.jpg             -> ../../../../store/3f/3f0a91…
+    │           ├── cover.jpg             -> ../../../../store/3f/3f0a91…
+    │           └── log.txt               -> ../../../../store/1a/1a2b3c…
+    ├── by-credit/
+    │   └── feat/
+    │       └── Anz/
+    │           └── Overmono - Good Lies -> ../../../by-artist/Overmono/Good Lies [2023]
     ├── by-release-year-original/
     │   └── 2023/
     │       └── Overmono - Good Lies -> ../../by-artist/Overmono/Good Lies [2023]
@@ -118,6 +123,12 @@ format = 1
 - `format` is an **integer**, required. This specification (version 1.0.0, draft) defines version `1`.
 - A tool that encounters a `format` value **higher** than the version it implements must refuse to write and should refuse to read, rather than silently degrade.
 - The names `.mu` and `.lock` are **reserved** directly under `meta/`; they must not be used as entity filenames.
+
+`meta/.lock` is the **write lock**. A tool that modifies `meta/` must hold it exclusively for the duration of the modification; readers do not take it. It exists so that two writers cannot interleave, which would leave `meta/` in a state neither of them wrote.
+
+The lock is not part of the collection's state: it carries no content that anything interprets, it is never versioned (section 6), and a collection in which the file is absent is valid — the file exists only while, or because, someone has written. Deleting it while no writer is running has no effect.
+
+The locking mechanism is **not specified**, for the same reason as in section 3.4: whether a tool uses an advisory lock on the file, its exclusive creation, or something else is its own business, as long as writers of the same collection exclude one another.
 
 ### 4.1 Entities
 
@@ -339,11 +350,13 @@ blob = "1a2b3c….txt"
 |-----------|-------------------|----------|------------------------------------------|
 | `kind`    | single            | yes      | asset category, see vocabulary below     |
 | `blob`    | single (ref blob) | yes      | reference to the file in the store       |
-| `title`   | single            | no       | display name, e.g. `"Booklet page 3"`    |
+| `title`   | single            | no       | display name, e.g. `"Booklet page 3"`; becomes the view filename (section 5.4) |
 
 Kind vocabulary V1: `log`, `booklet`, `scan`, `cue`, `other`. The vocabulary is **open**; unknown kinds are valid and preserved verbatim (same handling as `role`, section 4.6).
 
-Assets attach to the release, not to individual tracks: rip logs and booklets describe the medium as a whole.
+Assets attach to the release, not to individual tracks: rip logs and booklets describe the medium as a whole. They are materialized in `views/` alongside the tracks of the release (section 5.4).
+
+The file order of the `[[asset]]` tables is **authoritative**: where two assets would produce the same view filename, it decides which of them keeps it (section 5.4). Assets behave like credits here (section 4.6, rule 4), not like tracks, whose file order the builder ignores.
 
 #### Example release (multi-CD)
 
@@ -435,18 +448,21 @@ Step 4 is guaranteed unique. Colliding releases are sorted by UUID and processed
 
 #### Collisions in the other views
 
-`by-release-year-original` and `by-source-medium` key on `<billing> - <title>`, which can collide independently of `by-artist` — two different releases may share a billing line, a title and a year. Resolved in two steps:
+`by-credit`, `by-release-year-original` and `by-source-medium` key on `<billing> - <title>`, which can collide independently of `by-artist` — two different releases may share a billing line, a title and a year. Resolved in two steps:
 
 1. `<billing> - <title>`
 2. `<billing> - <title> (<uuid[0:8]>)`
 
 Step 2 is guaranteed unique. As above, colliding releases are sorted by UUID and processed in that order. This ladder is independent of the one above; the `by-artist` name is not reused here.
 
+The ladder is applied **per directory**, not per view: the collision scope is the single year directory, medium directory or `<role>/<artist-name>` directory in which the entry is created. Two releases that collide under one role but not under another therefore carry the suffix only where it is needed.
+
 ### 5.4 Standard views
 
 | View                       | Structure                                                                                                                                                                  |
 |----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `by-artist`                | `by-artist/<artist-name>/<release-name>/<NN Title.ext>` — the only view with symlinks directly into the store; a release appears under **every** one of its `main` artists |
+| `by-credit`                | `by-credit/<role>/<artist-name>/<billing> - <title>` → symlink to the `by-artist` directory                                                                                |
 | `by-release-year-original` | `by-release-year-original/<release-year-original>/<billing> - <title>` → symlink to the `by-artist` directory                                                              |
 | `by-source-medium`         | `by-source-medium/<source-medium>/<billing> - <title>` → symlink to the `by-artist` directory                                                                              |
 
@@ -454,16 +470,25 @@ Only `by-artist` creates track symlinks; all other views link to its directories
 
 #### Credits in views
 
-- **Grouping** is based exclusively on credits with `role = "main"`. An artist who participates only as `feat`, `remixer`, `producer` or similar does **not** get their own `by-artist` directory in V1. A `by-credit/<role>/<artist>/` view is deliberately **not** part of V1.
-- `by-artist/<artist-name>` uses the `name` attribute of the **artist entity**, not `as`. The directory represents the artist, not a single billing.
-- `<billing>` in `by-release-year-original` and `by-source-medium` is the **reconstructed billing line** of the release (section 4.6, rule 5), i.e. including `as` names and `join` phrases — not a join of entity names.
+- **Grouping in `by-artist` is based exclusively on credits with `role = "main"`.** An artist who participates only as `feat`, `remixer`, `producer` or similar does **not** get their own `by-artist` directory; that participation is carried by `by-credit` instead.
+- `by-artist/<artist-name>` and `by-credit/<role>/<artist-name>` use the `name` attribute of the **artist entity**, not `as`. The directory represents the artist, not a single billing.
+- `<billing>` in `by-credit`, `by-release-year-original` and `by-source-medium` is the **reconstructed billing line** of the release (section 4.6, rule 5), i.e. including `as` names and `join` phrases — not a join of entity names.
 - A release lacking the attribute a view is keyed on is **omitted from that view** — no `unknown/` bucket, no `_` placeholder. It stays reachable through `by-artist/`.
+
+#### `by-credit`
+
+`by-credit` is the counterpart to `by-artist`: it makes every participation reachable that does not form a billing line.
+
+1. **Scope.** `by-credit` covers every credit whose `role` is **not** `main`, at release level (`[[credit]]`) and at track level (`[[track.credit]]`) alike. `main` is excluded because `by-artist` already covers it; including it would duplicate that view under a second name.
+2. **Granularity.** The entry is the **release**, never the individual track. A track credit therefore places the whole release under `<role>/<artist-name>/`. A release appears exactly **once** per `(role, artist)` pair, however many of its tracks carry that credit and whether the credit sits at release or at track level.
+3. **Multiple roles.** An artist credited on one release under two roles gets an entry under each of them.
+4. **Inheritance does not apply.** Section 4.6, rule 6 inherits `main` credits only, and `main` is out of scope here — a track never inherits a `feat` or `remixer` credit, so nothing is materialized that is not written down.
+5. **`<role>`** is the credit's `role` value, sanitized per section 5.2. Since the vocabulary is open (section 4.6), an unknown role yields a directory just like a known one.
+6. **Ordering.** Roles are iterated by NFC code point, artists by NFC-normalized `name`, releases by UUID (section 5.6).
 
 #### Track filenames
 
 `<sortkey> <sanitized track-title>.<ext of the blob reference>`, e.g. `01 Feeling Plain.flac`, or `2-05 Kink.m4a` for multi-disc releases. If the reference carries no extension (section 4.5), the name is written without a suffix and **without** a trailing dot: `01 Feeling Plain`. The sort key is derived by the builder from `disc`/`number` (`[<disc>-]<number>`, number zero-padded to **at least** two digits — a `number` of 100 or more keeps all its digits and is not truncated). A string `disc` is inserted verbatim after sanitization (section 5.2), so a vinyl side yields `A-01 Feeling Plain.flac`; zero-padding applies to `number` only.
-
-Assets (section 4.8) are **not** materialized in `views/` in V1. They live in the store and are reachable through `meta/` alone.
 
 `title` is taken **verbatim**. The builder never appends `(feat. …)` or any other credit information (section 4.6, rule 8).
 
@@ -472,6 +497,31 @@ Compilation exception: if a track's `main` credits differ from the release's, th
 `<sortkey> <billing of the track> - <sanitized track-title>.<ext>`
 
 e.g. `03 Kuhn Fu - Waffle House.m4a`. Without that prefix a compilation directory would be unusable. If the track inherits the release credits, the prefix is omitted.
+
+#### Asset filenames
+
+Assets (section 4.8) are materialized in the `by-artist` release directory, flat, beside the tracks:
+
+`<sanitized asset-title, or kind if title is absent>.<ext of the blob reference>`
+
+e.g. `Booklet page 3.jpg` for an asset carrying a `title`, and `log.txt` for one that does not. The extension rule is the one for tracks: it comes from the blob reference, and a reference without an extension yields a name without a suffix and **without** a trailing dot (section 4.5). No sort key is prefixed — assets have no position.
+
+There is no `assets/` subdirectory and no grouping by `kind`. A rip log sits next to the tracks it describes, which is where a player, a tag editor and a human all look for it.
+
+Because the name is derived from a free-form value, it can collide — with another asset of the same `kind`, with cover art, or with a track. The colliding asset gets ` (<n>)` appended before the extension, `<n>` counting up from `2` until the name is free:
+
+```
+log.txt
+log (2).txt
+log (3).txt
+```
+
+The counter is unbounded, so a free name is always reached. Two rules make the outcome unambiguous:
+
+1. **An asset never displaces a track or cover art.** In a collision with either, the asset is the one that gets the suffix.
+2. **Among assets, file order decides.** The asset that appears earlier in the release file keeps the undecorated name; later ones are suffixed in file order (section 4.8).
+
+Assets appear in `by-artist` only. The other views link to its directories and therefore carry the assets with them.
 
 ### 5.5 Disposability
 
@@ -483,7 +533,7 @@ How a builder produces the tree, and whether it rebuilds from scratch or updates
 
 Building twice against the same meta state must produce byte-identical trees. All directory iteration is explicitly sorted (by UUID or by NFC-normalized name); directory-listing order is never inherited from the filesystem.
 
-Credits are exempt: their order comes from the file (section 4.6, rule 4) and is therefore already deterministic.
+Credits and assets are exempt: their order comes from the file (section 4.6, rule 4; section 4.8) and is therefore already deterministic.
 
 ## 6. Git integration
 
