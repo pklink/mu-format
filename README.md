@@ -37,7 +37,7 @@ A release has no location. It has attributes. Where it shows up is the view's de
 | Document                               | Contents                                                                           |
 |----------------------------------------|------------------------------------------------------------------------------------|
 | [SPEC.md](SPEC.md)                     | normative on-disk format: store, meta, schema, views, git. Implementation-neutral. |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | the `mu` CLI: commands, lint rules, exit codes, platform decisions.                |
+| [IMPLEMENTATION.md](IMPLEMENTATION.md) | the `mu` CLI: `import`, exit codes, platform decisions.                            |
 
 ## CLI
 
@@ -46,15 +46,15 @@ mu import <path>...        take files into the store, create a meta skeleton
 mu build [view]            regenerate views
 mu lint [--strict]         check meta consistency
 mu verify [--quick]        check store integrity
-mu gc [--dry-run]          move unreferenced blobs to store/.trash/
-mu migrate <source>        adopt an existing collection
 ```
+
+Only `import` is specified in detail; the rest are sketches.
 
 Details in [IMPLEMENTATION.md](IMPLEMENTATION.md).
 
 ## Status
 
-Early development. The format specification is settling; the CLI is not yet usable. Open questions are tracked in [IMPLEMENTATION.md §5](IMPLEMENTATION.md#5-known-gaps).
+Early development. The format specification is settling; the CLI is not yet usable.
 
 ## License
 
