@@ -5,6 +5,12 @@ plugins {
 group = 'net.einself'
 version = '1.0-SNAPSHOT'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -13,6 +19,7 @@ repositories {
 
 dependencies {
     implementation 'commons-io:commons-io:2.16.1'
+    implementation 'io.github.wasabithumb:jtoml:1.5.2'
     implementation 'info.picocli:picocli:4.7.6'
     testImplementation platform('org.junit:junit-bom:5.10.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
