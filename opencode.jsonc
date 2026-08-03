@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "quire": {
+      "type": "remote",
+      "url": "https://mcp.quire.app/mcp",
+      "enabled": true
+    }
+  }
+}
