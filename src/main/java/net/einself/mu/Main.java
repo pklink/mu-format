@@ -1,54 +1,105 @@
 package net.einself.mu;
 
-import net.einself.mu.dto.Attribute;
-import net.einself.mu.dto.MuFolder;
-import net.einself.mu.dto.Release;
-import net.einself.mu.reader.AttributeKeyExtractor;
-import net.einself.mu.reader.AttributeReader;
-import net.einself.mu.reader.MuFolderFinder;
-import net.einself.mu.reader.MuReleaseParser;
+import io.github.wasabithumb.jtoml.JToml;
+import io.github.wasabithumb.jtoml.option.JTomlOption;
+import io.github.wasabithumb.jtoml.option.JTomlOptions;
+import io.github.wasabithumb.jtoml.option.prop.LineSeparator;
+import io.github.wasabithumb.jtoml.option.prop.OrderMarkPolicy;
+import net.einself.mu.importer.ImportCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.ScopeType;
 
 import java.io.PrintStream;
-import java.nio.file.Files;
+import java.io.PrintWriter;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.Callable;
 
-@Command(name = "mu", mixinStandardHelpOptions = true, version = "mu 1.0")
+@Command(name = "mu",
+        mixinStandardHelpOptions = true,
+        version = "mu 1.0",
+        subcommands = {ImportCommand.class},
+        synopsisSubcommandLabel = "COMMAND")
 public class Main implements Callable<Integer> {
 
-    @Parameters(index = "0", defaultValue = ".", description = "Root directory to scan")
-    Path root;
+    /**
+     * Entity files are UTF-8 without BOM with LF line endings (SPEC.md section 4).
+     */
+    private static final JToml TOML = JToml.jToml(JTomlOptions.builder()
+            .set(JTomlOption.LINE_SEPARATOR, LineSeparator.LF)
+            .set(JTomlOption.WRITE_BOM, OrderMarkPolicy.NEVER)
+            .build());
+
+    @Option(names = "--root", scope = ScopeType.INHERIT, paramLabel = "<path>",
+            description = "Collection root. Default: search upwards for a directory "
+                    + "containing meta/.mu.")
+    public Path root;
+
+    private PrintStream out = System.out;
+
+    private PrintStream err = System.err;
+
+    private CommandLine commandLine;
 
     public static void main(String[] args) {
-        System.exit(new CommandLine(new Main()).execute(args));
+        System.exit(execute(args, System.out, System.err));
     }
 
+    public static int execute(String[] args, PrintStream out, PrintStream err) {
+        Main main = new Main();
+        main.out = out;
+        main.err = err;
+        CommandLine commandLine = new CommandLine(main);
+        main.commandLine = commandLine;
+        return commandLine
+                .setOut(new PrintWriter(out, true))
+                .setErr(new PrintWriter(err, true))
+                .setExecutionExceptionHandler(new ExceptionHandler(err))
+                .execute(args);
+    }
+
+    /**
+     * Reached only when no subcommand was given, which is a usage error
+     * (IMPLEMENTATION.md section 7).
+     */
     @Override
     public Integer call() {
-        if (!Files.isDirectory(root)) {
-            System.err.println("Not a directory: " + root);
-            return 1;
-        }
-        run(root, System.out);
-        return 0;
+        commandLine.usage(err);
+        return ExitCode.USAGE.value();
     }
 
-    static void run(Path root, PrintStream out) {
-        MuReleaseParser parser = new MuReleaseParser(new AttributeReader(new AttributeKeyExtractor()));
-        List<MuFolder> folders = new MuFolderFinder().findAll(root);
+    public PrintStream out() {
+        return out;
+    }
 
-        for (MuFolder folder : folders) {
-            Release release = parser.parse(folder);
-            out.println(release.path());
-            out.println("  artist: " + String.join(", ", release.artists()));
-            out.println("  title: " + release.title());
-            for (Attribute attribute : release.attributes().getAll()) {
-                out.println("  " + attribute.key().name() + ": " + attribute.value());
+    public PrintStream err() {
+        return err;
+    }
+
+    public JToml toml() {
+        return TOML;
+    }
+
+    /**
+     * Turns a {@link MuException} into its exit code (IMPLEMENTATION.md section 7) instead of a
+     * stack trace. Anything else is an unexpected failure and is reported as an I/O error.
+     */
+    private record ExceptionHandler(PrintStream err) implements CommandLine.IExecutionExceptionHandler {
+
+        @Override
+        public int handleExecutionException(Exception exception,
+                                            CommandLine commandLine,
+                                            CommandLine.ParseResult parseResult) {
+            if (exception instanceof MuException muException) {
+                err.println("mu: " + muException.getMessage());
+                muException.details().forEach(detail -> err.println("  " + detail));
+                return muException.exitCode().value();
             }
+            err.println("mu: " + exception);
+            return ExitCode.IO_ERROR.value();
         }
+
     }
+
 }
