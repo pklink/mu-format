@@ -1,6 +1,6 @@
 package net.einself.mu.importcontext.internal;
 
-import net.einself.mu.naming.internal.ExtensionDeriver;
+import net.einself.mu.naming.api.ExtensionDeriver;
 
 /**
  * Guesses the {@code kind} of an asset from its extension (SPEC.md section 4.8).

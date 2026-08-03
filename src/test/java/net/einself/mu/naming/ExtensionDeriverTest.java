@@ -1,6 +1,6 @@
 package net.einself.mu.naming;
 
-import net.einself.mu.naming.internal.ExtensionDeriver;
+import net.einself.mu.naming.api.ExtensionDeriver;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

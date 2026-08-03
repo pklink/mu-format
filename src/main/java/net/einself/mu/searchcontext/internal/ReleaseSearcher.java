@@ -4,7 +4,7 @@ import io.github.wasabithumb.jtoml.value.table.TomlTable;
 import net.einself.mu.searchcontext.api.SearchResult;
 import net.einself.mu.searchcontext.api.SearchOptions;
 import net.einself.mu.searchcontext.api.EntityType;
-import net.einself.mu.searchcontext.api.EntityFile;
+import net.einself.mu.metadata.api.EntityFile;
 import net.einself.mu.metadata.api.Tomls;
 
 import java.util.ArrayList;

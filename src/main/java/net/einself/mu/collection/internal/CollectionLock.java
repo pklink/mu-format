@@ -1,6 +1,7 @@
 package net.einself.mu.collection.internal;
 
 import net.einself.mu.collection.api.CollectionRoot;
+import net.einself.mu.collection.api.LockHandle;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.shared.MuException;
@@ -19,7 +20,7 @@ import java.nio.file.StandardOpenOption;
  * <p>A second {@code mu} process aborts immediately rather than waiting. The lock file itself
  * has no content anyone interprets and is never versioned (SPEC.md section 6).
  */
-public class CollectionLock implements AutoCloseable {
+public class CollectionLock implements LockHandle {
 
     private final FileChannel channel;
 

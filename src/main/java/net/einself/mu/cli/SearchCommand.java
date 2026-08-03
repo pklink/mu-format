@@ -3,27 +3,21 @@ package net.einself.mu.cli;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.cli.Main;
 import net.einself.mu.shared.MuException;
+import net.einself.mu.collection.api.CollectionModule;
 import net.einself.mu.collection.api.CollectionRoot;
-import net.einself.mu.collection.internal.CollectionRootFinder;
-import net.einself.mu.collection.internal.FormatVersionReader;
-import net.einself.mu.metadata.api.MetadataScanner;
-import net.einself.mu.searchcontext.api.EntityFile;
+import net.einself.mu.collection.api.CollectionService;
 import net.einself.mu.searchcontext.api.EntityType;
+import net.einself.mu.searchcontext.api.SearchModule;
 import net.einself.mu.searchcontext.api.SearchOptions;
 import net.einself.mu.searchcontext.api.SearchResult;
 import net.einself.mu.searchcontext.api.SearchResultFormatter;
-import net.einself.mu.searchcontext.internal.ArtistSearcher;
-import net.einself.mu.searchcontext.internal.CreditSearcher;
-import net.einself.mu.searchcontext.internal.QueryMatcher;
-import net.einself.mu.searchcontext.internal.ReleaseSearcher;
-import net.einself.mu.searchcontext.internal.TrackSearcher;
+import net.einself.mu.searchcontext.api.SearchService;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.Parameters;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -78,62 +72,15 @@ public class SearchCommand implements Callable<Integer> {
         SearchOptions options = validateOptions();
         SearchResultFormatter.Format outputFormat = parseFormat();
 
-        CollectionRoot root = resolveRoot();
-        MetadataScanner scanner = new MetadataScanner(parent.toml(), parent.err());
-        List<EntityFile> releases = scanner.scan(root.releases());
-        List<EntityFile> artists = scanner.scan(root.artists());
+        CollectionService collectionService = CollectionModule.createService(parent.toml());
+        CollectionRoot root = collectionService.findRoot(parent.root, Path.of("").toAbsolutePath());
+        collectionService.readFormatVersion(root);
 
-        QueryMatcher matcher = new QueryMatcher(query);
-        List<SearchResult> results = collect(releases, artists, matcher, options);
-
-        if (options.limit() > 0 && results.size() > options.limit()) {
-            results = new ArrayList<>(results.subList(0, options.limit()));
-        }
+        SearchService searchService = SearchModule.createSearchService(parent.toml(), parent.err());
+        List<SearchResult> results = searchService.search(query, options, root);
 
         new SearchResultFormatter(root.path()).format(results, outputFormat, parent.out());
         return ExitCode.SUCCESS.value();
-    }
-
-    private List<SearchResult> collect(List<EntityFile> releases,
-                                       List<EntityFile> artists,
-                                       QueryMatcher matcher,
-                                       SearchOptions options) {
-        List<SearchResult> results = new ArrayList<>();
-        if (options.searches(EntityType.RELEASE)) {
-            results.addAll(new ReleaseSearcher(matcher, options).search(releases));
-            if (options.field() == null) {
-                results.addAll(new CreditSearcher(matcher, options).search(releases, artists));
-            }
-        }
-        if (options.searches(EntityType.ARTIST)) {
-            results.addAll(new ArtistSearcher(matcher, options).search(artists));
-        }
-        if (options.searches(EntityType.TRACK)) {
-            results.addAll(new TrackSearcher(matcher, options).search(releases));
-        }
-        return deduplicate(results);
-    }
-
-    /**
-     * A release matched both by its own attributes and by a credit appears twice; the
-     * attribute hit is kept, which is the stronger signal. Identity is (type, id) for
-     * artists and releases; tracks of one release are distinct results, so they key on
-     * (type, id, disc, number).
-     */
-    private static List<SearchResult> deduplicate(List<SearchResult> results) {
-        List<SearchResult> deduplicated = new ArrayList<>();
-        Set<String> seen = new java.util.HashSet<>();
-        for (SearchResult result : results) {
-            String key = switch (result.type()) {
-                case RELEASE, ARTIST -> result.type() + ":" + result.id();
-                case TRACK -> result.type() + ":" + result.id() + ":"
-                        + result.fields().get("disc") + ":" + result.fields().get("number");
-            };
-            if (seen.add(key)) {
-                deduplicated.add(result);
-            }
-        }
-        return deduplicated;
     }
 
     private SearchOptions validateOptions() {
@@ -169,12 +116,4 @@ public class SearchCommand implements Callable<Integer> {
                     "Invalid --format: must be text, json, or ids");
         };
     }
-
-    private CollectionRoot resolveRoot() {
-        CollectionRoot root = new CollectionRootFinder()
-                .find(parent.root, Path.of("").toAbsolutePath());
-        new FormatVersionReader(parent.toml()).read(root);
-        return root;
-    }
-
 }

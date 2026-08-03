@@ -1,7 +1,7 @@
 package net.einself.mu.searchcontext;
 
 import io.github.wasabithumb.jtoml.JToml;
-import net.einself.mu.searchcontext.api.EntityFile;
+import net.einself.mu.metadata.api.EntityFile;
 import net.einself.mu.searchcontext.api.EntityType;
 import net.einself.mu.searchcontext.api.SearchOptions;
 import net.einself.mu.searchcontext.api.SearchResult;

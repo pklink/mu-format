@@ -25,7 +25,6 @@ class ModulithArchitectureTest {
         slices()
                 .matching("net.einself.mu.(*)..")
                 .should().beFreeOfCycles()
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -36,7 +35,6 @@ class ModulithArchitectureTest {
                 .should().onlyDependOnClassesThat()
                 .resideInAnyPackage("net.einself.mu.shared", "java..")
                 .because("Shared kernel must be dependency-free")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -47,7 +45,6 @@ class ModulithArchitectureTest {
                 .should().dependOnClassesThat()
                 .resideInAPackage("net.einself.mu.collection.internal..")
                 .because("collection.internal is private to the collection module")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -58,7 +55,6 @@ class ModulithArchitectureTest {
                 .should().dependOnClassesThat()
                 .resideInAPackage("net.einself.mu.naming.internal..")
                 .because("naming.internal is private to the naming module")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -69,7 +65,6 @@ class ModulithArchitectureTest {
                 .should().dependOnClassesThat()
                 .resideInAPackage("net.einself.mu.storage.internal..")
                 .because("storage.internal is private to the storage module")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -80,7 +75,6 @@ class ModulithArchitectureTest {
                 .should().dependOnClassesThat()
                 .resideInAPackage("net.einself.mu.metadata.internal..")
                 .because("metadata.internal is private to the metadata module")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -91,7 +85,6 @@ class ModulithArchitectureTest {
                 .should().dependOnClassesThat()
                 .resideInAPackage("net.einself.mu.importcontext.internal..")
                 .because("importcontext.internal is private to the import module")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -102,7 +95,6 @@ class ModulithArchitectureTest {
                 .should().dependOnClassesThat()
                 .resideInAPackage("net.einself.mu.searchcontext.internal..")
                 .because("searchcontext.internal is private to the search module")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 
@@ -120,7 +112,6 @@ class ModulithArchitectureTest {
                         "net.einself.mu.searchcontext.internal.."
                 )
                 .because("CLI should only depend on module APIs")
-                .allowEmptyShould(true)
                 .check(classes);
     }
 }

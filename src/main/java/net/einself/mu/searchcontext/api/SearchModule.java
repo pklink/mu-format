@@ -3,6 +3,8 @@ package net.einself.mu.searchcontext.api;
 import io.github.wasabithumb.jtoml.JToml;
 import net.einself.mu.metadata.api.MetadataModule;
 import net.einself.mu.metadata.api.MetadataScanner;
+import net.einself.mu.searchcontext.internal.SearchServiceImpl;
+
 import java.io.PrintStream;
 
 public final class SearchModule {
@@ -11,5 +13,9 @@ public final class SearchModule {
 
     public static MetadataScanner createScanner(JToml toml, PrintStream err) {
         return MetadataModule.createScanner(toml, err);
+    }
+
+    public static SearchService createSearchService(JToml toml, PrintStream err) {
+        return new SearchServiceImpl(toml, err);
     }
 }

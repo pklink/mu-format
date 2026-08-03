@@ -1,4 +1,4 @@
-package net.einself.mu.searchcontext.api;
+package net.einself.mu.metadata.api;
 
 import io.github.wasabithumb.jtoml.value.table.TomlTable;
 

@@ -1,7 +1,7 @@
 package net.einself.mu.importcontext.internal;
 
 import net.einself.mu.naming.api.Nfc;
-import net.einself.mu.naming.internal.ExtensionDeriver;
+import net.einself.mu.naming.api.ExtensionDeriver;
 import net.einself.mu.storage.api.Blob;
 import net.einself.mu.metadata.api.Release;
 

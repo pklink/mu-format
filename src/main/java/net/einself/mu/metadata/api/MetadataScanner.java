@@ -3,7 +3,6 @@ package net.einself.mu.metadata.api;
 import io.github.wasabithumb.jtoml.JToml;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
-import net.einself.mu.searchcontext.api.EntityFile;
 
 import java.io.IOException;
 import java.io.PrintStream;

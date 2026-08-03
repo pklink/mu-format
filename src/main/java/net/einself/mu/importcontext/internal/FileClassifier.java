@@ -1,6 +1,6 @@
 package net.einself.mu.importcontext.internal;
 
-import net.einself.mu.naming.internal.ExtensionDeriver;
+import net.einself.mu.naming.api.ExtensionDeriver;
 
 import java.util.Set;
 import java.util.function.Function;

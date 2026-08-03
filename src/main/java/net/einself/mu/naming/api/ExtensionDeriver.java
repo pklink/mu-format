@@ -1,4 +1,4 @@
-package net.einself.mu.naming.internal;
+package net.einself.mu.naming.api;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -18,7 +18,6 @@ public class ExtensionDeriver {
     public Optional<String> derive(String filename) {
         int dot = filename.lastIndexOf('.');
         if (dot <= 0 || dot == filename.length() - 1) {
-            // No dot, a leading dot (".gitignore" starts no extension), or a trailing dot.
             return Optional.empty();
         }
 
@@ -26,9 +25,6 @@ public class ExtensionDeriver {
         return VALID.matcher(candidate).matches() ? Optional.of(candidate) : Optional.empty();
     }
 
-    /**
-     * Appends the derived extension to a hash, yielding a blob reference (SPEC.md section 4.5).
-     */
     public String reference(String hash, String filename) {
         return derive(filename)
                 .map(extension -> hash + "." + extension)
