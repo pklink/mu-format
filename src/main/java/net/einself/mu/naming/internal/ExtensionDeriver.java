@@ -5,8 +5,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Derives the extension of a blob reference from the source filename
- * (IMPLEMENTATION.md section 2.3).
+ * Derives the extension of a blob reference from the source filename.
  *
  * <p>The extension is not part of the blob's identity and has no effect on resolution; it is a
  * rendering hint (SPEC.md section 4.5). This heuristic trusts the filename, but since the result

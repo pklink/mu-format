@@ -37,7 +37,6 @@ A release has no location. It has attributes. Where it shows up is the view's de
 | Document                               | Contents                                                                           |
 |----------------------------------------|------------------------------------------------------------------------------------|
 | [SPEC.md](SPEC.md)                     | normative on-disk format: store, meta, schema, views, git. Implementation-neutral. |
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | the `mu` CLI: `import`, exit codes, platform decisions.                            |
 
 ## CLI
 
@@ -50,8 +49,6 @@ mu verify [--quick]        check store integrity
 ```
 
 `import` and `search` are implemented; the rest are sketches.
-
-Details in [IMPLEMENTATION.md](IMPLEMENTATION.md).
 
 ## Status
 

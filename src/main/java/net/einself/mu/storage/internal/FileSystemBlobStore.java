@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Takes files into the store (IMPLEMENTATION.md section 2.2).
+ * Takes files into the store.
  *
  * <p>SPEC.md section 3.4 fixes only the guarantee — a blob becomes visible at its final path
  * as a whole — not the mechanism. This implementation stages inside {@code store/.tmp/} so that
@@ -142,7 +142,7 @@ public class FileSystemBlobStore implements BlobRepository {
 
     /**
      * Best-effort: where POSIX permissions are missing (exFAT, SMB) the call fails and is
-     * ignored (IMPLEMENTATION.md section 1).
+     * ignored.
      */
     private static void makeReadOnly(Path target) {
         try {

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 /**
  * Parses a leading track prefix such as {@code 01 }, {@code A1 } or {@code 1-05 } from a
- * filename (IMPLEMENTATION.md section 2, step 4). A letter prefix gives a string {@code disc}
+ * filename. A letter prefix gives a string {@code disc}
  * (SPEC.md section 4.7).
  *
  * <p>The number is capped at three digits so that a filename like {@code 1984 Song.flac} is not

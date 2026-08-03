@@ -11,7 +11,7 @@ import java.nio.file.Path;
 
 /**
  * Locates the collection root: an explicit {@code --root}, or the nearest enclosing directory
- * containing {@code meta/.mu}, searching upwards the way git does (IMPLEMENTATION.md section 35).
+ * containing {@code meta/.mu}, searching upwards the way git does.
  */
 public class CollectionRootFinder {
 

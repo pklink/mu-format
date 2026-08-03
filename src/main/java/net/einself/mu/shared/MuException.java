@@ -3,8 +3,7 @@ package net.einself.mu.shared;
 import java.util.List;
 
 /**
- * An aborting condition that carries the exit code it must produce
- * (IMPLEMENTATION.md section 8).
+ * An aborting condition that carries the exit code it must produce.
  */
 public class MuException extends RuntimeException {
 

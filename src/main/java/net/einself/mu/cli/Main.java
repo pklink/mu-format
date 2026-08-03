@@ -63,8 +63,7 @@ public class Main implements Callable<Integer> {
     }
 
     /**
-     * Reached only when no subcommand was given, which is a usage error
-     * (IMPLEMENTATION.md section 8).
+     * Reached only when no subcommand was given, which is a usage error.
      */
     @Override
     public Integer call() {
@@ -85,7 +84,7 @@ public class Main implements Callable<Integer> {
     }
 
     /**
-     * Turns a {@link MuException} into its exit code (IMPLEMENTATION.md section 8) instead of a
+     * Turns a {@link MuException} into its exit code instead of a
      * stack trace. Anything else is an unexpected failure and is reported as an I/O error.
      */
     private record ExceptionHandler(PrintStream err) implements CommandLine.IExecutionExceptionHandler {

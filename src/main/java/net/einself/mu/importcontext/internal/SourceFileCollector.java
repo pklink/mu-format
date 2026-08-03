@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Collects the files to import, recursively (IMPLEMENTATION.md section 2, step 1).
+ * Collects the files to import, recursively.
  *
  * <p>Order is by NFC-normalized relative path in code point order, so that track numbering and
  * the resulting entity file do not depend on directory listing order.

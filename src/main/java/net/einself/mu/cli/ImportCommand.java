@@ -40,8 +40,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 /**
- * {@code mu import} — takes files into the store and creates a release skeleton
- * (IMPLEMENTATION.md section 2).
+ * {@code mu import} — takes files into the store and creates a release skeleton.
  */
 @Command(name = "import",
         description = "Take files into the store and create a meta skeleton.")
@@ -144,7 +143,7 @@ public class ImportCommand implements Callable<Integer> {
 
     /**
      * {@code --origin} needs exactly one directory argument: several paths, or a file, leave no
-     * name for {@code origin-dir} (IMPLEMENTATION.md section 2.1).
+     * name for {@code origin-dir}.
      */
     private String requireSingleDirectoryName(List<SourceFile> files) {
         if (paths.size() != 1 || !Files.isDirectory(paths.get(0))) {
@@ -220,7 +219,7 @@ public class ImportCommand implements Callable<Integer> {
     /**
      * SPEC.md section 4.6 requires a credit with {@code role = "main"} whose {@code artist}
      * resolves. Without {@code --artist} there is none, so the release is written incomplete
-     * and the user is told (IMPLEMENTATION.md section 2).
+     * and the user is told.
      */
     private void warnAboutCredit(ImportResult report) {
         if (artistId == null) {

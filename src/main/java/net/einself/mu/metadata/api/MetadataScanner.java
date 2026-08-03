@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Reads every {@code *.mu} entity file of one meta directory. A file that fails to parse
  * is reported on stderr and skipped: one broken entity must not hide the rest of the
- * collection. Read-only — no lock is taken (IMPLEMENTATION.md section 7).
+ * collection. Read-only — no lock is taken.
  */
 public class MetadataScanner {
 

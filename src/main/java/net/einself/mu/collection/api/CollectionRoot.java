@@ -19,7 +19,7 @@ public record CollectionRoot(Path path) {
 
     /**
      * Staging directory for blobs, inside the store so that the publishing rename stays on
-     * one filesystem (IMPLEMENTATION.md section 1).
+     * one filesystem.
      */
     public Path staging() {
         return store().resolve(".tmp");

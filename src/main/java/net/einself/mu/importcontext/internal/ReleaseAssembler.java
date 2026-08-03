@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Assembles the release entity from the imported files (IMPLEMENTATION.md section 2, steps 3-5).
+ * Assembles the release entity from the imported files.
  */
 public class ReleaseAssembler {
 

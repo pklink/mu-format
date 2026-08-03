@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * Classifies a source file by extension (IMPLEMENTATION.md section 2, step 1).
+ * Classifies a source file by extension.
  */
 public class FileClassifier implements Function<String, FileKind> {
 

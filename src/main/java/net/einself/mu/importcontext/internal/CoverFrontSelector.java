@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Selects the image that becomes {@code cover-front} (IMPLEMENTATION.md section 2, step 5).
+ * Selects the image that becomes {@code cover-front}.
  *
  * <p>The first image in filename order whose stem is {@code cover}, {@code front} or
  * {@code folder}. Every other image becomes an asset.

@@ -16,7 +16,7 @@ import java.util.Map;
  *
  * <p>Every segment must pass name construction unchanged, and origin paths must be unique
  * within a release. Violations are collected and reported together: importing the rest would
- * produce exactly the half-tree the option exists to prevent (IMPLEMENTATION.md section 2.1).
+ * produce exactly the half-tree the option exists to prevent.
  */
 public class OriginPathValidator {
 

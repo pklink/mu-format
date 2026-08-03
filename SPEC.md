@@ -4,7 +4,7 @@
 
 This document is the **normative specification** of the mu content-addressed music collection. It defines the on-disk format only: what a valid collection looks like, and how the layers relate.
 
-It is deliberately implementation-neutral. It prescribes no programming language, no libraries and no command-line interface. For the reference implementation of the `mu` tool see [IMPLEMENTATION.md](IMPLEMENTATION.md).
+It is deliberately implementation-neutral. It prescribes no programming language, no libraries and no command-line interface.
 
 The keywords **must**, **must not**, **should** and **may** are used in their usual normative sense.
 
