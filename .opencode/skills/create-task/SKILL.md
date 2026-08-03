@@ -1,12 +1,13 @@
 ---
 name: create-task
-description: Use when the user asks to create a task, subtask, milestone or section in Quire — triggers include "Quire task", "create a task", "add a task", "Quire-Task", "Task anlegen", "Task erstellen", "leg einen Task an". Parses free-form German or English descriptions into Quire API parameters (priority, due/start date, assignees, tags, subtasks, recurrence, estimate) and creates them in the mu project. Do NOT use for reading, searching, updating or completing existing Quire tasks, and do NOT use for non-Quire task tracking.
+description: Use when the user asks to create a task, subtask, milestone or section in Quire — triggers include "Quire task", "create a task", "add a task", "Quire-Task", "Task anlegen", "Task erstellen", "leg einen Task an". Parses free-form German or English descriptions into Quire API parameters (priority, due/start date, assignees, tags, subtasks, recurrence, estimate) and creates them in the mu project, always written in English with the description as a user story. Do NOT use for reading, searching, updating or completing existing Quire tasks, and do NOT use for non-Quire task tracking.
 ---
 
 # Create a Quire task from natural language
 
 Turns a free-form sentence into a Quire task and creates it. Input may be German or
-English; this document is English but the trigger phrases below cover both.
+English; the trigger phrases below cover both. What lands in Quire is **always English**
+and its description is **always a user story** — see [Writing the task](#writing-the-task).
 
 ## Target project
 
@@ -25,20 +26,78 @@ Project context (snapshot taken when this skill was written — the API wins on 
 
 1. **Parse** — decompose the input using the reference table below.
 2. **Resolve** — turn names into IDs (assignees, tags). Never guess, never invent.
-3. **Ask** — only when the name is missing or a reference cannot be resolved.
-4. **Create** — a single `quire_create_task` call carrying every parameter at once.
-5. **Subtasks** — afterwards, one `quire_create_subtask` per item using the parent's `oid`.
-6. **Confirm** — report name and URL.
+3. **Write** — phrase `name` and `description` in English as a user story.
+4. **Ask** — only when the name is missing, a reference cannot be resolved, or the user
+   story has no honest benefit.
+5. **Create** — a single `quire_create_task` call carrying every parameter at once.
+6. **Subtasks** — afterwards, one `quire_create_subtask` per item using the parent's `oid`.
+7. **Confirm** — report name and URL.
 
 No dry run and no pre-confirmation: the user already asked for the task to be created.
 Above 5 subtasks, show the list for approval first.
+
+## Writing the task
+
+### Always English
+
+`name`, `description` and every subtask name go into Quire **in English**, no matter which
+language the request was in. A German request is translated, not transcribed: "Leg einen
+Task an: SPEC.md Abschnitt 5 überarbeiten" becomes `Rework SPEC.md section 5`.
+
+Translate the request, do not enlarge it. Keep identifiers verbatim — file paths, class and
+method names, CLI flags, package names, quoted spec wording, error strings. `./gradlew test`
+and `MetadataScanner` stay as they are.
+
+Reply to the user in the language they used; only the Quire content is English.
+
+### Description as a user story
+
+`description` always opens with a user story:
+
+```markdown
+**As a** <role>,
+**I want** <goal>,
+**so that** <benefit>.
+```
+
+- **role** — who benefits. Default to `developer on mu-format`; mu is a single-member,
+  single-tool project, so that fits almost everything. Use a different role only when the
+  request names one (e.g. `user of the mu CLI` for user-visible behaviour).
+- **goal** — the outcome, not the implementation. "the architecture tests read our Java 25
+  class files", not "bump archunit to 1.4.1".
+- **benefit** — why it matters. Derive it from what the user said or from evident context,
+  and keep it factual. Never invent business value, revenue or user demand that was not
+  stated. If no honest benefit can be derived, ask one short question instead of padding.
+
+Then add only the sections the input actually supports:
+
+- `## Context` — background, root cause, findings, file references as `path:line`.
+- `## Scope` — a numbered list of the work, when it decomposes into several steps.
+- `## Acceptance criteria` — a checklist of observable outcomes. Prefer verifiable ones;
+  for this repo `./gradlew test` passes is the usual anchor (see AGENTS.md — it is the only
+  verification step that exists).
+
+Omit any section you would have to make up. A one-line request yields a user story and
+nothing else — that is a complete task, not a deficient one.
+
+Keep the story to three lines. Detail belongs under `## Context`, never inside the
+`As a … I want … so that …` sentence.
+
+When the breakdown already lives in subtasks, drop `## Scope` — do not list the same steps
+twice.
+
+### Exception: sections and milestones
+
+`section: true` is an organizational header and `milestone: true` is a date marker. Neither
+delivers anything, so neither gets a user story. Give them a one-line description of what
+they group or mark, or no description at all. The English rule still applies.
 
 ## Parsing reference
 
 | Phrasing (DE / EN) | Field | Value |
 |---|---|---|
-| the core statement of the sentence | `name` | **Required.** Strip the imperative: "Erstelle einen Task für X" / "Create a task for X" → `X` |
-| "Beschreibung/Details:", "description:", trailing sentences | `description` | markdown allowed |
+| the core statement of the sentence | `name` | **Required.** Strip the imperative, then translate: "Erstelle einen Task für X" / "Create a task for X" → `X`, in English |
+| "Beschreibung/Details:", "description:", trailing sentences | `description` | **Always set.** English user story, see [Writing the task](#writing-the-task) |
 | "dringend", "urgent", "ASAP", "critical" | `priority` | `urgent` |
 | "hohe Prio", "wichtig", "high priority", "important" | `priority` | `high` |
 | "niedrige Prio", "low priority", "irgendwann", "someday" | `priority` | `low` |
@@ -54,6 +113,8 @@ Above 5 subtasks, show the list for approval first.
 
 Omit any field the user did not mention — **do not invent defaults**. In particular, with
 no statement about priority, do not set `priority` at all (Quire then applies `medium`).
+`description` is the one exception: it is always written, because the user story is the
+task's format, not extra content.
 
 ### Date resolution
 
@@ -112,6 +173,9 @@ compute the equivalent `until` date yourself and mention the conversion in the r
 ## Error handling
 
 - **No task name derivable** → ask; do not invent one.
+- **No benefit derivable for the user story** → ask one short question. Do not fill the
+  `so that` clause with a restatement of the goal ("so that X is done") or with invented
+  value — both are worse than asking.
 - **Assignee or tag unresolvable** → show the available options, then ask.
 - **API error** → translate to plain language (e.g. 402 = free-plan limit); never dump
   raw JSON at the user.
@@ -127,24 +191,45 @@ name, the short `#id` from the URL, and the URL itself.
 
 ## Examples
 
+German in, English out. The name is translated; `SPEC.md` stays verbatim.
+
 **Input:** "Leg einen Task an: SPEC.md Abschnitt 5 überarbeiten, dringend, fällig Freitag, für mich"
 
 ```
 quire_create_task(
   projectId: "mu2261",
-  name: "SPEC.md Abschnitt 5 überarbeiten",
+  name: "Rework SPEC.md section 5",
+  description: """
+**As a** developer on mu-format,
+**I want** section 5 of SPEC.md reworked,
+**so that** the normative format description stays the thing the code is checked against.
+""",
   priority: "urgent",
   due: "<next Friday as YYYY-MM-DD>",
   assignees: ["pierre111"]
 )
 ```
 
+The benefit is not invented: AGENTS.md states SPEC.md is normative and wins over the code.
+Derive from context like this; if there is no such anchor, ask.
+
 ---
+
+Subtasks carry the breakdown, so the description has no `## Scope`.
 
 **Input:** "Quire task for the import refactoring with subtasks: lock handling, error paths, tests. Estimate 2h"
 
 ```
-quire_create_task(projectId:"mu2261", name:"Import refactoring", estimate:7200)
+quire_create_task(
+  projectId: "mu2261",
+  name: "Refactor the import workflow",
+  description: """
+**As a** developer on mu-format,
+**I want** the import workflow restructured,
+**so that** lock handling and error paths are covered by tests instead of held in one method.
+""",
+  estimate: 7200
+)
 → oid from the result
 quire_create_subtask(parentTaskId:<oid>, name:"Lock handling")
 quire_create_subtask(parentTaskId:<oid>, name:"Error paths")
@@ -152,6 +237,8 @@ quire_create_subtask(parentTaskId:<oid>, name:"Tests")
 ```
 
 ---
+
+A milestone marks a date. No user story.
 
 **Input:** "Milestone 'Release 1.0' by end of month"
 
@@ -166,12 +253,19 @@ quire_create_task(
 
 ---
 
+A one-line request still gets a user story, and nothing beyond it.
+
 **Input:** "Jeden Montag: Abhängigkeiten prüfen, niedrige Prio"
 
 ```
 quire_create_task(
   projectId: "mu2261",
-  name: "Abhängigkeiten prüfen",
+  name: "Check dependencies",
+  description: """
+**As a** developer on mu-format,
+**I want** the project's dependencies reviewed every Monday,
+**so that** outdated or vulnerable versions surface early instead of at the next upgrade.
+""",
   priority: "low",
   recurrence: { freq: "weekly", interval: 1, byweekday: [0] }
 )
