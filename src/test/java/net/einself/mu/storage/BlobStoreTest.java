@@ -42,7 +42,7 @@ class BlobStoreTest {
         Path source = write("source.txt", "hello");
 
         // act
-        Blob result = underTest.take(source);
+        Blob result = underTest.store(source);
 
         // assert
         assertThat(result.hash()).isEqualTo(HELLO_HASH);
@@ -54,7 +54,7 @@ class BlobStoreTest {
 
     @Test
     void take_shardsByTheFirstTwoCharacters() throws IOException {
-        Blob result = underTest.take(write("source.txt", "hello"));
+        Blob result = underTest.store(write("source.txt", "hello"));
 
         assertThat(result.relativePath()).isEqualTo("store/2c/" + HELLO_HASH);
     }
@@ -62,10 +62,10 @@ class BlobStoreTest {
     @Test
     void take_deduplicatesIdenticalContentRegardlessOfName() throws IOException {
         // arrange
-        underTest.take(write("first.txt", "hello"));
+        underTest.store(write("first.txt", "hello"));
 
         // act
-        Blob result = underTest.take(write("second-name.dat", "hello"));
+        Blob result = underTest.store(write("second-name.dat", "hello"));
 
         // assert
         assertThat(result.deduplicated()).isTrue();
@@ -77,8 +77,8 @@ class BlobStoreTest {
 
     @Test
     void take_leavesNothingInStaging() throws IOException {
-        underTest.take(write("first.txt", "hello"));
-        underTest.take(write("second.txt", "hello"));
+        underTest.store(write("first.txt", "hello"));
+        underTest.store(write("second.txt", "hello"));
 
         try (var entries = Files.list(collectionRoot.staging())) {
             assertThat(entries).isEmpty();
@@ -89,7 +89,7 @@ class BlobStoreTest {
     void take_makesTheBlobReadOnly() throws IOException {
         assumeThat(FileSystems.getDefault().supportedFileAttributeViews()).contains("posix");
 
-        Blob result = underTest.take(write("source.txt", "hello"));
+        Blob result = underTest.store(write("source.txt", "hello"));
 
         Set<PosixFilePermission> permissions =
                 Files.getPosixFilePermissions(root.resolve(result.relativePath()));
@@ -130,7 +130,7 @@ class BlobStoreTest {
 
     @Test
     void inspect_reportsAnExistingBlobAsDeduplicated() throws IOException {
-        underTest.take(write("first.txt", "hello"));
+        underTest.store(write("first.txt", "hello"));
 
         assertThat(underTest.inspect(write("second.txt", "hello")).deduplicated()).isTrue();
     }

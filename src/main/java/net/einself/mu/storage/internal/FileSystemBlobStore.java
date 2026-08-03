@@ -4,6 +4,7 @@ import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.storage.api.Blob;
+import net.einself.mu.storage.api.BlobRepository;
 import org.apache.commons.io.file.PathUtils;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ import java.util.UUID;
  * nothing there is reachable by the path formula, so an interrupted import cannot leave a
  * resolvable but incomplete blob.
  */
-public class FileSystemBlobStore {
+public class FileSystemBlobStore implements BlobRepository {
 
     private static final Set<PosixFilePermission> READ_ONLY = EnumSet.of(
             PosixFilePermission.OWNER_READ,
@@ -63,7 +64,7 @@ public class FileSystemBlobStore {
     /**
      * Copies {@code source} into the store, hashing it in the same pass.
      */
-    public Blob take(Path source) {
+    public Blob store(Path source) {
         Path staging = root.staging();
         Path temp;
         String hash;

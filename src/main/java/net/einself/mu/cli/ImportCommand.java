@@ -20,6 +20,8 @@ import net.einself.mu.importcontext.internal.AssetKindMapper;
 import net.einself.mu.naming.api.NameSanitizer;
 import net.einself.mu.naming.api.Nfc;
 import net.einself.mu.storage.api.Blob;
+import net.einself.mu.storage.api.BlobRepository;
+import net.einself.mu.storage.api.StorageModule;
 import net.einself.mu.storage.internal.FileSystemBlobStore;
 import net.einself.mu.metadata.api.Release;
 import net.einself.mu.metadata.internal.ReleaseTomlWriter;
@@ -159,12 +161,12 @@ public class ImportCommand implements Callable<Integer> {
                                   String originDir,
                                   ImportResult report) {
         try (CollectionLock ignored = CollectionLock.acquire(root)) {
-            FileSystemBlobStore store = new FileSystemBlobStore(root);
+            BlobRepository store = StorageModule.createRepository(root);
             store.clearStaging();
 
             Map<SourceFile, Blob> blobs = new LinkedHashMap<>();
             for (SourceFile file : files) {
-                Blob blob = store.take(file.path());
+                Blob blob = store.store(file.path());
                 blobs.put(file, blob);
                 count(report, blob);
             }
@@ -183,7 +185,7 @@ public class ImportCommand implements Callable<Integer> {
                                  List<SourceFile> files,
                                  String originDir,
                                  ImportResult report) {
-        FileSystemBlobStore store = new FileSystemBlobStore(root);
+        BlobRepository store = StorageModule.createRepository(root);
         Map<SourceFile, Blob> blobs = new LinkedHashMap<>();
         for (SourceFile file : files) {
             Blob blob = store.inspect(file.path());
