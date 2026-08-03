@@ -50,15 +50,11 @@ Each module splits into `<module>.api` (public, jMolecules `@Module` on `package
 and `<module>.internal` (private). `<Module>Module` classes in `api` are the intended
 factories (e.g. `StorageModule.createRepository(root)`).
 
-### Module boundaries are not enforced — respect them anyway
+### Module boundaries are enforced by arch tests
 
-`ModulithArchitectureTest` and `DddArchitectureTest` **pass vacuously**: ArchUnit 1.2.1 cannot
-read Java 25 class files, so `importPackages("net.einself.mu")` returns 0 classes, and every
-rule carries `allowEmptyShould(true)`. A green arch test proves nothing.
-
-Consequence: `cli/ImportCommand` and `cli/SearchCommand` currently import ~21 classes from
-`*.internal` packages, violating the documented layering. `ImportService` and `SearchService`
-are declared in `api` but have no implementation; the CLI wires internal collaborators by hand.
+`ModulithArchitectureTest` and `DddArchitectureTest` use ArchUnit 1.4.1 to verify that
+`.internal` packages are not accessed from outside their module and that the CLI only depends
+on module APIs.
 
 For new code: go through `<module>.api` types and `<Module>Module` factories, never through
 another module's `.internal`. Do not use the existing CLI commands as a template for layering.
