@@ -22,7 +22,11 @@ dependencies {
     implementation 'commons-io:commons-io:2.16.1'
     implementation 'io.github.wasabithumb:jtoml:1.5.2'
     implementation 'info.picocli:picocli:4.7.6'
-    
+
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+    implementation 'ch.qos.logback:logback-classic:1.5.18'
+
     // Architecture support
     implementation 'org.jmolecules:jmolecules-ddd:1.10.0'
     
