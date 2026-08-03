@@ -88,6 +88,12 @@ another module's `.internal`. Do not use the existing CLI commands as a template
 - `BlobStoreTest` uses `Assumptions` to skip POSIX-permission assertions on unsupported
   filesystems.
 
+## Git
+
+Commit messages are conventional commits with a **subject line only — never a body**.
+Types in use: `docs`, `chore`, `feat`, `test`, `refactor`. Put everything the reader needs
+into the subject; if it does not fit, the commit is doing too much.
+
 ## Status
 
 `mu import` and `mu search` work. `build`, `lint` and `verify` from the README's CLI table
