@@ -1,7 +1,9 @@
 package net.einself.mu.collection;
 
-import net.einself.mu.ExitCode;
-import net.einself.mu.MuException;
+import net.einself.mu.collection.api.CollectionRoot;
+import net.einself.mu.collection.internal.CollectionRootFinder;
+import net.einself.mu.shared.ExitCode;
+import net.einself.mu.shared.MuException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
