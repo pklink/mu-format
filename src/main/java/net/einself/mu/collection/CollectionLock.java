@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 /**
- * The advisory write lock on {@code meta/.lock} (IMPLEMENTATION.md section 6).
+ * The advisory write lock on {@code meta/.lock} (IMPLEMENTATION.md section 7).
  *
  * <p>A second {@code mu} process aborts immediately rather than waiting. The lock file itself
  * has no content anyone interprets and is never versioned (SPEC.md section 6).

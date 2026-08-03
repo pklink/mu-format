@@ -6,6 +6,7 @@ import io.github.wasabithumb.jtoml.option.JTomlOptions;
 import io.github.wasabithumb.jtoml.option.prop.LineSeparator;
 import io.github.wasabithumb.jtoml.option.prop.OrderMarkPolicy;
 import net.einself.mu.importer.ImportCommand;
+import net.einself.mu.search.SearchCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -19,7 +20,7 @@ import java.util.concurrent.Callable;
 @Command(name = "mu",
         mixinStandardHelpOptions = true,
         version = "mu 1.0",
-        subcommands = {ImportCommand.class},
+        subcommands = {ImportCommand.class, SearchCommand.class},
         synopsisSubcommandLabel = "COMMAND")
 public class Main implements Callable<Integer> {
 
@@ -61,7 +62,7 @@ public class Main implements Callable<Integer> {
 
     /**
      * Reached only when no subcommand was given, which is a usage error
-     * (IMPLEMENTATION.md section 7).
+     * (IMPLEMENTATION.md section 8).
      */
     @Override
     public Integer call() {
@@ -82,7 +83,7 @@ public class Main implements Callable<Integer> {
     }
 
     /**
-     * Turns a {@link MuException} into its exit code (IMPLEMENTATION.md section 7) instead of a
+     * Turns a {@link MuException} into its exit code (IMPLEMENTATION.md section 8) instead of a
      * stack trace. Anything else is an unexpected failure and is reported as an I/O error.
      */
     private record ExceptionHandler(PrintStream err) implements CommandLine.IExecutionExceptionHandler {

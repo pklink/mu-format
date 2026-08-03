@@ -43,18 +43,19 @@ A release has no location. It has attributes. Where it shows up is the view's de
 
 ```
 mu import <path>...        take files into the store, create a meta skeleton
+mu search <query>          search releases, artists and tracks in meta
 mu build [view]            regenerate views
 mu lint [--strict]         check meta consistency
 mu verify [--quick]        check store integrity
 ```
 
-`import` is implemented; the rest are sketches.
+`import` and `search` are implemented; the rest are sketches.
 
 Details in [IMPLEMENTATION.md](IMPLEMENTATION.md).
 
 ## Status
 
-Early development. The format specification is settling. `mu import` works; `build`, `lint` and `verify` are not implemented yet, so a collection can be filled but not yet browsed or checked.
+Early development. The format specification is settling. `mu import` and `mu search` work; `build`, `lint` and `verify` are not implemented yet, so a collection can be filled and searched but not yet browsed or checked.
 
 ## License
 

@@ -84,7 +84,26 @@ Every blob is in place before the entity file is written. The two failure modes 
 
 The store path is the bare hash (§3.2); the extension lives only in the reference, as a rendering hint (§4.5). `import` takes it from the source filename: the part after the **last** `.`, lower-cased with ASCII rules, used only if it matches `[a-z0-9]{1,8}`; a leading dot starts no extension (`.gitignore`); if nothing qualifies, the reference is the bare hash. A heuristic that trusts the filename — but since the result lives in `meta/`, a wrong extension is fixed by editing the entity file, not by re-importing.
 
-## 3. `mu build [view]` — sketch
+## 3. `mu search`
+
+```
+mu search [--type <type>] [--field <field>] [--year <year>] [--medium <medium>]
+          [--role <role>] [--format <format>] [--limit <num>] <query>
+```
+
+Searches `meta/`, never `store/`: the blob layer holds no metadata worth matching (§3.2). Read-only, no lock (§7).
+
+The query is a case-insensitive substring, NFC-normalized on both sides (§4.3) — the normalization form a value was typed or stored in cannot affect matching. Without `--type`, releases, artists and tracks are all searched; `--field` restricts matching to one TOML attribute instead of the standard set of each entity type (`title`, the year and medium attributes, `notes` on releases; `name`, `sort-name`, `alias`, `notes` on artists; `title`, `isrc` on tracks).
+
+A release also matches through its **credits** (§4.6): when the query matches an artist's `name` or `alias`, every release crediting that artist is a result, and the matching credits are shown. That is what makes `mu search overmono` find the records, not just the artist file. `--role` restricts which roles count; `--field` disables credit matching, since it names an attribute, not a relationship.
+
+`--year` and `--medium` filter releases — and, for track results, the containing release — by exact, case-insensitive equality on `release-year-original` and `source-medium`. `--limit` caps the total number of results.
+
+Output is `--format text` (grouped by entity type), `json` (all three groups always present, for further processing) or `ids` (one identifier per line, deduplicated, for piping). A track result carries the containing release's identifier — tracks have no files of their own (§4.7) — and its `path` is the release file. Zero matches is success with an empty report, not an error.
+
+A file that fails to parse is reported on stderr and skipped: one broken entity must not hide the rest of the collection.
+
+## 4. `mu build [view]` — sketch
 
 Not implemented; the shape below is settled, the details are not.
 
@@ -103,7 +122,7 @@ An aborted run leaves `views.new/` or `views.old/` behind; the next run removes 
 
 > **Open questions.** `mu build <view>` rebuilds one view, but step 1 produces a complete `views.new/`; whether the untouched views are copied, hardlinked or rebuilt before the swap is undecided. The name a `cover-front`/`cover-back` reference produces in `by-artist` is undefined (§5.4 covers tracks and assets), and with two `main` credits it is undefined which release directory the single entry in `by-credit`, `by-release-year-original` and `by-source-medium` links to.
 
-## 4. `mu lint [--strict]` — sketch
+## 5. `mu lint [--strict]` — sketch
 
 Not implemented. Validates `meta/` against SPEC.md, in three severities; `--strict` promotes warnings to errors. Read-only, no lock.
 
@@ -123,17 +142,17 @@ Not implemented. Validates `meta/` against SPEC.md, in three severities; `--stri
 
 Case-folded uniqueness can only fail on a case-sensitive filesystem — elsewhere the two files are one — but the check earns its place: such a pair committed from ext4 makes the checkout drop an entity on macOS or Windows. Unreferenced blobs are a store question and not reported here.
 
-## 5. `mu verify [--quick]` — sketch
+## 6. `mu verify [--quick]` — sketch
 
 Not implemented. Re-hashes every blob and compares against its filename, which is the full hash and nothing else (§3.2). `--quick` checks existence only. Corrupt blobs are reported, never touched. Read-only, no lock.
 
 `verify` enumerates the store instead of resolving references, which needs a rule the format does not give: a path is a blob iff it matches `store/[0-9a-f]{2}/[0-9a-f]{64}` and the two leading characters equal the first two of the filename. Everything else under `store/` is skipped without descending — that is what keeps `store/.tmp/` from being reported as a heap of corrupt blobs.
 
-## 6. Locking
+## 7. Locking
 
-`import` and `build` hold `meta/.lock` via `FileChannel.tryLock()`; a second `mu` process aborts immediately with exit code 3 rather than waiting. `lint` and `verify` do not lock. The lock is advisory: it excludes processes using the same call, not a tool that ignores the file. §4.0 leaves the name to the tool, the file has no content anyone interprets, it is never versioned (SPEC.md §6), and its absence is valid — deleting it while no `mu` runs has no effect.
+`import` and `build` hold `meta/.lock` via `FileChannel.tryLock()`; a second `mu` process aborts immediately with exit code 3 rather than waiting. `lint`, `verify` and `search` do not lock. The lock is advisory: it excludes processes using the same call, not a tool that ignores the file. §4.0 leaves the name to the tool, the file has no content anyone interprets, it is never versioned (SPEC.md §6), and its absence is valid — deleting it while no `mu` runs has no effect.
 
-## 7. Exit codes
+## 8. Exit codes
 
 | Code | Meaning                                                    |
 |------|------------------------------------------------------------|

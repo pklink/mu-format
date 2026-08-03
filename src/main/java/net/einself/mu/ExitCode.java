@@ -1,7 +1,7 @@
 package net.einself.mu;
 
 /**
- * Exit codes of the {@code mu} tool (IMPLEMENTATION.md section 7).
+ * Exit codes of the {@code mu} tool (IMPLEMENTATION.md section 8).
  */
 public enum ExitCode {
 

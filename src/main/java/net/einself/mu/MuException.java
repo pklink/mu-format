@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * An aborting condition that carries the exit code it must produce
- * (IMPLEMENTATION.md section 7).
+ * (IMPLEMENTATION.md section 8).
  */
 public class MuException extends RuntimeException {
 
