@@ -48,13 +48,13 @@ mu lint [--strict]         check meta consistency
 mu verify [--quick]        check store integrity
 ```
 
-Only `import` is specified in detail; the rest are sketches.
+`import` is implemented; the rest are sketches.
 
 Details in [IMPLEMENTATION.md](IMPLEMENTATION.md).
 
 ## Status
 
-Early development. The format specification is settling; the CLI is not yet usable.
+Early development. The format specification is settling. `mu import` works; `build`, `lint` and `verify` are not implemented yet, so a collection can be filled but not yet browsed or checked.
 
 ## License
 

@@ -10,7 +10,7 @@ The `mu` command-line tool. The on-disk format is defined in [SPEC.md](SPEC.md) 
 | Build       | Gradle (`build.gradle`)                                          |
 | CLI parsing | `info.picocli:picocli:4.7.6`                                     |
 | File utils  | `commons-io:commons-io:2.16.1`                                   |
-| TOML        | a TOML 1.0 parser, e.g. `org.tomlj:tomlj` (not yet a dependency) |
+| TOML        | `io.github.wasabithumb:jtoml:1.5.2`                              |
 | Tests       | JUnit 5 + AssertJ                                                |
 
 Mapping onto the JDK. Rows with a `SPEC.md §` are obligations of the format, the rest are decisions of this tool.
@@ -26,6 +26,8 @@ Mapping onto the JDK. Rows with a `SPEC.md §` are obligations of the format, th
 
 SPEC.md §3.4 requires only that a blob become visible as a whole, not how. This tool renames, and `ATOMIC_MOVE` needs source and target on one filesystem — hence `store/.tmp/` inside the store and `views.new/` beside `views/`. None of those paths is part of the format: §3.2 and §4.0 leave any unknown entry under `store/` and `meta/` without meaning, and §5.5 leaves the build procedure open. `0444` is likewise a tool decision and best-effort: where POSIX permissions are missing (exFAT, SMB) the call fails and is ignored.
 
+The TOML library is the one constraint the format placed on the choice. §4.6 rule 9 makes the block table the canonical write form, which rules out any writer that emits a table inside an array inline — `jackson-dataformat-toml` does exactly that, and `org.tomlj:tomlj` does not write at all. jtoml writes `SortMethod.STRATIFIED` by default: primitives first, then arrays of tables, each group lexicographic. Key order inside an entity file is therefore alphabetical rather than the order the examples in SPEC.md use, and not the writer's to choose — but it is stable, which is all §6 needs from it. Entity files are written with `LINE_SEPARATOR = LF` and `WRITE_BOM = NEVER` (§4), and published by rename, so a reader never sees a half-written one.
+
 ## 2. `mu import`
 
 ```
@@ -38,11 +40,21 @@ Global option `--root <path>`, default: search upwards for a directory containin
 2. Hash each file while streaming and take it into the store (§2.2).
 3. Create `meta/releases/<id>.mu` as TOML with exactly one `[[credit]]` of role `main`. The identifier is a UUIDv4: §4.1 would allow a readable one, but `import` reads no tags, and the directory name is not trustworthy enough for an identity that must never change.
 4. Audio files in filename order become `[[track]]` tables with a `blob` reference and `number`/`disc`, parsed from a leading prefix such as `01 `, `A1 `, `1-05 `; the remainder of the name becomes `title`. A letter prefix gives a string `disc` (`A1 ` → `disc = "A"`, `number = 1`, §4.7).
-5. An image named `cover|front|folder` becomes `cover-front = "<hash>.<ext>"`.
+5. An image named `cover|front|folder` becomes `cover-front = "<hash>.<ext>"`. Every remaining non-audio file becomes an `[[asset]]`, its `kind` guessed from the extension: images `scan`, `.log` `log`, `.cue` `cue`, anything else `other`. The vocabulary is open (§4.8), so a wrong guess is valid and is corrected by editing the entity file.
 
 `--release` imports into an existing release, `--artist` sets the `main` credit.
 
-> **Open question.** §4.6 requires a credit with `role = "main"` whose `artist` resolves. Without `--artist` there is none, so `import` writes an incomplete release. Artist stub — from which name? — or mandatory `--artist`: undecided.
+`title` is required (§4.8) and `import` reads no tags, so it takes the base name of the imported directory — the same source `--origin` trusts for `origin-dir`, and the only one available. For file arguments it is the name of the containing directory.
+
+Files are collected without a filter: everything under the directory goes into the store, `.DS_Store` included. The format has no opinion here, and a blocklist would be a guess of a different kind — one that silently drops bytes the user handed over.
+
+Order is by NFC-normalized relative path in code point order, never the order the filesystem lists. `import` writes no attribute it cannot read off the filesystem, so `type`, the year attributes, `source-medium` and the audio properties are left out entirely rather than guessed.
+
+**Numbering falls back as a whole.** `number` is required and unique per disc (§4.7), so a set in which only some filenames carry a prefix cannot be numbered from the prefixes alone. If any audio file fails to parse, or if the parsed positions collide, `import` discards all of them and numbers the release sequentially in filename order, `title` becoming the whole stem. Half-parsed numbering would produce an entity file `lint` rejects; a leading `1984 ` is not read as a track number, and neither is `00 `.
+
+**Without `--artist` the release is written incomplete.** §4.6 requires a credit with `role = "main"` whose `artist` resolves; `import` writes the credit with `role` alone and says so on stderr. The alternatives were worse: a mandatory `--artist` refuses work that is otherwise complete, and a stub artist would have to invent a name from the directory — the one string §4.1 warns is not trustworthy enough to hang an identity on. `lint` reports the gap, and filling it in is a one-line edit.
+
+> **Not implemented.** `--release` exits 2. Importing into an existing release means reading an entity file and writing it back, which loses the comments and the key order a hand-edited file carries. Until that round-trip is settled, refusing is better than silently creating a second release.
 
 ### 2.1 `--origin`
 
@@ -52,6 +64,7 @@ Off by default. Most imports are a loose directory whose name carries nothing wo
 
 - Exactly **one** directory argument. Several paths, or a file, leave no name for `origin-dir` (exit 2).
 - Every segment must survive §5.2 unchanged (§4.9). If one does not, `import` lists every offending path and aborts before writing anything (exit 1); importing the rest would produce exactly the half-tree the option exists to prevent. §4.9 does permit a partial tree, since a hand-written entity file may be incomplete — this tool does not produce one.
+- Origin paths must be unique within the release, compared after NFC normalization and case folding (§4.9). The check runs before the store is touched, together with the one above.
 
 ### 2.2 Taking a file into the store
 
@@ -64,6 +77,8 @@ Off by default. Most imports are a loose directory whose name carries nothing wo
 5. Set `0444`, best-effort.
 
 An abort before step 4 leaves garbage in `store/.tmp/`, which the next run clears before it starts. Nothing there is reachable by the path formula, so an interrupted import cannot produce a resolvable but incomplete blob. Another implementation may stage elsewhere — but then neither tool cleans up after the other.
+
+Every blob is in place before the entity file is written. The two failure modes are not symmetric: blobs nothing references are invisible — §3.2 resolves by path formula and never by listing — whereas a release referencing a blob that is not there is broken. `--dry-run` hashes without copying and takes no lock; it writes nothing, so there is nothing to exclude anyone from.
 
 ### 2.3 Deriving the extension
 
