@@ -1,8 +1,8 @@
 package net.einself.mu.storage.internal;
 
+import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
-import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.storage.api.Blob;
 import net.einself.mu.storage.api.BlobRepository;
 import org.apache.commons.io.file.PathUtils;

@@ -5,7 +5,6 @@ import io.github.wasabithumb.jtoml.value.TomlValue;
 import io.github.wasabithumb.jtoml.value.table.TomlTable;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.shared.ExitCode;
-import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.shared.MuException;
 
 /**

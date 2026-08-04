@@ -1,19 +1,15 @@
 package net.einself.mu.cli;
 
-import net.einself.mu.shared.ExitCode;
-import net.einself.mu.shared.MuException;
 import net.einself.mu.collection.api.CollectionModule;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.collection.api.CollectionService;
-import net.einself.mu.importcontext.api.ImportData;
-import net.einself.mu.importcontext.api.ImportModule;
-import net.einself.mu.importcontext.api.ImportOptions;
-import net.einself.mu.importcontext.api.ImportReport;
-import net.einself.mu.importcontext.api.ImportService;
+import net.einself.mu.importcontext.api.*;
+import net.einself.mu.shared.ExitCode;
+import net.einself.mu.shared.MuException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.ParentCommand;
 
 import java.io.PrintStream;
 import java.nio.file.Path;

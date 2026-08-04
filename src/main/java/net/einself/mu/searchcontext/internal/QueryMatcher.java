@@ -2,8 +2,8 @@ package net.einself.mu.searchcontext.internal;
 
 import io.github.wasabithumb.jtoml.value.TomlValue;
 import io.github.wasabithumb.jtoml.value.table.TomlTable;
-import net.einself.mu.naming.api.Nfc;
 import net.einself.mu.metadata.api.Tomls;
+import net.einself.mu.naming.api.Nfc;
 
 import java.util.Locale;
 

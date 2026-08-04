@@ -3,7 +3,6 @@ package net.einself.mu.collection.internal;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.collection.api.LockHandle;
 import net.einself.mu.shared.ExitCode;
-import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.shared.MuException;
 
 import java.io.IOException;

@@ -1,16 +1,11 @@
 package net.einself.mu.importcontext.internal;
 
-import net.einself.mu.naming.api.Nfc;
-import net.einself.mu.naming.api.ExtensionDeriver;
-import net.einself.mu.storage.api.Blob;
 import net.einself.mu.metadata.api.Release;
+import net.einself.mu.naming.api.ExtensionDeriver;
+import net.einself.mu.naming.api.Nfc;
+import net.einself.mu.storage.api.Blob;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Assembles the release entity from the imported files.

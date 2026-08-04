@@ -1,7 +1,7 @@
 package net.einself.mu.searchcontext;
 
-import net.einself.mu.shared.ExitCode;
 import net.einself.mu.cli.Main;
+import net.einself.mu.shared.ExitCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

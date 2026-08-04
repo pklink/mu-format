@@ -1,31 +1,19 @@
 package net.einself.mu.cli;
 
-import net.einself.mu.shared.ExitCode;
-import net.einself.mu.shared.MuException;
 import net.einself.mu.collection.api.CollectionModule;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.collection.api.CollectionService;
-import net.einself.mu.searchcontext.api.EntityType;
-import net.einself.mu.searchcontext.api.SearchData;
-import net.einself.mu.searchcontext.api.SearchModule;
-import net.einself.mu.searchcontext.api.SearchOptions;
-import net.einself.mu.searchcontext.api.SearchResult;
-import net.einself.mu.searchcontext.api.SearchResultItem;
-import net.einself.mu.searchcontext.api.SearchService;
+import net.einself.mu.searchcontext.api.*;
+import net.einself.mu.shared.ExitCode;
+import net.einself.mu.shared.MuException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.ParentCommand;
 
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**

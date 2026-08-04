@@ -1,8 +1,8 @@
 package net.einself.mu.importcontext.internal;
 
+import net.einself.mu.naming.api.Nfc;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
-import net.einself.mu.naming.api.Nfc;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,15 +1,11 @@
 package net.einself.mu.importcontext.internal;
 
-import net.einself.mu.shared.ExitCode;
-import net.einself.mu.shared.MuException;
 import net.einself.mu.naming.api.NameSanitizer;
 import net.einself.mu.naming.api.Nfc;
+import net.einself.mu.shared.ExitCode;
+import net.einself.mu.shared.MuException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Checks the values {@code --origin} would record (SPEC.md section 4.9).

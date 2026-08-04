@@ -2,18 +2,12 @@ package net.einself.mu.searchcontext.internal;
 
 import io.github.wasabithumb.jtoml.value.TomlValue;
 import io.github.wasabithumb.jtoml.value.table.TomlTable;
-import net.einself.mu.searchcontext.api.SearchResult;
-import net.einself.mu.searchcontext.api.SearchOptions;
-import net.einself.mu.searchcontext.api.EntityType;
 import net.einself.mu.metadata.api.EntityFile;
 import net.einself.mu.metadata.api.Tomls;
+import net.einself.mu.searchcontext.api.SearchOptions;
+import net.einself.mu.searchcontext.api.SearchResult;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.SequencedSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Matches releases through their credits (SPEC.md section 4.6): when the query matches an
