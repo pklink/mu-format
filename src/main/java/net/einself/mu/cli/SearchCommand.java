@@ -74,6 +74,7 @@ public class SearchCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        OutputFormatter.validate(parent.format);
         SearchOptions options = validateOptions();
 
         CollectionService collectionService = CollectionModule.createService(parent.toml());

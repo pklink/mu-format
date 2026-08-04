@@ -307,6 +307,8 @@ class ImportCommandTest {
 
         assertThat(exitCode).isEqualTo(ExitCode.USAGE.value());
         assertThat(err.toString()).contains("--format");
+        assertThat(root.resolve("store")).doesNotExist();
+        assertThat(root.resolve("meta/releases")).doesNotExist();
     }
 
     @Test

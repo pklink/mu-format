@@ -10,24 +10,29 @@ import java.util.function.Consumer;
 
 public final class OutputFormatter {
 
+    private static final String FORMAT_JSON = "json";
+
+    private static final String FORMAT_TEXT = "text";
+
     private static final Gson GSON = new Gson();
 
     private OutputFormatter() {}
 
-    public static <T> void write(PrintStream out, String format, String command,
-                                  T data, Consumer<PrintStream> textWriter) {
-        if (format == null) {
-            throw new MuException(ExitCode.USAGE,
-                    "Invalid --format: null (must be text or json)");
-        }
-        if ("json".equalsIgnoreCase(format)) {
-            GSON.toJson(new Envelope<>(command, data), out);
-            out.println();
-        } else if ("text".equalsIgnoreCase(format)) {
-            textWriter.accept(out);
-        } else {
+    public static void validate(String format) {
+        if (format == null
+                || !(FORMAT_JSON.equalsIgnoreCase(format) || FORMAT_TEXT.equalsIgnoreCase(format))) {
             throw new MuException(ExitCode.USAGE,
                     "Invalid --format: " + format + " (must be text or json)");
+        }
+    }
+
+    public static <T> void write(PrintStream out, String format, String command,
+                                  T data, Consumer<PrintStream> textWriter) {
+        if (FORMAT_JSON.equalsIgnoreCase(format)) {
+            GSON.toJson(new Envelope<>(command, data), out);
+            out.println();
+        } else {
+            textWriter.accept(out);
         }
     }
 

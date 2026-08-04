@@ -56,6 +56,7 @@ public class ImportCommand implements Callable<Integer> {
     }
 
     int run(PrintStream out, PrintStream err) {
+        OutputFormatter.validate(parent.format);
         rejectUnimplementedOptions();
 
         CollectionService collectionService = CollectionModule.createService(parent.toml());
