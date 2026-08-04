@@ -21,8 +21,10 @@ Java 25 toolchain, pinned by `mise.toml` and `build.gradle`. Gradle 9.6.1 via wr
 
 ## Running the CLI
 
-There is **no `application` plugin**, so `./gradlew run` does not exist and the jar has no
-`Main-Class`. Exercise the CLI through the test seam:
+`./gradlew run` starts the CLI and `./gradlew build` produces a jar with a `Main-Class`
+manifest. When no command is given, `./gradlew run` prints usage and exits with code 2
+(USAGE) — pass args via `./gradlew run --args="subcommand ..."`. For testing, exercise the
+CLI through the test seam:
 
 ```java
 int exitCode = Main.execute(new String[]{"import", "--root", root, path}, out, err);
