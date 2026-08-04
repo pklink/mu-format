@@ -11,11 +11,11 @@ import java.util.function.Function;
 public class FileClassifier implements Function<String, FileKind> {
 
     private static final Set<String> AUDIO = Set.of(
-            "flac", "mp3", "m4a", "m4b", "aac", "ogg", "oga", "opus", "wav", "wave",
-            "aiff", "aif", "aifc", "ape", "wv", "wma", "alac", "dsf", "dff", "mpc", "tta", "shn");
+                                    "flac", "mp3", "m4a", "m4b", "aac", "ogg", "oga", "opus", "wav", "wave",
+                                    "aiff", "aif", "aifc", "ape", "wv", "wma", "alac", "dsf", "dff", "mpc", "tta", "shn");
 
     private static final Set<String> IMAGE = Set.of(
-            "jpg", "jpeg", "png", "gif", "webp", "tif", "tiff", "bmp", "heic", "avif");
+                                    "jpg", "jpeg", "png", "gif", "webp", "tif", "tiff", "bmp", "heic", "avif");
 
     private final ExtensionDeriver extensionDeriver;
 
@@ -26,8 +26,8 @@ public class FileClassifier implements Function<String, FileKind> {
     @Override
     public FileKind apply(String filename) {
         return extensionDeriver.derive(filename)
-                .map(FileClassifier::byExtension)
-                .orElse(FileKind.OTHER);
+                                        .map(FileClassifier::byExtension)
+                                        .orElse(FileKind.OTHER);
     }
 
     private static FileKind byExtension(String extension) {

@@ -23,79 +23,79 @@ class CreditSearcherTest {
     void search_findsReleaseCreditingAMatchingArtist() {
         EntityFile artist = artist("overmono", "name = \"Overmono\"\n");
         EntityFile release = release("good-lies", """
-                title = "Good Lies"
-                [[credit]]
-                role = "main"
-                artist = "overmono"
-                """);
+                                        title = "Good Lies"
+                                        [[credit]]
+                                        role = "main"
+                                        artist = "overmono"
+                                        """);
         List<SearchResult> results = searcher("over", null)
-                .search(List.of(release), List.of(artist));
+                                        .search(List.of(release), List.of(artist));
         assertThat(results).hasSize(1);
         assertThat(results.get(0).id()).isEqualTo("good-lies");
         assertThat(results.get(0).fields())
-                .containsEntry("matched-credit", "overmono (main)");
+                                        .containsEntry("matched-credit", "overmono (main)");
     }
 
     @Test
     void search_findsReleaseThroughAnAlias() {
         EntityFile artist = artist("overmono", """
-                name = "Overmono"
-                alias = ["Tom & Ed"]
-                """);
+                                        name = "Overmono"
+                                        alias = ["Tom & Ed"]
+                                        """);
         EntityFile release = release("good-lies", """
-                [[credit]]
-                role = "main"
-                artist = "overmono"
-                """);
+                                        [[credit]]
+                                        role = "main"
+                                        artist = "overmono"
+                                        """);
         assertThat(searcher("tom & ed", null).search(List.of(release), List.of(artist)))
-                .hasSize(1);
+                                        .hasSize(1);
     }
 
     @Test
     void search_findsTrackLevelCredits() {
         EntityFile artist = artist("anz", "name = " + quoted("Anz") + "\n");
         EntityFile release = release("good-lies", """
-                [[credit]]
-                role = "main"
-                artist = "overmono"
-                [[track]]
-                number = 1
-                title = "Kink"
-                [[track.credit]]
-                role = "feat"
-                artist = "anz"
-                """);
+                                        [[credit]]
+                                        role = "main"
+                                        artist = "overmono"
+                                        [[track]]
+                                        number = 1
+                                        title = "Kink"
+                                        [[track.credit]]
+                                        role = "feat"
+                                        artist = "anz"
+                                        """);
         List<SearchResult> results = searcher("anz", null)
-                .search(List.of(release), List.of(artist));
+                                        .search(List.of(release), List.of(artist));
         assertThat(results).hasSize(1);
         assertThat(results.get(0).fields())
-                .containsEntry("matched-credit", "anz (feat)");
+                                        .containsEntry("matched-credit", "anz (feat)");
     }
 
     @Test
     void search_roleRestrictsMatchingCredits() {
         EntityFile artist = artist("anz", "name = \"Anz\"\n");
         EntityFile release = release("good-lies", """
-                [[track]]
-                number = 1
-                title = "Kink"
-                [[track.credit]]
-                role = "feat"
-                artist = "anz"
-                """);
+                                        [[track]]
+                                        number = 1
+                                        title = "Kink"
+                                        [[track.credit]]
+                                        role = "feat"
+                                        artist = "anz"
+                                        """);
         assertThat(searcher("anz", "producer").search(List.of(release), List.of(artist)))
-                .isEmpty();
+                                        .isEmpty();
         assertThat(searcher("anz", "feat").search(List.of(release), List.of(artist)))
-                .hasSize(1);
+                                        .hasSize(1);
     }
 
     @Test
     void search_noMatchingArtistYieldsNoResults() {
         EntityFile release = release("good-lies", """
-                [[credit]]
-                role = "main"
-                artist = "overmono"
-                """);
+                                        [[credit]]
+                                        role = "main"
+                                        artist = "overmono"
+                                        """);
         assertThat(searcher("nobody", null).search(List.of(release), List.of())).isEmpty();
     }
 
@@ -105,7 +105,7 @@ class CreditSearcherTest {
 
     private CreditSearcher searcher(String query, String role) {
         SearchOptions options = new SearchOptions(
-                EnumSet.allOf(EntityType.class), null, null, null, role, 0);
+                                        EnumSet.allOf(EntityType.class), null, null, null, role, 0);
         return new CreditSearcher(new QueryMatcher(query), options);
     }
 

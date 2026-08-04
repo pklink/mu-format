@@ -8,10 +8,12 @@ import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
 
 /**
- * Reads and checks the {@code format} value of {@code meta/.mu} (SPEC.md section 4.0).
+ * Reads and checks the {@code format} value of {@code meta/.mu} (SPEC.md
+ * section 4.0).
  *
- * <p>A value higher than {@link #IMPLEMENTED_VERSION} makes the tool refuse to write, rather
- * than silently degrade.
+ * <p>
+ * A value higher than {@link #IMPLEMENTED_VERSION} makes the tool refuse to
+ * write, rather than silently degrade.
  */
 public class FormatVersionReader {
 
@@ -27,8 +29,8 @@ public class FormatVersionReader {
         long format = parse(root);
         if (format > IMPLEMENTED_VERSION) {
             throw new MuException(ExitCode.USAGE,
-                    "Collection uses format " + format + ", this tool implements "
-                            + IMPLEMENTED_VERSION + ": " + root.marker());
+                                            "Collection uses format " + format + ", this tool implements "
+                                                                            + IMPLEMENTED_VERSION + ": " + root.marker());
         }
         return format;
     }
@@ -44,7 +46,7 @@ public class FormatVersionReader {
         TomlValue value = marker.get("format");
         if (value == null || !value.isPrimitive() || !value.asPrimitive().isInteger()) {
             throw new MuException(ExitCode.USAGE,
-                    "Missing or non-integer 'format' in " + root.marker());
+                                            "Missing or non-integer 'format' in " + root.marker());
         }
         return value.asPrimitive().asLong();
     }

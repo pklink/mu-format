@@ -8,8 +8,9 @@ import java.util.Set;
 /**
  * Selects the image that becomes {@code cover-front}.
  *
- * <p>The first image in filename order whose stem is {@code cover}, {@code front} or
- * {@code folder}. Every other image becomes an asset.
+ * <p>
+ * The first image in filename order whose stem is {@code cover}, {@code front}
+ * or {@code folder}. Every other image becomes an asset.
  */
 public class CoverFrontSelector {
 
@@ -17,9 +18,9 @@ public class CoverFrontSelector {
 
     public Optional<SourceFile> select(List<SourceFile> files) {
         return files.stream()
-                .filter(file -> file.kind() == FileKind.IMAGE)
-                .filter(CoverFrontSelector::hasCoverName)
-                .findFirst();
+                                        .filter(file -> file.kind() == FileKind.IMAGE)
+                                        .filter(CoverFrontSelector::hasCoverName)
+                                        .findFirst();
     }
 
     private static boolean hasCoverName(SourceFile file) {

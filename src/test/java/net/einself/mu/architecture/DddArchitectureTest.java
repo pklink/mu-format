@@ -14,8 +14,8 @@ class DddArchitectureTest {
     @BeforeAll
     static void setup() {
         classes = new ClassFileImporter()
-                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                .importPackages("net.einself.mu");
+                                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                                        .importPackages("net.einself.mu");
     }
 
     @Test

@@ -13,19 +13,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Matches releases by their scalar attributes (SPEC.md section 4.8) and applies the
- * {@code --year} and {@code --medium} filters. Credits are matched separately
- * ({@link CreditSearcher}).
+ * Matches releases by their scalar attributes (SPEC.md section 4.8) and applies
+ * the {@code --year} and {@code --medium} filters. Credits are matched
+ * separately ({@link CreditSearcher}).
  */
 public class ReleaseSearcher {
 
     /**
-     * Searched when no {@code --field} is given. The descriptive, hand-edited attributes
-     * a user is likely to remember — not blob references or technical rip data.
+     * Searched when no {@code --field} is given. The descriptive, hand-edited
+     * attributes a user is likely to remember — not blob references or technical
+     * rip data.
      */
     private static final List<String> DEFAULT_FIELDS = List.of(
-            "title", "type", "release-year-original", "release-year-medium",
-            "source-medium", "source-store", "rip-result", "notes", "origin-dir");
+                                    "title", "type", "release-year-original", "release-year-medium",
+                                    "source-medium", "source-store", "rip-result", "notes", "origin-dir");
 
     private final QueryMatcher matcher;
 
@@ -47,12 +48,12 @@ public class ReleaseSearcher {
     }
 
     /**
-     * The filters are shared with {@link TrackSearcher}: a year or medium constraint
-     * keeps only tracks of matching releases.
+     * The filters are shared with {@link TrackSearcher}: a year or medium
+     * constraint keeps only tracks of matching releases.
      */
     static boolean passesFilters(TomlTable data, SearchOptions options) {
         return equalsIgnoreCase(data, "release-year-original", options.year())
-                && equalsIgnoreCase(data, "source-medium", options.medium());
+                                        && equalsIgnoreCase(data, "source-medium", options.medium());
     }
 
     private boolean passesFilters(TomlTable data) {
@@ -84,7 +85,8 @@ public class ReleaseSearcher {
     }
 
     /**
-     * @param extra additional fields, e.g. the credits that made a release match
+     * @param extra
+     *            additional fields, e.g. the credits that made a release match
      */
     static SearchResult toResult(EntityFile release, Map<String, String> extra) {
         TomlTable data = release.data();

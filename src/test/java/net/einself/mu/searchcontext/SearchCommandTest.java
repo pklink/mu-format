@@ -34,39 +34,39 @@ class SearchCommandTest {
         Files.writeString(root.resolve("meta/.mu"), "format = 1\n");
 
         Files.writeString(root.resolve("meta/releases/good-lies.mu"), """
-                title = "Good Lies"
-                type = "album"
-                release-year-original = "2023"
-                source-medium = "cd"
-                [[credit]]
-                role = "main"
-                artist = "overmono"
-                [[track]]
-                number = 1
-                title = "Feeling Plain"
-                [[track]]
-                number = 2
-                title = "Kink"
-                [[track.credit]]
-                role = "feat"
-                artist = "anz"
-                """.stripIndent());
+                                        title = "Good Lies"
+                                        type = "album"
+                                        release-year-original = "2023"
+                                        source-medium = "cd"
+                                        [[credit]]
+                                        role = "main"
+                                        artist = "overmono"
+                                        [[track]]
+                                        number = 1
+                                        title = "Feeling Plain"
+                                        [[track]]
+                                        number = 2
+                                        title = "Kink"
+                                        [[track.credit]]
+                                        role = "feat"
+                                        artist = "anz"
+                                        """.stripIndent());
         Files.writeString(root.resolve("meta/releases/dub.mu"), """
-                title = "Dub"
-                release-year-original = "2024"
-                source-medium = "vinyl"
-                [[credit]]
-                role = "main"
-                artist = "underworld"
-                [[track]]
-                number = 1
-                title = "Two Months Off"
-                """.stripIndent());
+                                        title = "Dub"
+                                        release-year-original = "2024"
+                                        source-medium = "vinyl"
+                                        [[credit]]
+                                        role = "main"
+                                        artist = "underworld"
+                                        [[track]]
+                                        number = 1
+                                        title = "Two Months Off"
+                                        """.stripIndent());
         Files.writeString(root.resolve("meta/artists/overmono.mu"), """
-                name = "Overmono"
-                is-group = true
-                member = ["tom-russell", "ed-russell"]
-                """.stripIndent());
+                                        name = "Overmono"
+                                        is-group = true
+                                        member = ["tom-russell", "ed-russell"]
+                                        """.stripIndent());
         Files.writeString(root.resolve("meta/artists/anz.mu"), "name = \"Anz\"\n");
         Files.writeString(root.resolve("meta/artists/underworld.mu"), "name = \"Underworld\"\n");
 
@@ -80,8 +80,8 @@ class SearchCommandTest {
 
         assertThat(exitCode).isZero();
         assertThat(out.toString())
-                .contains("Artists (1 found):")
-                .contains("overmono");
+                                        .contains("Artists (1 found):")
+                                        .contains("overmono");
     }
 
     @Test
@@ -90,9 +90,9 @@ class SearchCommandTest {
 
         assertThat(exitCode).isZero();
         assertThat(out.toString())
-                .contains("Releases (1 found):")
-                .contains("good-lies")
-                .contains("matched-credit: overmono (main)");
+                                        .contains("Releases (1 found):")
+                                        .contains("good-lies")
+                                        .contains("matched-credit: overmono (main)");
     }
 
     @Test
@@ -101,9 +101,9 @@ class SearchCommandTest {
 
         assertThat(exitCode).isZero();
         assertThat(out.toString())
-                .contains("Tracks (1 found):")
-                .contains("release: good-lies")
-                .contains("title: Feeling Plain");
+                                        .contains("Tracks (1 found):")
+                                        .contains("release: good-lies")
+                                        .contains("title: Feeling Plain");
     }
 
     @Test
@@ -112,8 +112,8 @@ class SearchCommandTest {
 
         assertThat(exitCode).isZero();
         assertThat(out.toString())
-                .contains("Releases")
-                .doesNotContain("Artists (");
+                                        .contains("Releases")
+                                        .doesNotContain("Artists (");
     }
 
     @Test
@@ -134,7 +134,7 @@ class SearchCommandTest {
 
         assertThat(exitCode).isZero();
         assertThat(out.toString()).contains("good-lies")
-                .contains("matched-credit: anz (feat)");
+                                        .contains("matched-credit: anz (feat)");
 
         exitCode = run("search", "--type", "release", "--role", "producer", "anz");
         assertThat(exitCode).isZero();
@@ -163,12 +163,12 @@ class SearchCommandTest {
 
         assertThat(exitCode).isZero();
         assertThat(out.toString())
-                .contains("\"command\":\"search\"")
-                .contains("\"total\":1")
-                .contains("\"releases\":[")
-                .contains("\"id\":\"good-lies\"")
-                .contains("\"artists\":[]")
-                .contains("\"tracks\":[]");
+                                        .contains("\"command\":\"search\"")
+                                        .contains("\"total\":1")
+                                        .contains("\"releases\":[")
+                                        .contains("\"id\":\"good-lies\"")
+                                        .contains("\"artists\":[]")
+                                        .contains("\"tracks\":[]");
     }
 
     @Test
@@ -237,13 +237,14 @@ class SearchCommandTest {
     }
 
     /**
-     * Every invocation passes {@code --root} explicitly, like {@code ImportCommandTest}.
+     * Every invocation passes {@code --root} explicitly, like
+     * {@code ImportCommandTest}.
      */
     private int run(String... args) {
         String[] withRoot = Stream.concat(
-                        Stream.of("--root", root.toString()),
-                        Stream.of(args))
-                .toArray(String[]::new);
+                                        Stream.of("--root", root.toString()),
+                                        Stream.of(args))
+                                        .toArray(String[]::new);
         return Main.execute(withRoot, new PrintStream(out), new PrintStream(err));
     }
 

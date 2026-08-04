@@ -21,10 +21,12 @@ import java.util.UUID;
 /**
  * Renders a {@link Release} to its entity file (SPEC.md section 4).
  *
- * <p>Written as UTF-8 without BOM with LF line endings, and published by rename so that a
- * reader never observes a half-written entity file. Key order inside each table is jtoml's:
- * primitives first, then arrays of tables, each group in lexicographical order — deterministic,
- * which is what keeps git diffs meaningful (SPEC.md section 6).
+ * <p>
+ * Written as UTF-8 without BOM with LF line endings, and published by rename so
+ * that a reader never observes a half-written entity file. Key order inside
+ * each table is jtoml's: primitives first, then arrays of tables, each group in
+ * lexicographical order — deterministic, which is what keeps git diffs
+ * meaningful (SPEC.md section 6).
  */
 public class ReleaseTomlWriter {
 
@@ -54,7 +56,7 @@ public class ReleaseTomlWriter {
         } catch (IOException e) {
             deleteQuietly(temp);
             throw new MuException(ExitCode.IO_ERROR,
-                    "Cannot write " + target + ": " + e.getMessage(), e);
+                                            "Cannot write " + target + ": " + e.getMessage(), e);
         }
     }
 
@@ -108,7 +110,7 @@ public class ReleaseTomlWriter {
     }
 
     private static <T> void putTables(TomlTable table, String key, List<T> values,
-                                      java.util.function.Function<T, TomlTable> mapper) {
+                                    java.util.function.Function<T, TomlTable> mapper) {
         if (values.isEmpty()) {
             return;
         }

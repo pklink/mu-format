@@ -9,22 +9,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Locates the collection root: an explicit {@code --root}, or the nearest enclosing directory
- * containing {@code meta/.mu}, searching upwards the way git does.
+ * Locates the collection root: an explicit {@code --root}, or the nearest
+ * enclosing directory containing {@code meta/.mu}, searching upwards the way
+ * git does.
  */
 public class CollectionRootFinder {
 
     public CollectionRoot find(Path explicitRoot, Path workingDirectory) {
         return explicitRoot != null
-                ? fromExplicit(explicitRoot)
-                : searchUpwards(workingDirectory);
+                                        ? fromExplicit(explicitRoot)
+                                        : searchUpwards(workingDirectory);
     }
 
     private CollectionRoot fromExplicit(Path explicitRoot) {
         CollectionRoot root = new CollectionRoot(absolute(explicitRoot));
         if (!Files.isRegularFile(root.marker())) {
             throw new MuException(ExitCode.USAGE,
-                    "Not a mu collection (no meta/.mu): " + root.path());
+                                            "Not a mu collection (no meta/.mu): " + root.path());
         }
         return root;
     }
@@ -37,8 +38,8 @@ public class CollectionRootFinder {
             }
         }
         throw new MuException(ExitCode.USAGE,
-                "Not a mu collection (no meta/.mu found in " + absolute(workingDirectory)
-                        + " or any parent directory)");
+                                        "Not a mu collection (no meta/.mu found in " + absolute(workingDirectory)
+                                                                        + " or any parent directory)");
     }
 
     private static Path absolute(Path path) {

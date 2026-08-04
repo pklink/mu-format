@@ -5,7 +5,8 @@ import net.einself.mu.storage.internal.FileSystemBlobStore;
 
 public final class StorageModule {
 
-    private StorageModule() {}
+    private StorageModule() {
+    }
 
     public static BlobRepository createRepository(CollectionRoot root) {
         return new FileSystemBlobStore(root);

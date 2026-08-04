@@ -17,33 +17,28 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
- * {@code mu import} — takes files into the store and creates a release skeleton.
+ * {@code mu import} — takes files into the store and creates a release
+ * skeleton.
  */
-@Command(name = "import",
-        description = "Take files into the store and create a meta skeleton.")
+@Command(name = "import", description = "Take files into the store and create a meta skeleton.")
 public class ImportCommand implements Callable<Integer> {
 
     @ParentCommand
     private Main parent;
 
-    @Option(names = "--release", paramLabel = "<id>",
-            description = "Import into an existing release. Not implemented yet.")
+    @Option(names = "--release", paramLabel = "<id>", description = "Import into an existing release. Not implemented yet.")
     String releaseId;
 
-    @Option(names = "--artist", paramLabel = "<id>",
-            description = "Artist identifier for the main credit.")
+    @Option(names = "--artist", paramLabel = "<id>", description = "Artist identifier for the main credit.")
     String artistId;
 
-    @Option(names = "--origin",
-            description = "Record origin-dir and origin-path (SPEC.md section 4.9).")
+    @Option(names = "--origin", description = "Record origin-dir and origin-path (SPEC.md section 4.9).")
     boolean origin;
 
-    @Option(names = "--dry-run",
-            description = "Report what would happen, write nothing.")
+    @Option(names = "--dry-run", description = "Report what would happen, write nothing.")
     boolean dryRun;
 
-    @Parameters(arity = "1..*", paramLabel = "<path>",
-            description = "Files or directories to import.")
+    @Parameters(arity = "1..*", paramLabel = "<path>", description = "Files or directories to import.")
     List<Path> paths;
 
     @Override
@@ -64,24 +59,24 @@ public class ImportCommand implements Callable<Integer> {
         ImportReport report = importService.importPaths(root, paths, options);
 
         String relPath = root.path().relativize(
-                root.releases().resolve(report.release().id() + ".mu")).toString();
+                                        root.releases().resolve(report.release().id() + ".mu")).toString();
         ImportData data = new ImportData(relPath, dryRun, report.result().files(),
-                report.result().stored(), report.result().deduplicated(),
-                report.result().warnings());
+                                        report.result().stored(), report.result().deduplicated(),
+                                        report.result().warnings());
 
         OutputFormatter.write(out, parent.format, "import", data,
-                printer -> {
-                    report.result().warnings().forEach(w -> err.println("warning: " + w));
-                    if (dryRun) {
-                        printer.println("--- meta/releases/" + report.release().id() + ".mu (dry run) ---");
-                        printer.print(importService.renderRelease(report.release()));
-                        printer.println("--- end ---");
-                    }
-                    printer.println(summary(root, report.release()));
-                    printer.println(report.result().files() + " file(s): "
-                            + report.result().stored() + " stored, "
-                            + report.result().deduplicated() + " deduplicated");
-                });
+                                        printer -> {
+                                            report.result().warnings().forEach(w -> err.println("warning: " + w));
+                                            if (dryRun) {
+                                                printer.println("--- meta/releases/" + report.release().id() + ".mu (dry run) ---");
+                                                printer.print(importService.renderRelease(report.release()));
+                                                printer.println("--- end ---");
+                                            }
+                                            printer.println(summary(root, report.release()));
+                                            printer.println(report.result().files() + " file(s): "
+                                                                            + report.result().stored() + " stored, "
+                                                                            + report.result().deduplicated() + " deduplicated");
+                                        });
         return ExitCode.SUCCESS.value();
     }
 
@@ -93,7 +88,7 @@ public class ImportCommand implements Callable<Integer> {
     private void rejectUnimplementedOptions() {
         if (releaseId != null) {
             throw new MuException(ExitCode.USAGE,
-                    "--release is not implemented yet; import creates a new release");
+                                            "--release is not implemented yet; import creates a new release");
         }
     }
 }

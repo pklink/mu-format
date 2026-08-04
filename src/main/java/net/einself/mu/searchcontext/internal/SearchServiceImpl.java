@@ -42,9 +42,9 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private List<SearchResult> collect(List<EntityFile> releases,
-                                       List<EntityFile> artists,
-                                       QueryMatcher matcher,
-                                       SearchOptions options) {
+                                    List<EntityFile> artists,
+                                    QueryMatcher matcher,
+                                    SearchOptions options) {
         List<SearchResult> results = new ArrayList<>();
         if (options.searches(EntityType.RELEASE)) {
             results.addAll(new ReleaseSearcher(matcher, options).search(releases));
@@ -68,7 +68,7 @@ public class SearchServiceImpl implements SearchService {
             String key = switch (result.type()) {
                 case RELEASE, ARTIST -> result.type() + ":" + result.id();
                 case TRACK -> result.type() + ":" + result.id() + ":"
-                        + result.fields().get("disc") + ":" + result.fields().get("number");
+                                                + result.fields().get("disc") + ":" + result.fields().get("number");
             };
             if (seen.add(key)) {
                 deduplicated.add(result);

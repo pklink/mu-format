@@ -20,8 +20,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 class BlobStoreTest {
 
     /** SHA-256 of "hello" */
-    private static final String HELLO_HASH =
-            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+    private static final String HELLO_HASH = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
 
     @TempDir
     Path root;
@@ -48,8 +47,8 @@ class BlobStoreTest {
         assertThat(result.hash()).isEqualTo(HELLO_HASH);
         assertThat(result.deduplicated()).isFalse();
         assertThat(root.resolve("store/2c").resolve(HELLO_HASH))
-                .exists()
-                .hasContent("hello");
+                                        .exists()
+                                        .hasContent("hello");
     }
 
     @Test
@@ -91,12 +90,11 @@ class BlobStoreTest {
 
         Blob result = underTest.store(write("source.txt", "hello"));
 
-        Set<PosixFilePermission> permissions =
-                Files.getPosixFilePermissions(root.resolve(result.relativePath()));
+        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(root.resolve(result.relativePath()));
         assertThat(permissions).containsExactlyInAnyOrder(
-                PosixFilePermission.OWNER_READ,
-                PosixFilePermission.GROUP_READ,
-                PosixFilePermission.OTHERS_READ);
+                                        PosixFilePermission.OWNER_READ,
+                                        PosixFilePermission.GROUP_READ,
+                                        PosixFilePermission.OTHERS_READ);
     }
 
     @Test

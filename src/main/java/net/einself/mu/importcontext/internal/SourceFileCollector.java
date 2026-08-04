@@ -15,8 +15,10 @@ import java.util.stream.Stream;
 /**
  * Collects the files to import, recursively.
  *
- * <p>Order is by NFC-normalized relative path in code point order, so that track numbering and
- * the resulting entity file do not depend on directory listing order.
+ * <p>
+ * Order is by NFC-normalized relative path in code point order, so that track
+ * numbering and the resulting entity file do not depend on directory listing
+ * order.
  */
 public class SourceFileCollector {
 
@@ -50,11 +52,11 @@ public class SourceFileCollector {
     private void collectDirectory(Path directory, List<SourceFile> collected) {
         try (Stream<Path> walk = Files.walk(directory)) {
             walk.filter(Files::isRegularFile)
-                    .map(file -> toSourceFile(file, relativize(directory, file)))
-                    .forEach(collected::add);
+                                            .map(file -> toSourceFile(file, relativize(directory, file)))
+                                            .forEach(collected::add);
         } catch (IOException e) {
             throw new MuException(ExitCode.IO_ERROR,
-                    "Cannot read " + directory + ": " + e.getMessage(), e);
+                                            "Cannot read " + directory + ": " + e.getMessage(), e);
         }
     }
 
@@ -63,7 +65,8 @@ public class SourceFileCollector {
     }
 
     /**
-     * Always {@code /}-separated, independent of the platform separator (SPEC.md section 4.9).
+     * Always {@code /}-separated, independent of the platform separator (SPEC.md
+     * section 4.9).
      */
     private static String relativize(Path directory, Path file) {
         Path relative = directory.relativize(file);

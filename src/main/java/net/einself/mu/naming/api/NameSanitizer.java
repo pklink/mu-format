@@ -4,9 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.UnaryOperator;
 
 /**
- * Name construction (SPEC.md section 5.2): derives a filesystem name from an attribute value.
+ * Name construction (SPEC.md section 5.2): derives a filesystem name from an
+ * attribute value.
  *
- * <p>Also the test for origin values, which must pass this unchanged (SPEC.md section 4.9).
+ * <p>
+ * Also the test for origin values, which must pass this unchanged (SPEC.md
+ * section 4.9).
  */
 public class NameSanitizer implements UnaryOperator<String> {
 
@@ -25,8 +28,8 @@ public class NameSanitizer implements UnaryOperator<String> {
     }
 
     /**
-     * Whether the value survives sanitization untouched, which is what makes it safe to write
-     * to the filesystem verbatim (SPEC.md sections 4.1, 4.9).
+     * Whether the value survives sanitization untouched, which is what makes it
+     * safe to write to the filesystem verbatim (SPEC.md sections 4.1, 4.9).
      */
     public boolean isUnchanged(String value) {
         return apply(value).equals(value);
@@ -39,8 +42,8 @@ public class NameSanitizer implements UnaryOperator<String> {
     private static String stripControlCharacters(String value) {
         StringBuilder result = new StringBuilder(value.length());
         value.codePoints()
-                .filter(codePoint -> codePoint > 0x1f)
-                .forEach(result::appendCodePoint);
+                                        .filter(codePoint -> codePoint > 0x1f)
+                                        .forEach(result::appendCodePoint);
         return result.toString();
     }
 

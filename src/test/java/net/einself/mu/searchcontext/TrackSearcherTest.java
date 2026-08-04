@@ -22,44 +22,44 @@ class TrackSearcherTest {
     @Test
     void search_findsTrackByTitle() {
         EntityFile release = release("good-lies", """
-                title = "Good Lies"
-                [[track]]
-                number = 1
-                title = "Feeling Plain"
-                [[track]]
-                number = 2
-                title = "Arla Fearn"
-                """);
+                                        title = "Good Lies"
+                                        [[track]]
+                                        number = 1
+                                        title = "Feeling Plain"
+                                        [[track]]
+                                        number = 2
+                                        title = "Arla Fearn"
+                                        """);
         List<SearchResult> results = searcher("feeling").search(List.of(release));
         assertThat(results).hasSize(1);
         SearchResult track = results.get(0);
         assertThat(track.type()).isEqualTo(EntityType.TRACK);
         assertThat(track.id()).isEqualTo("good-lies");
         assertThat(track.fields())
-                .containsEntry("release", "good-lies")
-                .containsEntry("number", "1")
-                .containsEntry("title", "Feeling Plain");
+                                        .containsEntry("release", "good-lies")
+                                        .containsEntry("number", "1")
+                                        .containsEntry("title", "Feeling Plain");
     }
 
     @Test
     void search_findsTrackByIsrc() {
         EntityFile release = release("a", """
-                [[track]]
-                number = 1
-                title = "X"
-                isrc = "GBABC1234567"
-                """);
+                                        [[track]]
+                                        number = 1
+                                        title = "X"
+                                        isrc = "GBABC1234567"
+                                        """);
         assertThat(searcher("gbabc").search(List.of(release))).hasSize(1);
     }
 
     @Test
     void search_rendersStringDiscs() {
         EntityFile release = release("a", """
-                [[track]]
-                disc = "A"
-                number = 1
-                title = "X"
-                """);
+                                        [[track]]
+                                        disc = "A"
+                                        number = 1
+                                        title = "X"
+                                        """);
         List<SearchResult> results = searcher("x").search(List.of(release));
         assertThat(results.get(0).fields()).containsEntry("disc", "A");
     }
@@ -67,40 +67,40 @@ class TrackSearcherTest {
     @Test
     void search_appliesReleaseFilters() {
         EntityFile cd = release("cd-release", """
-                title = "R"
-                source-medium = "cd"
-                [[track]]
-                number = 1
-                title = "X"
-                """);
+                                        title = "R"
+                                        source-medium = "cd"
+                                        [[track]]
+                                        number = 1
+                                        title = "X"
+                                        """);
         EntityFile vinyl = release("vinyl-release", """
-                title = "R"
-                source-medium = "vinyl"
-                [[track]]
-                number = 1
-                title = "X"
-                """);
+                                        title = "R"
+                                        source-medium = "vinyl"
+                                        [[track]]
+                                        number = 1
+                                        title = "X"
+                                        """);
         SearchOptions options = new SearchOptions(
-                EnumSet.allOf(EntityType.class), null, null, "vinyl", null, 0);
+                                        EnumSet.allOf(EntityType.class), null, null, "vinyl", null, 0);
         List<SearchResult> results = new TrackSearcher(new QueryMatcher("x"), options)
-                .search(List.of(cd, vinyl));
+                                        .search(List.of(cd, vinyl));
         assertThat(results).extracting(SearchResult::id).containsExactly("vinyl-release");
     }
 
     @Test
     void search_fieldRestrictsMatching() {
         EntityFile release = release("a", """
-                [[track]]
-                number = 1
-                title = "Kink"
-                isrc = "KINK12345678"
-                """);
+                                        [[track]]
+                                        number = 1
+                                        title = "Kink"
+                                        isrc = "KINK12345678"
+                                        """);
         SearchOptions titleOnly = new SearchOptions(
-                EnumSet.allOf(EntityType.class), "title", null, null, null, 0);
+                                        EnumSet.allOf(EntityType.class), "title", null, null, null, 0);
         assertThat(new TrackSearcher(new QueryMatcher("kink1"), titleOnly)
-                .search(List.of(release))).isEmpty();
+                                        .search(List.of(release))).isEmpty();
         assertThat(new TrackSearcher(new QueryMatcher("kink"), titleOnly)
-                .search(List.of(release))).hasSize(1);
+                                        .search(List.of(release))).hasSize(1);
     }
 
     @Test
@@ -111,7 +111,7 @@ class TrackSearcherTest {
 
     private TrackSearcher searcher(String query) {
         SearchOptions options = new SearchOptions(
-                EnumSet.allOf(EntityType.class), null, null, null, null, 0);
+                                        EnumSet.allOf(EntityType.class), null, null, null, null, 0);
         return new TrackSearcher(new QueryMatcher(query), options);
     }
 

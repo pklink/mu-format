@@ -10,9 +10,11 @@ import java.util.*;
 /**
  * Checks the values {@code --origin} would record (SPEC.md section 4.9).
  *
- * <p>Every segment must pass name construction unchanged, and origin paths must be unique
- * within a release. Violations are collected and reported together: importing the rest would
- * produce exactly the half-tree the option exists to prevent.
+ * <p>
+ * Every segment must pass name construction unchanged, and origin paths must be
+ * unique within a release. Violations are collected and reported together:
+ * importing the rest would produce exactly the half-tree the option exists to
+ * prevent.
  */
 public class OriginPathValidator {
 
@@ -30,16 +32,16 @@ public class OriginPathValidator {
 
         if (!problems.isEmpty()) {
             throw new MuException(ExitCode.PROBLEMS,
-                    "Cannot record origin paths, " + problems.size() + " value(s) are invalid "
-                            + "(SPEC.md section 4.9); nothing was written",
-                    problems);
+                                            "Cannot record origin paths, " + problems.size() + " value(s) are invalid "
+                                                                            + "(SPEC.md section 4.9); nothing was written",
+                                            problems);
         }
     }
 
     private List<String> directoryProblems(String originDir) {
         return isValidSegment(originDir)
-                ? List.of()
-                : List.of("origin-dir: " + originDir);
+                                        ? List.of()
+                                        : List.of("origin-dir: " + originDir);
     }
 
     private List<String> pathProblems(List<SourceFile> files) {
@@ -56,7 +58,8 @@ public class OriginPathValidator {
     }
 
     /**
-     * Compared after NFC normalization and case folding (SPEC.md sections 4.9, 4.1 rule 5).
+     * Compared after NFC normalization and case folding (SPEC.md sections 4.9, 4.1
+     * rule 5).
      */
     private List<String> duplicateProblems(List<SourceFile> files) {
         Map<String, String> seen = new HashMap<>();
@@ -66,7 +69,7 @@ public class OriginPathValidator {
             String previous = seen.putIfAbsent(key, file.relativePath());
             if (previous != null) {
                 problems.add("origin-path: '" + file.relativePath()
-                        + "' collides with '" + previous + "'");
+                                                + "' collides with '" + previous + "'");
             }
         }
         return problems;

@@ -22,9 +22,9 @@ class ReleaseSearcherTest {
     @Test
     void search_findsReleaseByTitleSubstring() {
         EntityFile release = release("good-lies", """
-                title = "Good Lies"
-                release-year-original = "2023"
-                """);
+                                        title = "Good Lies"
+                                        release-year-original = "2023"
+                                        """);
         List<SearchResult> results = searcher("lies", options()).search(List.of(release));
         assertThat(results).hasSize(1);
         assertThat(results.get(0).id()).isEqualTo("good-lies");
@@ -59,9 +59,9 @@ class ReleaseSearcherTest {
     @Test
     void search_fieldRestrictsMatching() {
         EntityFile release = release("good-lies", """
-                title = "Good Lies"
-                notes = "Ripped from the web"
-                """);
+                                        title = "Good Lies"
+                                        notes = "Ripped from the web"
+                                        """);
         SearchOptions titleOnly = options(null, null, "title");
         assertThat(searcher("web", titleOnly).search(List.of(release))).isEmpty();
         SearchOptions notesOnly = options(null, null, "notes");

@@ -65,7 +65,7 @@ class ImportCommandTest {
 
         TomlTable release = readRelease();
         assertThat(release.get("title").asPrimitive().asString())
-                .isEqualTo("Overmono - Good Lies (2023) [FLAC]");
+                                        .isEqualTo("Overmono - Good Lies (2023) [FLAC]");
         assertThat(release.get("track").asArray().size()).isEqualTo(2);
         assertThat(release.get("asset").asArray().size()).isEqualTo(1);
         assertThat(release.get("cover-front").asPrimitive().asString()).endsWith(".jpg");
@@ -123,7 +123,7 @@ class ImportCommandTest {
         TomlArray tracks = readRelease().get("track").asArray();
         assertThat(tracks.get(0).asTable().get("number").asPrimitive().asLong()).isEqualTo(1);
         assertThat(tracks.get(0).asTable().get("title").asPrimitive().asString())
-                .isEqualTo("01 Feeling Plain");
+                                        .isEqualTo("01 Feeling Plain");
         assertThat(tracks.get(1).asTable().get("number").asPrimitive().asLong()).isEqualTo(2);
         assertThat(tracks.get(1).asTable().get("title").asPrimitive().asString()).isEqualTo("Arla Fearn");
     }
@@ -153,12 +153,12 @@ class ImportCommandTest {
         assertThat(exitCode).isZero();
         TomlTable release = readRelease();
         assertThat(release.get("origin-dir").asPrimitive().asString())
-                .isEqualTo("Overmono - Good Lies (2023) [FLAC]");
+                                        .isEqualTo("Overmono - Good Lies (2023) [FLAC]");
         assertThat(release.get("cover-front-origin-path").asPrimitive().asString())
-                .isEqualTo("artwork/cover.jpg");
+                                        .isEqualTo("artwork/cover.jpg");
         assertThat(release.get("track").asArray().get(0).asTable()
-                .get("origin-path").asPrimitive().asString())
-                .isEqualTo("01 Feeling Plain.flac");
+                                        .get("origin-path").asPrimitive().asString())
+                                        .isEqualTo("01 Feeling Plain.flac");
     }
 
     @Test
@@ -249,8 +249,8 @@ class ImportCommandTest {
         Path lockFile = root.resolve("meta/.lock");
 
         try (FileChannel channel = FileChannel.open(lockFile,
-                StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-             FileLock ignored = channel.lock()) {
+                                        StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                                        FileLock ignored = channel.lock()) {
 
             int exitCode = run("import", source.toString());
 
@@ -278,13 +278,13 @@ class ImportCommandTest {
 
         assertThat(exitCode).isZero();
         assertThat(out.toString())
-                .contains("\"command\":\"import\"")
-                .contains("\"path\"")
-                .contains("\"dryRun\":false")
-                .contains("\"files\":1")
-                .contains("\"stored\":1")
-                .contains("\"deduplicated\":0")
-                .contains("\"warnings\":[]");
+                                        .contains("\"command\":\"import\"")
+                                        .contains("\"path\"")
+                                        .contains("\"dryRun\":false")
+                                        .contains("\"files\":1")
+                                        .contains("\"stored\":1")
+                                        .contains("\"deduplicated\":0")
+                                        .contains("\"warnings\":[]");
     }
 
     @Test
@@ -295,8 +295,8 @@ class ImportCommandTest {
 
         assertThat(exitCode).isZero();
         assertThat(out.toString())
-                .contains("\"warnings\":[")
-                .contains("no --artist");
+                                        .contains("\"warnings\":[")
+                                        .contains("no --artist");
     }
 
     @Test
@@ -322,14 +322,14 @@ class ImportCommandTest {
     }
 
     /**
-     * Every invocation passes {@code --root} explicitly; the upward search is covered by
-     * {@link net.einself.mu.collection.CollectionRootFinderTest}.
+     * Every invocation passes {@code --root} explicitly; the upward search is
+     * covered by {@link net.einself.mu.collection.CollectionRootFinderTest}.
      */
     private int run(String... args) {
         String[] withRoot = Stream.concat(
-                        Stream.of("--root", root.toString()),
-                        Stream.of(args))
-                .toArray(String[]::new);
+                                        Stream.of("--root", root.toString()),
+                                        Stream.of(args))
+                                        .toArray(String[]::new);
         return Main.execute(withRoot, new PrintStream(out), new PrintStream(err));
     }
 
@@ -341,8 +341,8 @@ class ImportCommandTest {
         Path store = root.resolve("store");
         try (Stream<Path> walk = Files.walk(store)) {
             return walk.filter(Files::isRegularFile)
-                    .filter(path -> !path.getParent().getFileName().toString().equals(".tmp"))
-                    .count();
+                                            .filter(path -> !path.getParent().getFileName().toString().equals(".tmp"))
+                                            .count();
         }
     }
 

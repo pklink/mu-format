@@ -24,18 +24,20 @@ import java.util.UUID;
 /**
  * Takes files into the store.
  *
- * <p>SPEC.md section 3.4 fixes only the guarantee — a blob becomes visible at its final path
- * as a whole — not the mechanism. This implementation stages inside {@code store/.tmp/} so that
- * the publishing rename stays on one filesystem, and clears that directory before it starts:
- * nothing there is reachable by the path formula, so an interrupted import cannot leave a
- * resolvable but incomplete blob.
+ * <p>
+ * SPEC.md section 3.4 fixes only the guarantee — a blob becomes visible at its
+ * final path as a whole — not the mechanism. This implementation stages inside
+ * {@code store/.tmp/} so that the publishing rename stays on one filesystem,
+ * and clears that directory before it starts: nothing there is reachable by the
+ * path formula, so an interrupted import cannot leave a resolvable but
+ * incomplete blob.
  */
 public class FileSystemBlobStore implements BlobRepository {
 
     private static final Set<PosixFilePermission> READ_ONLY = EnumSet.of(
-            PosixFilePermission.OWNER_READ,
-            PosixFilePermission.GROUP_READ,
-            PosixFilePermission.OTHERS_READ);
+                                    PosixFilePermission.OWNER_READ,
+                                    PosixFilePermission.GROUP_READ,
+                                    PosixFilePermission.OTHERS_READ);
 
     private static final int BUFFER_SIZE = 8192;
 
@@ -46,7 +48,8 @@ public class FileSystemBlobStore implements BlobRepository {
     }
 
     /**
-     * Removes whatever an interrupted run left behind. Must run before the first {@link #take}.
+     * Removes whatever an interrupted run left behind. Must run before the first
+     * {@link #take}.
      */
     public void clearStaging() {
         Path staging = root.staging();
@@ -57,7 +60,7 @@ public class FileSystemBlobStore implements BlobRepository {
             PathUtils.cleanDirectory(staging);
         } catch (IOException e) {
             throw new MuException(ExitCode.IO_ERROR,
-                    "Cannot clear staging directory " + staging + ": " + e.getMessage(), e);
+                                            "Cannot clear staging directory " + staging + ": " + e.getMessage(), e);
         }
     }
 
@@ -74,7 +77,7 @@ public class FileSystemBlobStore implements BlobRepository {
             hash = copyAndHash(source, temp);
         } catch (IOException e) {
             throw new MuException(ExitCode.IO_ERROR,
-                    "Cannot stage " + source + ": " + e.getMessage(), e);
+                                            "Cannot stage " + source + ": " + e.getMessage(), e);
         }
 
         try {
@@ -82,7 +85,7 @@ public class FileSystemBlobStore implements BlobRepository {
         } catch (IOException e) {
             deleteQuietly(temp);
             throw new MuException(ExitCode.IO_ERROR,
-                    "Cannot store " + source + ": " + e.getMessage(), e);
+                                            "Cannot store " + source + ": " + e.getMessage(), e);
         }
     }
 
@@ -95,7 +98,7 @@ public class FileSystemBlobStore implements BlobRepository {
             return new Blob(hash, Files.exists(target(hash)));
         } catch (IOException e) {
             throw new MuException(ExitCode.IO_ERROR,
-                    "Cannot read " + source + ": " + e.getMessage(), e);
+                                            "Cannot read " + source + ": " + e.getMessage(), e);
         }
     }
 
@@ -124,13 +127,14 @@ public class FileSystemBlobStore implements BlobRepository {
     }
 
     /**
-     * Streams {@code source} through a digest, writing to {@code target} when it is not null.
+     * Streams {@code source} through a digest, writing to {@code target} when it is
+     * not null.
      */
     private String copyAndHash(Path source, Path target) throws IOException {
         MessageDigest digest = sha256();
         byte[] buffer = new byte[BUFFER_SIZE];
         try (InputStream in = Files.newInputStream(source);
-             OutputStream out = target == null ? OutputStream.nullOutputStream() : Files.newOutputStream(target)) {
+                                        OutputStream out = target == null ? OutputStream.nullOutputStream() : Files.newOutputStream(target)) {
             int read;
             while ((read = in.read(buffer)) != -1) {
                 digest.update(buffer, 0, read);
@@ -141,8 +145,8 @@ public class FileSystemBlobStore implements BlobRepository {
     }
 
     /**
-     * Best-effort: where POSIX permissions are missing (exFAT, SMB) the call fails and is
-     * ignored.
+     * Best-effort: where POSIX permissions are missing (exFAT, SMB) the call fails
+     * and is ignored.
      */
     private static void makeReadOnly(Path target) {
         try {

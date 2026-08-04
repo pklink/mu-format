@@ -10,10 +10,11 @@ import net.einself.mu.searchcontext.api.SearchResult;
 import java.util.*;
 
 /**
- * Matches releases through their credits (SPEC.md section 4.6): when the query matches an
- * artist's {@code name} or {@code alias}, every release crediting that artist is a result —
- * a query for a band finds their records, not just the artist file. {@code --role}
- * restricts which credit roles count, both at release and at track level.
+ * Matches releases through their credits (SPEC.md section 4.6): when the query
+ * matches an artist's {@code name} or {@code alias}, every release crediting
+ * that artist is a result — a query for a band finds their records, not just
+ * the artist file. {@code --role} restricts which credit roles count, both at
+ * release and at track level.
  */
 public class CreditSearcher {
 
@@ -38,24 +39,24 @@ public class CreditSearcher {
             collectTrackMatches(release.data().get("track"), artistIds, matches);
             if (!matches.isEmpty()) {
                 results.add(ReleaseSearcher.toResult(release,
-                        Map.of("matched-credit", String.join(", ", matches))));
+                                                Map.of("matched-credit", String.join(", ", matches))));
             }
         }
         return results;
     }
 
     /**
-     * The identifiers of every artist whose name or alias matches the query. Matching
-     * {@code member} references is deliberate: a query for a band member finds the band's
-     * releases as well.
+     * The identifiers of every artist whose name or alias matches the query.
+     * Matching {@code member} references is deliberate: a query for a band member
+     * finds the band's releases as well.
      */
     private Set<String> matchingArtistIds(List<EntityFile> artists) {
         Set<String> ids = new LinkedHashSet<>();
         for (EntityFile artist : artists) {
             TomlTable data = artist.data();
             if (matcher.matchesField(data, "name")
-                    || matcher.matchesAnyElement(data, "alias")
-                    || matcher.matchesAnyElement(data, "member")) {
+                                            || matcher.matchesAnyElement(data, "alias")
+                                            || matcher.matchesAnyElement(data, "member")) {
                 ids.add(artist.id());
             }
         }
@@ -63,7 +64,7 @@ public class CreditSearcher {
     }
 
     private void collectTrackMatches(TomlValue tracks, Set<String> artistIds,
-                                     SequencedSet<String> matches) {
+                                    SequencedSet<String> matches) {
         if (tracks == null || !tracks.isArray()) {
             return;
         }
@@ -75,7 +76,7 @@ public class CreditSearcher {
     }
 
     private void collectMatches(TomlValue credits, Set<String> artistIds,
-                                SequencedSet<String> matches) {
+                                    SequencedSet<String> matches) {
         if (credits == null || !credits.isArray()) {
             return;
         }

@@ -38,9 +38,9 @@ class QueryMatcherTest {
     @Test
     void matchesField_readsStringPrimitivesOnly() {
         TomlTable table = toml.readFromString("""
-                title = "Good Lies"
-                year = 2023
-                """.stripIndent());
+                                        title = "Good Lies"
+                                        year = 2023
+                                        """.stripIndent());
         QueryMatcher matcher = new QueryMatcher("good");
         assertThat(matcher.matchesField(table, "title")).isTrue();
         assertThat(matcher.matchesField(table, "year")).isFalse();
@@ -50,9 +50,9 @@ class QueryMatcherTest {
     @Test
     void matchesAnyElement_searchesStringArrays() {
         TomlTable table = toml.readFromString("""
-                alias = ["Tom Russell", "Ed Russell"]
-                count = [1, 2]
-                """.stripIndent());
+                                        alias = ["Tom Russell", "Ed Russell"]
+                                        count = [1, 2]
+                                        """.stripIndent());
         QueryMatcher matcher = new QueryMatcher("russell");
         assertThat(matcher.matchesAnyElement(table, "alias")).isTrue();
         assertThat(matcher.matchesAnyElement(table, "count")).isFalse();

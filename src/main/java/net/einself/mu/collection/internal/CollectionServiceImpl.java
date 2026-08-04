@@ -28,8 +28,8 @@ public class CollectionServiceImpl implements CollectionService {
     @Override
     public CollectionRoot findRoot(Path explicitRoot, Path workingDirectory) {
         return explicitRoot != null
-                ? fromExplicit(explicitRoot)
-                : searchUpwards(workingDirectory);
+                                        ? fromExplicit(explicitRoot)
+                                        : searchUpwards(workingDirectory);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class CollectionServiceImpl implements CollectionService {
         CollectionRoot root = new CollectionRoot(absolute(explicitRoot));
         if (!Files.isRegularFile(root.marker())) {
             throw new MuException(ExitCode.USAGE,
-                    "Not a mu collection (no meta/.mu): " + root.path());
+                                            "Not a mu collection (no meta/.mu): " + root.path());
         }
         return root;
     }
@@ -55,8 +55,8 @@ public class CollectionServiceImpl implements CollectionService {
             }
         }
         throw new MuException(ExitCode.USAGE,
-                "Not a mu collection (no meta/.mu found in " + absolute(workingDirectory)
-                        + " or any parent directory)");
+                                        "Not a mu collection (no meta/.mu found in " + absolute(workingDirectory)
+                                                                        + " or any parent directory)");
     }
 
     private static Path absolute(Path path) {
