@@ -21,8 +21,7 @@ Java 25 toolchain, pinned by `mise.toml` and `build.gradle`. Gradle 9.6.1 via wr
 
 ## Running the CLI
 
-`./gradlew run` starts the CLI and `./gradlew build` produces a jar with a `Main-Class`
-manifest. When no command is given, `./gradlew run` prints usage and exits with code 2
+`./gradlew run` starts the CLI. When no command is given, `./gradlew run` prints usage and exits with code 2
 (USAGE) — pass args via `./gradlew run --args="subcommand ..."`. For testing, exercise the
 CLI through the test seam:
 
@@ -32,6 +31,13 @@ int exitCode = Main.execute(new String[]{"import", "--root", root, path}, out, e
 
 `Main.execute(String[], PrintStream, PrintStream)` (`src/main/java/net/einself/mu/cli/Main.java:52`)
 takes injected streams; `main()` only wraps it with `System.exit`. All CLI-level tests use it.
+
+`./gradlew build` also produces a fat jar at `build/libs/mu-format-1.0-SNAPSHOT-all.jar`
+that bundles all runtime dependencies. Run it directly:
+
+```
+java -jar build/libs/mu-format-1.0-SNAPSHOT-all.jar
+```
 
 ## Architecture
 

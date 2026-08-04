@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.gradleup.shadow' version '9.6.1'
 }
 
 group = 'net.einself'
@@ -20,11 +21,12 @@ application {
     mainClass = 'net.einself.mu.cli.Main'
 }
 
-jar {
-    manifest {
-        attributes 'Main-Class': application.mainClass
-    }
+shadowJar {
+    // produces mu-format-1.0-SNAPSHOT-all.jar — separate from the thin jar
 }
+
+tasks.named('shadowDistTar') { enabled = false }
+tasks.named('shadowDistZip') { enabled = false }
 
 dependencies {
     // Core dependencies
