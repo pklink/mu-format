@@ -1,6 +1,3 @@
 #!/bin/sh
-staged=$(git diff --cached --name-only --diff-filter=ACM)
 ./gradlew spotlessApply --quiet
-if [ -n "$staged" ]; then
-    echo "$staged" | xargs -r git add
-fi
+git diff --cached --name-only --diff-filter=ACM -z | xargs -0 git add
