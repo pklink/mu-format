@@ -68,3 +68,12 @@ spotless {
 tasks.named('build') {
     dependsOn('spotlessCheck')
 }
+
+tasks.register('installGitHook') {
+    doLast {
+        def hookFile = file("${rootDir}/scripts/pre-commit")
+        def linkFile = file("${rootDir}/.git/hooks/pre-commit")
+        linkFile.delete()
+        java.nio.file.Files.createSymbolicLink(linkFile.toPath(), hookFile.toPath())
+    }
+}

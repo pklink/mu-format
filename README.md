@@ -57,9 +57,10 @@ Early development. The format specification is settling. `mu import` and `mu sea
 ## Development
 
 ```
-./gradlew test           run tests
-./gradlew spotlessApply  format all sources
-./gradlew build          compile, test, check formatting
+./gradlew test             run tests
+./gradlew spotlessApply    format all sources
+./gradlew build            compile, test, check formatting
+./gradlew installGitHook   install the pre-commit hook (auto-formats on commit)
 ```
 
 ## License
