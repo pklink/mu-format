@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'com.gradleup.shadow' version '9.6.1'
-    id 'com.diffplug.spotless' version '7.0.3'
+    id 'com.diffplug.spotless' version '8.9.0'
 }
 
 group = 'net.einself'
@@ -41,17 +41,17 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.6.1'
 
     // Architecture support
-    implementation 'org.jmolecules:jmolecules-ddd:1.10.0'
+    implementation 'org.jmolecules:jmolecules-ddd:2.0.1'
     
     // Testing
-    testImplementation platform('org.junit:junit-bom:5.14.4')
+    testImplementation platform('org.junit:junit-bom:6.1.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.assertj:assertj-core:3.27.7'
     
     // Architecture testing
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.5.0'
-    testImplementation 'org.jmolecules.integrations:jmolecules-archunit:0.33.0'
+    testImplementation 'org.jmolecules.integrations:jmolecules-archunit:1.6.0'
 }
 
 test {
