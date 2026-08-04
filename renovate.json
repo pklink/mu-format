@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies"],
+  "schedule": ["before 9am on Monday"],
+  "commitMessagePrefix": "chore(deps):",
+  "packageRules": [
+    {
+      "description": "Group Gradle minor and patch updates together",
+      "matchManagers": ["gradle"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Gradle minor/patch updates",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Separate major Gradle updates for review",
+      "matchManagers": ["gradle"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Gradle major updates"
+    }
+  ],
+  "prConcurrentLimit": 5
+}
