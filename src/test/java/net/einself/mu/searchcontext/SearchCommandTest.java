@@ -180,6 +180,22 @@ class SearchCommandTest {
     }
 
     @Test
+    void search_rejectsAnInvalidFormat() {
+        int exitCode = run("--format", "yaml", "search", "x");
+
+        assertThat(exitCode).isEqualTo(ExitCode.USAGE.value());
+        assertThat(err.toString()).contains("--format");
+    }
+
+    @Test
+    void search_acceptsJsonFormatCaseInsensitively() {
+        int exitCode = run("--format", "JSON", "search", "--type", "release", "good");
+
+        assertThat(exitCode).isZero();
+        assertThat(out.toString()).contains("\"command\":\"search\"");
+    }
+
+    @Test
     void search_rejectsAnInvalidType() {
         int exitCode = run("search", "--type", "album", "x");
 
