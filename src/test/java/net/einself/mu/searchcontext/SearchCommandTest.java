@@ -159,23 +159,16 @@ class SearchCommandTest {
 
     @Test
     void search_jsonFormatEmitsAllGroups() {
-        int exitCode = run("search", "--format", "json", "--type", "release", "good");
+        int exitCode = run("--format", "json", "search", "--type", "release", "good");
 
         assertThat(exitCode).isZero();
         assertThat(out.toString())
-                .contains("\"total\": 1")
-                .contains("\"releases\": [")
-                .contains("\"id\": \"good-lies\"")
-                .contains("\"artists\": []")
-                .contains("\"tracks\": []");
-    }
-
-    @Test
-    void search_idsFormatPrintsOneIdPerLine() {
-        int exitCode = run("search", "--format", "ids", "--type", "release", "good");
-
-        assertThat(exitCode).isZero();
-        assertThat(out.toString().trim()).isEqualTo("good-lies");
+                .contains("\"command\":\"search\"")
+                .contains("\"total\":1")
+                .contains("\"releases\":[")
+                .contains("\"id\":\"good-lies\"")
+                .contains("\"artists\":[]")
+                .contains("\"tracks\":[]");
     }
 
     @Test
@@ -187,19 +180,27 @@ class SearchCommandTest {
     }
 
     @Test
+    void search_rejectsAnInvalidFormat() {
+        int exitCode = run("--format", "yaml", "search", "x");
+
+        assertThat(exitCode).isEqualTo(ExitCode.USAGE.value());
+        assertThat(err.toString()).contains("--format");
+    }
+
+    @Test
+    void search_acceptsJsonFormatCaseInsensitively() {
+        int exitCode = run("--format", "JSON", "search", "--type", "release", "good");
+
+        assertThat(exitCode).isZero();
+        assertThat(out.toString()).contains("\"command\":\"search\"");
+    }
+
+    @Test
     void search_rejectsAnInvalidType() {
         int exitCode = run("search", "--type", "album", "x");
 
         assertThat(exitCode).isEqualTo(ExitCode.USAGE.value());
         assertThat(err.toString()).contains("--type");
-    }
-
-    @Test
-    void search_rejectsAnInvalidFormat() {
-        int exitCode = run("search", "--format", "yaml", "x");
-
-        assertThat(exitCode).isEqualTo(ExitCode.USAGE.value());
-        assertThat(err.toString()).contains("--format");
     }
 
     @Test

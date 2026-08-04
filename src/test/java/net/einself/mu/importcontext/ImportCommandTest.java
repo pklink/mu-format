@@ -4,6 +4,7 @@ import io.github.wasabithumb.jtoml.JToml;
 import io.github.wasabithumb.jtoml.value.array.TomlArray;
 import io.github.wasabithumb.jtoml.value.table.TomlTable;
 import net.einself.mu.cli.Main;
+import net.einself.mu.shared.ExitCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -267,6 +268,57 @@ class ImportCommandTest {
         byte[] bytes = Files.readAllBytes(releaseFile());
         assertThat(bytes).doesNotContain((byte) '\r');
         assertThat(new String(bytes, java.nio.charset.StandardCharsets.UTF_8)).doesNotStartWith("\uFEFF");
+    }
+
+    @Test
+    void import_jsonFlagOutputsJsonStructure() throws IOException {
+        file("01 Track.flac", "audio");
+
+        int exitCode = run("--format", "json", "import", "--artist", "overmono", source.toString());
+
+        assertThat(exitCode).isZero();
+        assertThat(out.toString())
+                .contains("\"command\":\"import\"")
+                .contains("\"path\"")
+                .contains("\"dryRun\":false")
+                .contains("\"files\":1")
+                .contains("\"stored\":1")
+                .contains("\"deduplicated\":0")
+                .contains("\"warnings\":[]");
+    }
+
+    @Test
+    void import_jsonFlagIncludesWarnings() throws IOException {
+        file("01 Track.flac", "audio");
+
+        int exitCode = run("--format", "json", "import", source.toString());
+
+        assertThat(exitCode).isZero();
+        assertThat(out.toString())
+                .contains("\"warnings\":[")
+                .contains("no --artist");
+    }
+
+    @Test
+    void import_rejectsAnInvalidFormat() throws IOException {
+        file("01 Track.flac", "audio");
+
+        int exitCode = run("--format", "yaml", "import", source.toString());
+
+        assertThat(exitCode).isEqualTo(ExitCode.USAGE.value());
+        assertThat(err.toString()).contains("--format");
+        assertThat(root.resolve("store")).doesNotExist();
+        assertThat(root.resolve("meta/releases")).doesNotExist();
+    }
+
+    @Test
+    void import_acceptsJsonFormatCaseInsensitively() throws IOException {
+        file("01 Track.flac", "audio");
+
+        int exitCode = run("--format", "JSON", "import", "--artist", "overmono", source.toString());
+
+        assertThat(exitCode).isZero();
+        assertThat(out.toString()).contains("\"command\":\"import\"");
     }
 
     /**
