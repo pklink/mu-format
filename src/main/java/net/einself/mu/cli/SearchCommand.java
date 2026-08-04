@@ -20,44 +20,36 @@ import java.util.concurrent.Callable;
  * {@code mu search} — searches releases, artists and tracks in the meta layer.
  * Read-only: takes no lock, writes nothing.
  */
-@Command(name = "search",
-        description = "Search releases, artists and tracks.")
+@Command(name = "search", description = "Search releases, artists and tracks.")
 public class SearchCommand implements Callable<Integer> {
 
     private static final Map<EntityType, String> GROUP_LABELS = Map.of(
-            EntityType.RELEASE, "Releases",
-            EntityType.ARTIST, "Artists",
-            EntityType.TRACK, "Tracks");
+                                    EntityType.RELEASE, "Releases",
+                                    EntityType.ARTIST, "Artists",
+                                    EntityType.TRACK, "Tracks");
 
     @ParentCommand
     private Main parent;
 
-    @Parameters(index = "0", paramLabel = "<query>",
-            description = "Case-insensitive substring to search for.")
+    @Parameters(index = "0", paramLabel = "<query>", description = "Case-insensitive substring to search for.")
     String query;
 
-    @Option(names = {"-t", "--type"}, paramLabel = "<type>",
-            description = "Restrict to one entity type: release, artist, track, all (default: all).")
+    @Option(names = {"-t", "--type"}, paramLabel = "<type>", description = "Restrict to one entity type: release, artist, track, all (default: all).")
     String type = "all";
 
-    @Option(names = {"-f", "--field"}, paramLabel = "<field>",
-            description = "Restrict matching to one TOML attribute.")
+    @Option(names = {"-f", "--field"}, paramLabel = "<field>", description = "Restrict matching to one TOML attribute.")
     String field;
 
-    @Option(names = "--year", paramLabel = "<year>",
-            description = "Keep only releases with this release-year-original.")
+    @Option(names = "--year", paramLabel = "<year>", description = "Keep only releases with this release-year-original.")
     String year;
 
-    @Option(names = "--medium", paramLabel = "<medium>",
-            description = "Keep only releases with this source-medium.")
+    @Option(names = "--medium", paramLabel = "<medium>", description = "Keep only releases with this source-medium.")
     String medium;
 
-    @Option(names = "--role", paramLabel = "<role>",
-            description = "Credit matching counts only this role (e.g. main, feat).")
+    @Option(names = "--role", paramLabel = "<role>", description = "Credit matching counts only this role (e.g. main, feat).")
     String role;
 
-    @Option(names = {"-n", "--limit"}, paramLabel = "<num>",
-            description = "Maximum number of results (0 = unlimited).")
+    @Option(names = {"-n", "--limit"}, paramLabel = "<num>", description = "Maximum number of results (0 = unlimited).")
     int limit = 0;
 
     @Override
@@ -75,13 +67,13 @@ public class SearchCommand implements Callable<Integer> {
         Path rootPath = root.path();
         Map<EntityType, List<SearchResult>> grouped = group(results);
         SearchData data = new SearchData(
-                results.size(),
-                toItems(grouped, EntityType.RELEASE, rootPath),
-                toItems(grouped, EntityType.ARTIST, rootPath),
-                toItems(grouped, EntityType.TRACK, rootPath));
+                                        results.size(),
+                                        toItems(grouped, EntityType.RELEASE, rootPath),
+                                        toItems(grouped, EntityType.ARTIST, rootPath),
+                                        toItems(grouped, EntityType.TRACK, rootPath));
 
         OutputFormatter.write(parent.out(), parent.format, "search", data,
-                out -> formatText(grouped, rootPath, out));
+                                        out -> formatText(grouped, rootPath, out));
         return ExitCode.SUCCESS.value();
     }
 
@@ -92,25 +84,25 @@ public class SearchCommand implements Callable<Integer> {
             case "artist" -> EnumSet.of(EntityType.ARTIST);
             case "track" -> EnumSet.of(EntityType.TRACK);
             default -> throw new MuException(ExitCode.USAGE,
-                    "Invalid --type: must be release, artist, track, or all");
+                                            "Invalid --type: must be release, artist, track, or all");
         };
         if (limit < 0) {
             throw new MuException(ExitCode.USAGE, "--limit must be ≥ 0");
         }
         if (role != null && !scope.contains(EntityType.RELEASE)) {
             throw new MuException(ExitCode.USAGE,
-                    "--role applies to release credits; --type must include release");
+                                            "--role applies to release credits; --type must include release");
         }
         if ((year != null || medium != null) && !scope.contains(EntityType.RELEASE)
-                && !scope.contains(EntityType.TRACK)) {
+                                        && !scope.contains(EntityType.TRACK)) {
             throw new MuException(ExitCode.USAGE,
-                    "--year/--medium apply to releases and tracks of releases");
+                                            "--year/--medium apply to releases and tracks of releases");
         }
         return new SearchOptions(scope, field, year, medium, role, limit);
     }
 
     private void formatText(Map<EntityType, List<SearchResult>> grouped,
-                             Path root, PrintStream out) {
+                                    Path root, PrintStream out) {
         if (grouped.values().stream().allMatch(List::isEmpty)) {
             out.println("No matches.");
             return;
@@ -123,8 +115,7 @@ public class SearchCommand implements Callable<Integer> {
             out.printf("%s (%d found):%n", GROUP_LABELS.get(type), group.size());
             for (SearchResult result : group) {
                 out.println("  " + result.id());
-                result.fields().forEach((key, value) ->
-                        out.println("    " + key + ": " + value));
+                result.fields().forEach((key, value) -> out.println("    " + key + ": " + value));
                 out.println("    path: " + relative(result.path(), root));
             }
             out.println();
@@ -135,17 +126,17 @@ public class SearchCommand implements Callable<Integer> {
         Map<EntityType, List<SearchResult>> grouped = new EnumMap<>(EntityType.class);
         for (SearchResult result : results) {
             grouped.computeIfAbsent(result.type(), ignored -> new ArrayList<>())
-                    .add(result);
+                                            .add(result);
         }
         return grouped;
     }
 
     private List<SearchResultItem> toItems(Map<EntityType, List<SearchResult>> grouped,
-                                            EntityType type, Path root) {
+                                    EntityType type, Path root) {
         return grouped.getOrDefault(type, List.of()).stream()
-                .map(result -> new SearchResultItem(result.id(), result.fields(),
-                        relative(result.path(), root)))
-                .toList();
+                                        .map(result -> new SearchResultItem(result.id(), result.fields(),
+                                                                        relative(result.path(), root)))
+                                        .toList();
     }
 
     private String relative(Path path, Path root) {

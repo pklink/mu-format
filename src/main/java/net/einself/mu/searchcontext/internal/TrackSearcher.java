@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Matches the {@code [[track]]} tables inside release files by {@code title} and
- * {@code isrc} (SPEC.md section 4.7). A track result points at the release file that
- * contains it; the {@code --year} and {@code --medium} release filters apply to the
- * containing release.
+ * Matches the {@code [[track]]} tables inside release files by {@code title}
+ * and {@code isrc} (SPEC.md section 4.7). A track result points at the release
+ * file that contains it; the {@code --year} and {@code --medium} release
+ * filters apply to the containing release.
  */
 public class TrackSearcher {
 

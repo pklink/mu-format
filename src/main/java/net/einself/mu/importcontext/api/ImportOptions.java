@@ -4,11 +4,10 @@ import org.jmolecules.ddd.annotation.ValueObject;
 
 @ValueObject
 public record ImportOptions(
-    boolean dryRun,
-    boolean origin,
-    String artistId,
-    String releaseId
-) {
+                                boolean dryRun,
+                                boolean origin,
+                                String artistId,
+                                String releaseId) {
     public static ImportOptions defaults() {
         return new ImportOptions(false, false, null, null);
     }

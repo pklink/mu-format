@@ -14,9 +14,9 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Reads every {@code *.mu} entity file of one meta directory. A file that fails to parse
- * is reported on stderr and skipped: one broken entity must not hide the rest of the
- * collection. Read-only — no lock is taken.
+ * Reads every {@code *.mu} entity file of one meta directory. A file that fails
+ * to parse is reported on stderr and skipped: one broken entity must not hide
+ * the rest of the collection. Read-only — no lock is taken.
  */
 public class MetadataScanner {
 
@@ -32,8 +32,8 @@ public class MetadataScanner {
     }
 
     /**
-     * The parsed entity files of {@code directory}, sorted by file name for a stable
-     * result order; empty when the directory does not exist.
+     * The parsed entity files of {@code directory}, sorted by file name for a
+     * stable result order; empty when the directory does not exist.
      */
     public List<EntityFile> scan(Path directory) {
         if (!Files.isDirectory(directory)) {
@@ -57,7 +57,7 @@ public class MetadataScanner {
             stream.forEach(files::add);
         } catch (IOException e) {
             throw new MuException(ExitCode.IO_ERROR,
-                    "Cannot list " + directory + ": " + e.getMessage(), e);
+                                            "Cannot list " + directory + ": " + e.getMessage(), e);
         }
         files.sort(Comparator.comparing(path -> path.getFileName().toString()));
         return files;

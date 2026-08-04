@@ -48,7 +48,8 @@ class NameSanitizerTest {
 
     @Test
     void apply_truncatesOnACodepointBoundaryWhenTheLimitFallsMidCharacter() {
-        // 199 ASCII bytes then a two-byte character: the last character must not be split
+        // 199 ASCII bytes then a two-byte character: the last character must not be
+        // split
         String value = "a".repeat(199) + "\u00e4";
 
         byte[] result = underTest.apply(value).getBytes(StandardCharsets.UTF_8);

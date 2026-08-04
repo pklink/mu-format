@@ -3,11 +3,14 @@ package net.einself.mu.collection.api;
 import java.nio.file.Path;
 
 /**
- * The root of a collection: the directory containing {@code meta/.mu} (SPEC.md section 2).
+ * The root of a collection: the directory containing {@code meta/.mu} (SPEC.md
+ * section 2).
  *
- * <p>{@link #staging()} and {@link #lock()} are not part of the format. SPEC.md sections 3.2
- * and 4.0 leave unknown entries under {@code store/} and {@code meta/} without meaning, which
- * is what allows this tool to place them there.
+ * <p>
+ * {@link #staging()} and {@link #lock()} are not part of the format. SPEC.md
+ * sections 3.2 and 4.0 leave unknown entries under {@code store/} and
+ * {@code meta/} without meaning, which is what allows this tool to place them
+ * there.
  */
 public record CollectionRoot(Path path) {
 
@@ -18,8 +21,8 @@ public record CollectionRoot(Path path) {
     }
 
     /**
-     * Staging directory for blobs, inside the store so that the publishing rename stays on
-     * one filesystem.
+     * Staging directory for blobs, inside the store so that the publishing rename
+     * stays on one filesystem.
      */
     public Path staging() {
         return store().resolve(".tmp");

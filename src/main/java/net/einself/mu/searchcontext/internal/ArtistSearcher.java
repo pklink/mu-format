@@ -11,13 +11,12 @@ import net.einself.mu.searchcontext.api.SearchResult;
 import java.util.*;
 
 /**
- * Matches artists by {@code name}, {@code sort-name}, the {@code alias} array and
- * {@code notes} (SPEC.md section 4.8).
+ * Matches artists by {@code name}, {@code sort-name}, the {@code alias} array
+ * and {@code notes} (SPEC.md section 4.8).
  */
 public class ArtistSearcher {
 
-    private static final List<String> DEFAULT_SCALAR_FIELDS =
-            List.of("name", "sort-name", "notes", "discogs-artist-id");
+    private static final List<String> DEFAULT_SCALAR_FIELDS = List.of("name", "sort-name", "notes", "discogs-artist-id");
 
     private static final List<String> DEFAULT_ARRAY_FIELDS = List.of("alias");
 
@@ -43,7 +42,7 @@ public class ArtistSearcher {
     private boolean matchesQuery(TomlTable data) {
         if (options.field() != null) {
             return matcher.matchesField(data, options.field())
-                    || matcher.matchesAnyElement(data, options.field());
+                                            || matcher.matchesAnyElement(data, options.field());
         }
         for (String key : DEFAULT_SCALAR_FIELDS) {
             if (matcher.matchesField(data, key)) {

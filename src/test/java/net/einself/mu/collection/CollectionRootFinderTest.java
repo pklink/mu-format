@@ -41,10 +41,10 @@ class CollectionRootFinderTest {
     @Test
     void find_rejectsAnExplicitRootWithoutTheMarker() {
         assertThatThrownBy(() -> underTest.find(workspace, workspace))
-                .isInstanceOf(MuException.class)
-                .hasMessageContaining("Not a mu collection")
-                .extracting(e -> ((MuException) e).exitCode())
-                .isEqualTo(ExitCode.USAGE);
+                                        .isInstanceOf(MuException.class)
+                                        .hasMessageContaining("Not a mu collection")
+                                        .extracting(e -> ((MuException) e).exitCode())
+                                        .isEqualTo(ExitCode.USAGE);
     }
 
     @Test
@@ -66,8 +66,8 @@ class CollectionRootFinderTest {
         Files.createDirectories(outside);
 
         assertThatThrownBy(() -> underTest.find(null, outside))
-                .isInstanceOf(MuException.class)
-                .hasMessageContaining("Not a mu collection");
+                                        .isInstanceOf(MuException.class)
+                                        .hasMessageContaining("Not a mu collection");
     }
 
     @Test

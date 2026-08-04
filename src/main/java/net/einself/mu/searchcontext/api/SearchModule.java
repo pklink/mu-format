@@ -9,7 +9,8 @@ import java.io.PrintStream;
 
 public final class SearchModule {
 
-    private SearchModule() {}
+    private SearchModule() {
+    }
 
     public static MetadataScanner createScanner(JToml toml, PrintStream err) {
         return MetadataModule.createScanner(toml, err);

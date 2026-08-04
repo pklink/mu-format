@@ -6,7 +6,8 @@ import net.einself.mu.collection.internal.CollectionServiceImpl;
 
 public final class CollectionModule {
 
-    private CollectionModule() {}
+    private CollectionModule() {
+    }
 
     public static CollectionService createService(JToml toml) {
         return new CollectionServiceImpl(toml);

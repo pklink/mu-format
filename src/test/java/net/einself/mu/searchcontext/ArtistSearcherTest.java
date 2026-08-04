@@ -31,46 +31,46 @@ class ArtistSearcherTest {
     @Test
     void search_findsArtistByAlias() {
         EntityFile artist = artist("overmono", """
-                name = "Overmono"
-                alias = ["Tom & Ed"]
-                """);
+                                        name = "Overmono"
+                                        alias = ["Tom & Ed"]
+                                        """);
         assertThat(searcher("tom & ed").search(List.of(artist))).hasSize(1);
     }
 
     @Test
     void search_findsArtistBySortName() {
         EntityFile artist = artist("overmono", """
-                name = "Overmono"
-                sort-name = "Russell Brothers"
-                """);
+                                        name = "Overmono"
+                                        sort-name = "Russell Brothers"
+                                        """);
         assertThat(searcher("russell").search(List.of(artist))).hasSize(1);
     }
 
     @Test
     void search_exposesGroupMembership() {
         EntityFile artist = artist("overmono", """
-                name = "Overmono"
-                is-group = true
-                member = ["tom-russell", "ed-russell"]
-                """);
+                                        name = "Overmono"
+                                        is-group = true
+                                        member = ["tom-russell", "ed-russell"]
+                                        """);
         List<SearchResult> results = searcher("over").search(List.of(artist));
         assertThat(results.get(0).fields())
-                .containsEntry("is-group", "true")
-                .containsEntry("member", "tom-russell, ed-russell");
+                                        .containsEntry("is-group", "true")
+                                        .containsEntry("member", "tom-russell, ed-russell");
     }
 
     @Test
     void search_fieldRestrictsMatchingToScalarsAndArrays() {
         EntityFile artist = artist("overmono", """
-                name = "Overmono"
-                alias = ["Doversole"]
-                """);
+                                        name = "Overmono"
+                                        alias = ["Doversole"]
+                                        """);
         SearchOptions nameOnly = options("name");
         assertThat(new ArtistSearcher(new QueryMatcher("dover"), nameOnly)
-                .search(List.of(artist))).isEmpty();
+                                        .search(List.of(artist))).isEmpty();
         SearchOptions aliasOnly = options("alias");
         assertThat(new ArtistSearcher(new QueryMatcher("dover"), aliasOnly)
-                .search(List.of(artist))).hasSize(1);
+                                        .search(List.of(artist))).hasSize(1);
     }
 
     private ArtistSearcher searcher(String query) {

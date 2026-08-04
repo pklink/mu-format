@@ -35,8 +35,8 @@ public class ImportServiceImpl implements ImportService {
     private final SourceFileCollector sourceFileCollector = new SourceFileCollector(fileClassifier);
     private final OriginPathValidator originPathValidator = new OriginPathValidator(new NameSanitizer());
     private final ReleaseAssembler releaseAssembler = new ReleaseAssembler(
-            extensionDeriver, new TrackPrefixParser(), new CoverFrontSelector(),
-            new AssetKindMapper(extensionDeriver, fileClassifier));
+                                    extensionDeriver, new TrackPrefixParser(), new CoverFrontSelector(),
+                                    new AssetKindMapper(extensionDeriver, fileClassifier));
     private final ReleaseRepository releaseRepository;
 
     public ImportServiceImpl(JToml toml, PrintStream err) {
@@ -53,8 +53,8 @@ public class ImportServiceImpl implements ImportService {
 
         ImportResult report = new ImportResult();
         Release release = options.dryRun()
-                ? importDryRun(root, files, originDir, report, options, releaseTitle)
-                : importForReal(root, files, originDir, report, options, releaseTitle);
+                                        ? importDryRun(root, files, originDir, report, options, releaseTitle)
+                                        : importForReal(root, files, originDir, report, options, releaseTitle);
 
         return new ImportReport(report, release);
     }
@@ -81,7 +81,7 @@ public class ImportServiceImpl implements ImportService {
     private String requireSingleDirectoryName(List<Path> paths, List<SourceFile> files) {
         if (paths.size() != 1 || !Files.isDirectory(paths.get(0))) {
             throw new MuException(ExitCode.USAGE,
-                    "--origin requires exactly one directory argument");
+                                            "--origin requires exactly one directory argument");
         }
         String originDir = Nfc.normalize(directoryName(paths.get(0)));
         originPathValidator.validate(originDir, files);
@@ -89,11 +89,11 @@ public class ImportServiceImpl implements ImportService {
     }
 
     private Release importForReal(CollectionRoot root,
-                                  List<SourceFile> files,
-                                  String originDir,
-                                  ImportResult report,
-                                  ImportOptions options,
-                                  String releaseTitle) {
+                                    List<SourceFile> files,
+                                    String originDir,
+                                    ImportResult report,
+                                    ImportOptions options,
+                                    String releaseTitle) {
         try (var ignored = CollectionModule.acquireLock(root)) {
             BlobRepository store = StorageModule.createRepository(root);
             store.clearStaging();
@@ -112,11 +112,11 @@ public class ImportServiceImpl implements ImportService {
     }
 
     private Release importDryRun(CollectionRoot root,
-                                 List<SourceFile> files,
-                                 String originDir,
-                                 ImportResult report,
-                                 ImportOptions options,
-                                 String releaseTitle) {
+                                    List<SourceFile> files,
+                                    String originDir,
+                                    ImportResult report,
+                                    ImportOptions options,
+                                    String releaseTitle) {
         BlobRepository store = StorageModule.createRepository(root);
         Map<SourceFile, Blob> blobs = new LinkedHashMap<>();
         for (SourceFile file : files) {
@@ -136,25 +136,25 @@ public class ImportServiceImpl implements ImportService {
     }
 
     private Release buildRelease(List<SourceFile> files,
-                                 Map<SourceFile, Blob> blobs,
-                                 String originDir,
-                                 ImportResult report,
-                                 ImportOptions options,
-                                 String releaseTitle) {
+                                    Map<SourceFile, Blob> blobs,
+                                    String originDir,
+                                    ImportResult report,
+                                    ImportOptions options,
+                                    String releaseTitle) {
         warnAboutCredit(report, options);
         return releaseAssembler.assemble(
-                UUID.randomUUID().toString(),
-                releaseTitle,
-                options.artistId(),
-                files,
-                blobs,
-                originDir);
+                                        UUID.randomUUID().toString(),
+                                        releaseTitle,
+                                        options.artistId(),
+                                        files,
+                                        blobs,
+                                        originDir);
     }
 
     private void warnAboutCredit(ImportResult report, ImportOptions options) {
         if (options.artistId() == null) {
             report.warn("no --artist: the main credit has no artist, "
-                    + "the release is incomplete (SPEC.md section 4.6)");
+                                            + "the release is incomplete (SPEC.md section 4.6)");
         }
     }
 

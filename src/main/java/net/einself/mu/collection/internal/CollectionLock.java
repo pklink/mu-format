@@ -16,8 +16,10 @@ import java.nio.file.StandardOpenOption;
 /**
  * The advisory write lock on {@code meta/.lock}.
  *
- * <p>A second {@code mu} process aborts immediately rather than waiting. The lock file itself
- * has no content anyone interprets and is never versioned (SPEC.md section 6).
+ * <p>
+ * A second {@code mu} process aborts immediately rather than waiting. The lock
+ * file itself has no content anyone interprets and is never versioned (SPEC.md
+ * section 6).
  */
 public class CollectionLock implements LockHandle {
 
@@ -36,7 +38,7 @@ public class CollectionLock implements LockHandle {
         try {
             Files.createDirectories(root.meta());
             channel = FileChannel.open(lockFile,
-                    StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+                                            StandardOpenOption.CREATE, StandardOpenOption.WRITE);
             FileLock lock = channel.tryLock();
             if (lock == null) {
                 throw locked(lockFile, channel);
@@ -47,14 +49,14 @@ public class CollectionLock implements LockHandle {
         } catch (IOException e) {
             closeQuietly(channel);
             throw new MuException(ExitCode.IO_ERROR,
-                    "Cannot open lock file " + lockFile + ": " + e.getMessage(), e);
+                                            "Cannot open lock file " + lockFile + ": " + e.getMessage(), e);
         }
     }
 
     private static MuException locked(Path lockFile, FileChannel channel) {
         closeQuietly(channel);
         return new MuException(ExitCode.LOCK_HELD,
-                "Another mu process holds the lock: " + lockFile);
+                                        "Another mu process holds the lock: " + lockFile);
     }
 
     @Override

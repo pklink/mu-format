@@ -8,9 +8,10 @@ import net.einself.mu.naming.api.Nfc;
 import java.util.Locale;
 
 /**
- * Case-insensitive substring matching. Both the query and every candidate value are
- * NFC-normalized before comparison (SPEC.md section 4.3), so a query matches a value
- * regardless of the normalization form either was typed or stored in.
+ * Case-insensitive substring matching. Both the query and every candidate value
+ * are NFC-normalized before comparison (SPEC.md section 4.3), so a query
+ * matches a value regardless of the normalization form either was typed or
+ * stored in.
  */
 public class QueryMatcher {
 
@@ -31,8 +32,8 @@ public class QueryMatcher {
     }
 
     /**
-     * True when the string primitive mapped to {@code key} in {@code table} matches.
-     * Non-string values (integers, booleans) never match.
+     * True when the string primitive mapped to {@code key} in {@code table}
+     * matches. Non-string values (integers, booleans) never match.
      */
     public boolean matchesField(TomlTable table, String key) {
         String value = Tomls.string(table, key);
@@ -40,8 +41,9 @@ public class QueryMatcher {
     }
 
     /**
-     * True when any string element of the array mapped to {@code key} in {@code table}
-     * matches — for {@code alias} or {@code member} (SPEC.md section 4.2).
+     * True when any string element of the array mapped to {@code key} in
+     * {@code table} matches — for {@code alias} or {@code member} (SPEC.md section
+     * 4.2).
      */
     public boolean matchesAnyElement(TomlTable table, String key) {
         TomlValue value = table.get(key);
@@ -50,7 +52,7 @@ public class QueryMatcher {
         }
         for (TomlValue element : value.asArray()) {
             if (element.isPrimitive() && element.asPrimitive().isString()
-                    && matches(element.asPrimitive().asString())) {
+                                            && matches(element.asPrimitive().asString())) {
                 return true;
             }
         }

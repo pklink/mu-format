@@ -5,7 +5,8 @@ import net.einself.mu.metadata.internal.TomlReleaseRepository;
 
 public final class MetadataModule {
 
-    private MetadataModule() {}
+    private MetadataModule() {
+    }
 
     public static ReleaseRepository createReleaseRepository(JToml toml) {
         return new TomlReleaseRepository(toml);

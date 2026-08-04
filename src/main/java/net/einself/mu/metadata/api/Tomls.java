@@ -8,8 +8,8 @@ import java.util.Map;
 
 /**
  * Null-safe accessors for parsed entity TOML. Entity files are edited by hand
- * (SPEC.md section 1), so a search must tolerate a missing or mistyped attribute instead
- * of failing on it.
+ * (SPEC.md section 1), so a search must tolerate a missing or mistyped
+ * attribute instead of failing on it.
  */
 public final class Tomls {
 
@@ -17,7 +17,8 @@ public final class Tomls {
     }
 
     /**
-     * The string primitive mapped to {@code key}, or null when absent or not a string.
+     * The string primitive mapped to {@code key}, or null when absent or not a
+     * string.
      */
     public static String string(TomlTable table, String key) {
         TomlValue value = table.get(key);
@@ -51,8 +52,8 @@ public final class Tomls {
     }
 
     /**
-     * Adds {@code key → value} to {@code fields} unless {@code value} is null, keeping
-     * display maps free of absent attributes.
+     * Adds {@code key → value} to {@code fields} unless {@code value} is null,
+     * keeping display maps free of absent attributes.
      */
     public static void put(Map<String, String> fields, String key, String value) {
         if (value != null) {

@@ -16,18 +16,19 @@ public final class OutputFormatter {
 
     private static final Gson GSON = new Gson();
 
-    private OutputFormatter() {}
+    private OutputFormatter() {
+    }
 
     public static void validate(String format) {
         if (format == null
-                || !(FORMAT_JSON.equalsIgnoreCase(format) || FORMAT_TEXT.equalsIgnoreCase(format))) {
+                                        || !(FORMAT_JSON.equalsIgnoreCase(format) || FORMAT_TEXT.equalsIgnoreCase(format))) {
             throw new MuException(ExitCode.USAGE,
-                    "Invalid --format: " + format + " (must be text or json)");
+                                            "Invalid --format: " + format + " (must be text or json)");
         }
     }
 
     public static <T> void write(PrintStream out, String format, String command,
-                                  T data, Consumer<PrintStream> textWriter) {
+                                    T data, Consumer<PrintStream> textWriter) {
         if (FORMAT_JSON.equalsIgnoreCase(format)) {
             GSON.toJson(new Envelope<>(command, data), out);
             out.println();

@@ -17,9 +17,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ReleaseTomlWriterTest {
 
     private static final JToml TOML = JToml.jToml(JTomlOptions.builder()
-            .set(JTomlOption.LINE_SEPARATOR, LineSeparator.LF)
-            .set(JTomlOption.WRITE_BOM, OrderMarkPolicy.NEVER)
-            .build());
+                                    .set(JTomlOption.LINE_SEPARATOR, LineSeparator.LF)
+                                    .set(JTomlOption.WRITE_BOM, OrderMarkPolicy.NEVER)
+                                    .build());
 
     private final ReleaseTomlWriter underTest = new ReleaseTomlWriter(TOML);
 
@@ -51,7 +51,7 @@ class ReleaseTomlWriterTest {
     @Test
     void render_escapesStringValues() {
         Release release = new Release("id", "Quote \" and \\ and \n", List.of(), List.of(), List.of(),
-                null, null, null);
+                                        null, null, null);
 
         String result = underTest.render(release);
 
@@ -61,7 +61,7 @@ class ReleaseTomlWriterTest {
     @Test
     void render_normalizesStringValuesToNfc() {
         Release release = new Release("id", "Caf\u0065\u0301", List.of(), List.of(), List.of(),
-                null, null, null);
+                                        null, null, null);
 
         String result = underTest.render(release);
 
@@ -71,7 +71,7 @@ class ReleaseTomlWriterTest {
     @Test
     void render_omitsAbsentOptionalAttributes() {
         Release release = new Release("id", "Title",
-                List.of(new Release.Credit("main", null)), List.of(), List.of(), null, null, null);
+                                        List.of(new Release.Credit("main", null)), List.of(), List.of(), null, null, null);
 
         String result = underTest.render(release);
 
@@ -83,10 +83,10 @@ class ReleaseTomlWriterTest {
     @Test
     void render_writesAnIntegerDiscAsAnIntegerAndASideAsAString() {
         Release release = new Release("id", "Title", List.of(),
-                List.of(
-                        new Release.Track(2, 5, "beef01.flac", "Kink", null),
-                        new Release.Track("A", 1, "abcd3f.flac", "Feeling Plain", null)),
-                List.of(), null, null, null);
+                                        List.of(
+                                                                        new Release.Track(2, 5, "beef01.flac", "Kink", null),
+                                                                        new Release.Track("A", 1, "abcd3f.flac", "Feeling Plain", null)),
+                                        List.of(), null, null, null);
 
         String result = underTest.render(release);
 
@@ -119,16 +119,16 @@ class ReleaseTomlWriterTest {
 
     private static Release release() {
         return new Release(
-                "b27e3c80",
-                "Good Lies",
-                List.of(new Release.Credit("main", "overmono")),
-                List.of(
-                        new Release.Track(null, 1, "abcd3f.flac", "Feeling Plain", null),
-                        new Release.Track(null, 2, "ab77e1.flac", "Arla Fearn", null)),
-                List.of(new Release.Asset("log", "1a2b3c.txt", null)),
-                "3f0a91.jpg",
-                null,
-                null);
+                                        "b27e3c80",
+                                        "Good Lies",
+                                        List.of(new Release.Credit("main", "overmono")),
+                                        List.of(
+                                                                        new Release.Track(null, 1, "abcd3f.flac", "Feeling Plain", null),
+                                                                        new Release.Track(null, 2, "ab77e1.flac", "Arla Fearn", null)),
+                                        List.of(new Release.Asset("log", "1a2b3c.txt", null)),
+                                        "3f0a91.jpg",
+                                        null,
+                                        null);
     }
 
 }

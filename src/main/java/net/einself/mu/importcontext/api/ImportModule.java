@@ -12,7 +12,8 @@ import java.io.PrintStream;
 
 public final class ImportModule {
 
-    private ImportModule() {}
+    private ImportModule() {
+    }
 
     public static BlobRepository createBlobRepository(CollectionRoot root) {
         return StorageModule.createRepository(root);
