@@ -1,26 +1,30 @@
 package net.einself.mu.cli;
 
 import net.einself.mu.shared.ExitCode;
-import net.einself.mu.cli.Main;
 import net.einself.mu.shared.MuException;
 import net.einself.mu.collection.api.CollectionModule;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.collection.api.CollectionService;
 import net.einself.mu.searchcontext.api.EntityType;
+import net.einself.mu.searchcontext.api.SearchData;
 import net.einself.mu.searchcontext.api.SearchModule;
 import net.einself.mu.searchcontext.api.SearchOptions;
 import net.einself.mu.searchcontext.api.SearchResult;
-import net.einself.mu.searchcontext.api.SearchResultFormatter;
+import net.einself.mu.searchcontext.api.SearchResultItem;
 import net.einself.mu.searchcontext.api.SearchService;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.Parameters;
 
+import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -31,6 +35,11 @@ import java.util.concurrent.Callable;
 @Command(name = "search",
         description = "Search releases, artists and tracks.")
 public class SearchCommand implements Callable<Integer> {
+
+    private static final Map<EntityType, String> GROUP_LABELS = Map.of(
+            EntityType.RELEASE, "Releases",
+            EntityType.ARTIST, "Artists",
+            EntityType.TRACK, "Tracks");
 
     @ParentCommand
     private Main parent;
@@ -59,10 +68,6 @@ public class SearchCommand implements Callable<Integer> {
             description = "Credit matching counts only this role (e.g. main, feat).")
     String role;
 
-    @Option(names = "--format", paramLabel = "<format>",
-            description = "Output format: text, json, ids (default: text).")
-    String format = "text";
-
     @Option(names = {"-n", "--limit"}, paramLabel = "<num>",
             description = "Maximum number of results (0 = unlimited).")
     int limit = 0;
@@ -70,7 +75,6 @@ public class SearchCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         SearchOptions options = validateOptions();
-        SearchResultFormatter.Format outputFormat = parseFormat();
 
         CollectionService collectionService = CollectionModule.createService(parent.toml());
         CollectionRoot root = collectionService.findRoot(parent.root, Path.of("").toAbsolutePath());
@@ -79,7 +83,16 @@ public class SearchCommand implements Callable<Integer> {
         SearchService searchService = SearchModule.createSearchService(parent.toml(), parent.err());
         List<SearchResult> results = searchService.search(query, options, root);
 
-        new SearchResultFormatter(root.path()).format(results, outputFormat, parent.out());
+        Path rootPath = root.path();
+        Map<EntityType, List<SearchResult>> grouped = group(results);
+        SearchData data = new SearchData(
+                results.size(),
+                toItems(grouped, EntityType.RELEASE, rootPath),
+                toItems(grouped, EntityType.ARTIST, rootPath),
+                toItems(grouped, EntityType.TRACK, rootPath));
+
+        OutputFormatter.write(parent.out(), parent.format, "search", data,
+                out -> formatText(grouped, rootPath, out));
         return ExitCode.SUCCESS.value();
     }
 
@@ -107,13 +120,46 @@ public class SearchCommand implements Callable<Integer> {
         return new SearchOptions(scope, field, year, medium, role, limit);
     }
 
-    private SearchResultFormatter.Format parseFormat() {
-        return switch (format.toLowerCase(Locale.ROOT)) {
-            case "text" -> SearchResultFormatter.Format.TEXT;
-            case "json" -> SearchResultFormatter.Format.JSON;
-            case "ids" -> SearchResultFormatter.Format.IDS;
-            default -> throw new MuException(ExitCode.USAGE,
-                    "Invalid --format: must be text, json, or ids");
-        };
+    private void formatText(Map<EntityType, List<SearchResult>> grouped,
+                             Path root, PrintStream out) {
+        if (grouped.values().stream().allMatch(List::isEmpty)) {
+            out.println("No matches.");
+            return;
+        }
+        for (EntityType type : EntityType.values()) {
+            List<SearchResult> group = grouped.get(type);
+            if (group == null || group.isEmpty()) {
+                continue;
+            }
+            out.printf("%s (%d found):%n", GROUP_LABELS.get(type), group.size());
+            for (SearchResult result : group) {
+                out.println("  " + result.id());
+                result.fields().forEach((key, value) ->
+                        out.println("    " + key + ": " + value));
+                out.println("    path: " + relative(result.path(), root));
+            }
+            out.println();
+        }
+    }
+
+    private Map<EntityType, List<SearchResult>> group(List<SearchResult> results) {
+        Map<EntityType, List<SearchResult>> grouped = new EnumMap<>(EntityType.class);
+        for (SearchResult result : results) {
+            grouped.computeIfAbsent(result.type(), ignored -> new ArrayList<>())
+                    .add(result);
+        }
+        return grouped;
+    }
+
+    private List<SearchResultItem> toItems(Map<EntityType, List<SearchResult>> grouped,
+                                            EntityType type, Path root) {
+        return grouped.getOrDefault(type, List.of()).stream()
+                .map(result -> new SearchResultItem(result.id(), result.fields(),
+                        relative(result.path(), root)))
+                .toList();
+    }
+
+    private String relative(Path path, Path root) {
+        return root.relativize(path).toString();
     }
 }

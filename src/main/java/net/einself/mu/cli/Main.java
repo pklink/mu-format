@@ -39,6 +39,10 @@ public class Main implements Callable<Integer> {
                     + "containing meta/.mu.")
     public Path root;
 
+    @Option(names = "--format", scope = ScopeType.INHERIT, paramLabel = "<format>",
+            description = "Output format: text, json (default: text).")
+    public String format = "text";
+
     private PrintStream out = System.out;
 
     private PrintStream err = System.err;

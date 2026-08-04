@@ -1,11 +1,11 @@
 package net.einself.mu.cli;
 
 import net.einself.mu.shared.ExitCode;
-import net.einself.mu.cli.Main;
 import net.einself.mu.shared.MuException;
 import net.einself.mu.collection.api.CollectionModule;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.collection.api.CollectionService;
+import net.einself.mu.importcontext.api.ImportData;
 import net.einself.mu.importcontext.api.ImportModule;
 import net.einself.mu.importcontext.api.ImportOptions;
 import net.einself.mu.importcontext.api.ImportReport;
@@ -66,12 +66,25 @@ public class ImportCommand implements Callable<Integer> {
         ImportService importService = ImportModule.createImportService(parent.toml(), err);
         ImportReport report = importService.importPaths(root, paths, options);
 
-        if (dryRun) {
-            out.println("--- meta/releases/" + report.release().id() + ".mu (dry run) ---");
-            out.print(importService.renderRelease(report.release()));
-            out.println("--- end ---");
-        }
-        report.result().print(out, err, summary(root, report.release()));
+        String relPath = root.path().relativize(
+                root.releases().resolve(report.release().id() + ".mu")).toString();
+        ImportData data = new ImportData(relPath, dryRun, report.result().files(),
+                report.result().stored(), report.result().deduplicated(),
+                report.result().warnings());
+
+        OutputFormatter.write(out, parent.format, "import", data,
+                printer -> {
+                    report.result().warnings().forEach(w -> err.println("warning: " + w));
+                    if (dryRun) {
+                        printer.println("--- meta/releases/" + report.release().id() + ".mu (dry run) ---");
+                        printer.print(importService.renderRelease(report.release()));
+                        printer.println("--- end ---");
+                    }
+                    printer.println(summary(root, report.release()));
+                    printer.println(report.result().files() + " file(s): "
+                            + report.result().stored() + " stored, "
+                            + report.result().deduplicated() + " deduplicated");
+                });
         return ExitCode.SUCCESS.value();
     }
 

@@ -269,6 +269,35 @@ class ImportCommandTest {
         assertThat(new String(bytes, java.nio.charset.StandardCharsets.UTF_8)).doesNotStartWith("\uFEFF");
     }
 
+    @Test
+    void import_jsonFlagOutputsJsonStructure() throws IOException {
+        file("01 Track.flac", "audio");
+
+        int exitCode = run("--format", "json", "import", "--artist", "overmono", source.toString());
+
+        assertThat(exitCode).isZero();
+        assertThat(out.toString())
+                .contains("\"command\":\"import\"")
+                .contains("\"path\"")
+                .contains("\"dryRun\":false")
+                .contains("\"files\":1")
+                .contains("\"stored\":1")
+                .contains("\"deduplicated\":0")
+                .contains("\"warnings\":[]");
+    }
+
+    @Test
+    void import_jsonFlagIncludesWarnings() throws IOException {
+        file("01 Track.flac", "audio");
+
+        int exitCode = run("--format", "json", "import", source.toString());
+
+        assertThat(exitCode).isZero();
+        assertThat(out.toString())
+                .contains("\"warnings\":[")
+                .contains("no --artist");
+    }
+
     /**
      * Every invocation passes {@code --root} explicitly; the upward search is covered by
      * {@link net.einself.mu.collection.CollectionRootFinderTest}.

@@ -1,6 +1,5 @@
 package net.einself.mu.importcontext.api;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,12 +40,6 @@ public class ImportResult {
 
     public List<String> warnings() {
         return List.copyOf(warnings);
-    }
-
-    public void print(PrintStream out, PrintStream err, String summary) {
-        warnings.forEach(warning -> err.println("warning: " + warning));
-        out.println(summary);
-        out.println(files() + " file(s): " + stored + " stored, " + deduplicated + " deduplicated");
     }
 
 }
