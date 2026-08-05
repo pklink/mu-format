@@ -66,8 +66,8 @@ class OutputFormatterTest {
 
     @Test
     void write_jsonEmitsEnvelopeWithCommandAndData() {
-        underTest = new OutputFormatter(out, "json");
-        underTest.write("search", new SampleData("good-lies", 1),
+        underTest = new OutputFormatter(out);
+        underTest.write("json", "search", new SampleData("good-lies", 1),
                                         printer -> printer.println("should not appear"));
 
         JsonObject json = JsonParser.parseString(buffer.toString()).getAsJsonObject();
@@ -78,8 +78,8 @@ class OutputFormatterTest {
 
     @Test
     void write_jsonEmitsTrailingNewline() {
-        underTest = new OutputFormatter(out, "json");
-        underTest.write("search", new SampleData("x", 0), printer -> {
+        underTest = new OutputFormatter(out);
+        underTest.write("json", "search", new SampleData("x", 0), printer -> {
         });
 
         assertThat(buffer.toString()).endsWith(System.lineSeparator());
@@ -87,8 +87,8 @@ class OutputFormatterTest {
 
     @Test
     void write_jsonIsCaseInsensitive() {
-        underTest = new OutputFormatter(out, "JSON");
-        underTest.write("search", new SampleData("x", 0), printer -> {
+        underTest = new OutputFormatter(out);
+        underTest.write("JSON", "search", new SampleData("x", 0), printer -> {
         });
 
         JsonObject json = JsonParser.parseString(buffer.toString()).getAsJsonObject();
@@ -99,8 +99,8 @@ class OutputFormatterTest {
     void write_jsonDoesNotInvokeTextWriter() {
         AtomicBoolean invoked = new AtomicBoolean(false);
 
-        underTest = new OutputFormatter(out, "json");
-        underTest.write("search", new SampleData("x", 0),
+        underTest = new OutputFormatter(out);
+        underTest.write("json", "search", new SampleData("x", 0),
                                         printer -> invoked.set(true));
 
         assertThat(invoked).isFalse();
@@ -108,8 +108,8 @@ class OutputFormatterTest {
 
     @Test
     void write_textDelegatesToTextWriter() {
-        underTest = new OutputFormatter(out, "text");
-        underTest.write("search", new SampleData("good-lies", 1),
+        underTest = new OutputFormatter(out);
+        underTest.write("text", "search", new SampleData("good-lies", 1),
                                         printer -> printer.println("Releases (1 found):"));
 
         assertThat(buffer.toString()).contains("Releases (1 found):");

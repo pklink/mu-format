@@ -64,8 +64,8 @@ public class ImportCommand implements Callable<Integer> {
                                         report.result().stored(), report.result().deduplicated(),
                                         report.result().warnings());
 
-        OutputFormatter outputFormatter = new OutputFormatter(out, parent.format);
-        outputFormatter.write("import", data,
+        OutputFormatter outputFormatter = new OutputFormatter(out);
+        outputFormatter.write(parent.format, "import", data,
                                         printer -> {
                                             report.result().warnings().forEach(w -> err.println("warning: " + w));
                                             if (dryRun) {

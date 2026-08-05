@@ -72,8 +72,8 @@ public class SearchCommand implements Callable<Integer> {
                                         toItems(grouped, EntityType.ARTIST, rootPath),
                                         toItems(grouped, EntityType.TRACK, rootPath));
 
-        OutputFormatter outputFormatter = new OutputFormatter(parent.out(), parent.format);
-        outputFormatter.write("search", data,
+        OutputFormatter outputFormatter = new OutputFormatter(parent.out());
+        outputFormatter.write(parent.format, "search", data,
                                         out -> formatText(grouped, rootPath, out));
         return ExitCode.SUCCESS.value();
     }
