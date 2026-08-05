@@ -15,7 +15,12 @@ public final class OutputFormatter {
 
     private static final Gson GSON = new Gson();
 
-    private OutputFormatter() {
+    private final PrintStream out;
+    private final String format;
+
+    public OutputFormatter(PrintStream out, String format) {
+        this.out = out;
+        this.format = format;
     }
 
     public static void validate(String format) {
@@ -25,7 +30,7 @@ public final class OutputFormatter {
         }
     }
 
-    public static <T> void write(PrintStream out, String format, String command, T data, Consumer<PrintStream> textWriter) {
+    public <T> void write(String command, T data, Consumer<PrintStream> textWriter) {
         if (FORMAT_JSON.equalsIgnoreCase(format)) {
             GSON.toJson(new Envelope<>(command, data), out);
             out.println();
