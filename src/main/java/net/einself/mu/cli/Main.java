@@ -17,7 +17,7 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
-@Command(name = "mu", mixinStandardHelpOptions = true, version = "mu 1.0", subcommands = {ImportCommand.class, SearchCommand.class}, synopsisSubcommandLabel = "COMMAND")
+@Command(name = "mu", mixinStandardHelpOptions = true, version = "mu 1.0", synopsisSubcommandLabel = "COMMAND")
 public class Main implements Callable<Integer> {
 
     /**
@@ -51,7 +51,12 @@ public class Main implements Callable<Integer> {
         main.err = err;
         CommandLine commandLine = new CommandLine(main);
         main.commandLine = commandLine;
+
+        OutputFormatter outputFormatter = new OutputFormatter(out);
+
         return commandLine
+                                        .addSubcommand(new ImportCommand(outputFormatter))
+                                        .addSubcommand(new SearchCommand(outputFormatter))
                                         .setOut(new PrintWriter(out, true))
                                         .setErr(new PrintWriter(err, true))
                                         .setExecutionExceptionHandler(new ExceptionHandler(err))

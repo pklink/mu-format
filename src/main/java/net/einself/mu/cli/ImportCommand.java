@@ -41,6 +41,12 @@ public class ImportCommand implements Callable<Integer> {
     @Parameters(arity = "1..*", paramLabel = "<path>", description = "Files or directories to import.")
     List<Path> paths;
 
+    private final OutputFormatter outputFormatter;
+
+    public ImportCommand(OutputFormatter outputFormatter) {
+        this.outputFormatter = outputFormatter;
+    }
+
     @Override
     public Integer call() {
         return run(parent.out(), parent.err());
@@ -64,7 +70,6 @@ public class ImportCommand implements Callable<Integer> {
                                         report.result().stored(), report.result().deduplicated(),
                                         report.result().warnings());
 
-        OutputFormatter outputFormatter = new OutputFormatter(out);
         outputFormatter.write(parent.format, "import", data,
                                         printer -> {
                                             report.result().warnings().forEach(w -> err.println("warning: " + w));

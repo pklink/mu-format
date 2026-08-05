@@ -52,6 +52,12 @@ public class SearchCommand implements Callable<Integer> {
     @Option(names = {"-n", "--limit"}, paramLabel = "<num>", description = "Maximum number of results (0 = unlimited).")
     int limit = 0;
 
+    private final OutputFormatter outputFormatter;
+
+    public SearchCommand(OutputFormatter outputFormatter) {
+        this.outputFormatter = outputFormatter;
+    }
+
     @Override
     public Integer call() {
         OutputFormatter.validate(parent.format);
@@ -72,7 +78,6 @@ public class SearchCommand implements Callable<Integer> {
                                         toItems(grouped, EntityType.ARTIST, rootPath),
                                         toItems(grouped, EntityType.TRACK, rootPath));
 
-        OutputFormatter outputFormatter = new OutputFormatter(parent.out());
         outputFormatter.write(parent.format, "search", data,
                                         out -> formatText(grouped, rootPath, out));
         return ExitCode.SUCCESS.value();
