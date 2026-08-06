@@ -112,6 +112,7 @@ or a parent issue as an alternative.
 | "fällig", "bis", "deadline", "due"                          | `dueDate`     | `YYYY-MM-DD`                                                                                                              |
 | "ab", "Start", "beginnt", "starting", "from"                | —             | **Not supported by Linear.** Note it in the description context instead.                                                  |
 | "mir", "für mich", "me", "assign to me", "@pierre"          | `assignee`    | `"pierre"` (display name)                                                                                                 |
+| *(default)*                                                 | `assignee`    | **Always set to `"pierre"`** unless the user explicitly assigns to someone else.                                          |
 | "Label X", "tagged X", "#X", "Tag X"                        | `labels`      | label **names** as array, see below                                                                                       |
 | "als Meilenstein", "as a milestone"                         | —             | use `linear_save_milestone` instead of `linear_save_issue`                                                                |
 | "Aufwand", "Schätzung", "estimate", "takes N"               | `estimate`    | number (see below)                                                                                                        |
@@ -131,7 +132,8 @@ or a parent issue as an alternative.
 
 Omit any field the user did not mention — **do not invent defaults**. In particular, with
 no statement about priority, do not set `priority` at all (Linear then applies `0` = No priority).
-`description` is the one exception: it is always written, because the user story is the
+**Exception: `assignee` always defaults to `"pierre"`** unless the user explicitly names
+someone else. `description` is always written, because the user story is the
 issue's format, not extra content.
 
 ### Date resolution
@@ -248,7 +250,8 @@ linear_save_issue(
 **I want** the import workflow restructured,
 **so that** lock handling and error paths are covered by tests instead of held in one method.
 """,
-  estimate: 2
+  estimate: 2,
+  assignee: "pierre"
 )
 → id from the result
 linear_save_issue(team: "einself", title: "Lock handling", parentId: <id>)
@@ -288,7 +291,8 @@ linear_save_issue(
 
 Recurrence: every Monday (not natively supported by Linear).
 """,
-  priority: 4
+  priority: 4,
+  assignee: "pierre"
 )
 ```
 
