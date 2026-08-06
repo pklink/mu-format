@@ -1,37 +1,42 @@
 ---
 name: create-task
-description: Use when the user asks to create a task, subtask, milestone or section in Quire — triggers include "Quire task", "create a task", "add a task", "Quire-Task", "Task anlegen", "Task erstellen", "leg einen Task an". Parses free-form German or English descriptions into Quire API parameters (priority, due/start date, assignees, tags, subtasks, recurrence, estimate) and creates them in the mu project, always written in English with the description as a user story. Do NOT use for reading, searching, updating or completing existing Quire tasks, and do NOT use for non-Quire task tracking.
+description: Use when the user asks to create a task, subtask, milestone or section in Linear — triggers include "Linear task", "create a task", "add a task", "Task anlegen", "Task erstellen", "leg einen Task an". Parses free-form German or English descriptions into Linear API parameters (priority, due date, assignee, labels, parent, estimate) and creates them in the mu project, always written in English with the description as a user story. Do NOT use for reading, searching, updating or completing existing Linear issues, and do NOT use for non-Linear task tracking.
 ---
 
-# Create a Quire task from natural language
+# Create a Linear issue from natural language
 
-Turns a free-form sentence into a Quire task and creates it. Input may be German or
-English; the trigger phrases below cover both. What lands in Quire is **always English**
+Turns a free-form sentence into a Linear issue and creates it. Input may be German or
+English; the trigger phrases below cover both. What lands in Linear is **always English**
 and its description is **always a user story** — see [Writing the task](#writing-the-task).
 
-## Target project
+## Target
 
-Always **`mu2261`** (project "mu", <https://quire.io/w/mu2261>) unless the user names a
-different project explicitly — then resolve it with `quire_search_projects` and use that
-slug.
+Always create in team **`einself`** and project **`mu`** unless the user names a
+different team or project explicitly — then resolve it and use that.
 
-Project context (snapshot taken when this skill was written — the API wins on conflict):
+Context (snapshot from workspace — the API wins on conflict):
 
-- Only member: `pierre111` (timezone Europe/Berlin)
-- Statuses: `To-do` = 0, `In progress` = 10, `Completed` = 100
-- No tags defined yet
-- **Free plan**: search `limit` caps at 30, `get_task_tree` with `depth > 1` returns 402
+- Team: `einself` (key: `111`)
+- Project: `mu` (https://linear.app/einself/project/mu-6b11e36819b3)
+- User: `Pierre Klink` (display name: `pierre`)
+- Statuses: `Todo` (unstarted), `In Progress` (started), `In Review` (started), `Done` (completed), `Canceled` (canceled), `Backlog` (backlog)
+- Labels: `Bug`, `Feature`, `Improvement`
+- No milestones defined yet
 
 ## Procedure
 
 1. **Parse** — decompose the input using the reference table below.
-2. **Resolve** — turn names into IDs (assignees, tags). Never guess, never invent.
-3. **Write** — phrase `name` and `description` in English as a user story.
-4. **Ask** — only when the name is missing, a reference cannot be resolved, or the user
+2. **Resolve** — turn names into identifiers (assignee, labels, parent, milestone, project).
+   Never guess, never invent.
+3. **Write** — phrase `title` and `description` in English as a user story.
+4. **Ask** — only when the title is missing, a reference cannot be resolved, or the user
    story has no honest benefit.
-5. **Create** — a single `quire_create_task` call carrying every parameter at once.
-6. **Subtasks** — afterwards, one `quire_create_subtask` per item using the parent's `oid`.
-7. **Confirm** — report name and URL.
+5. **Create** — a single `linear_save_issue` call carrying every parameter at once.
+6. **Subtasks** — afterwards, one `linear_save_issue` per item with `parentId` set to the
+   parent issue's ID.
+7. **Milestones** — use `linear_save_milestone` instead of `linear_save_issue`. A milestone
+   belongs to a project and has a `name` and optional `targetDate`.
+8. **Confirm** — report title, fields that were set, and the URL.
 
 No dry run and no pre-confirmation: the user already asked for the task to be created.
 Above 5 subtasks, show the list for approval first.
@@ -40,7 +45,7 @@ Above 5 subtasks, show the list for approval first.
 
 ### Always English
 
-`name`, `description` and every subtask name go into Quire **in English**, no matter which
+`title`, `description` and every subtask title go into Linear **in English**, no matter which
 language the request was in. A German request is translated, not transcribed: "Leg einen
 Task an: SPEC.md Abschnitt 5 überarbeiten" becomes `Rework SPEC.md section 5`.
 
@@ -48,7 +53,7 @@ Translate the request, do not enlarge it. Keep identifiers verbatim — file pat
 method names, CLI flags, package names, quoted spec wording, error strings. `./gradlew test`
 and `MetadataScanner` stay as they are.
 
-Reply to the user in the language they used; only the Quire content is English.
+Reply to the user in the language they used; only the Linear content is English.
 
 ### Description as a user story
 
@@ -86,35 +91,48 @@ Keep the story to three lines. Detail belongs under `## Context`, never inside t
 When the breakdown already lives in subtasks, drop `## Scope` — do not list the same steps
 twice.
 
-### Exception: sections and milestones
+### Exception: milestones
 
-`section: true` is an organizational header and `milestone: true` is a date marker. Neither
-delivers anything, so neither gets a user story. Give them a one-line description of what
-they group or mark, or no description at all. The English rule still applies.
+A milestone (`linear_save_milestone`) is a date marker for a project. It does not deliver
+work, so it gets no user story. Give it a one-line description of what it marks, or no
+description at all. The English rule still applies.
+
+Linear has no "section" concept. If the user asks for one, explain that and offer a label
+or a parent issue as an alternative.
 
 ## Parsing reference
 
-| Phrasing (DE / EN) | Field | Value |
-|---|---|---|
-| the core statement of the sentence | `name` | **Required.** Strip the imperative, then translate: "Erstelle einen Task für X" / "Create a task for X" → `X`, in English |
-| "Beschreibung/Details:", "description:", trailing sentences | `description` | **Always set.** English user story, see [Writing the task](#writing-the-task) |
-| "dringend", "urgent", "ASAP", "critical" | `priority` | `urgent` |
-| "hohe Prio", "wichtig", "high priority", "important" | `priority` | `high` |
-| "niedrige Prio", "low priority", "irgendwann", "someday" | `priority` | `low` |
-| "fällig", "bis", "deadline", "due" | `due` | `YYYY-MM-DD` |
-| "ab", "Start", "beginnt", "starting", "from" | `start` | `YYYY-MM-DD` |
-| "mir", "für mich", "me", "assign to me", "@pierre111" | `assignees` | `["pierre111"]` |
-| "Tag X", "tagged X", "#X" | `tags` | tag **IDs**, see below |
-| "als Meilenstein", "as a milestone" | `milestone` | `true` |
-| "als Section", "as a section" | `section` | `true` |
-| "Aufwand", "Schätzung", "estimate", "takes N" | `estimate` | seconds (integer) |
-| "mit Subtasks: A, B, C", "with subtasks: …" | — | separate `quire_create_subtask` calls |
-| "wiederholt sich", "jeden", "alle N", "every", "repeats" | `recurrence` | see below |
+| Phrasing (DE / EN)                                          | Field         | Value                                                                                                                     |
+|-------------------------------------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------|
+| the core statement of the sentence                          | `title`       | **Required.** Strip the imperative, then translate: "Erstelle einen Task für X" / "Create a task for X" → `X`, in English |
+| "Beschreibung/Details:", "description:", trailing sentences | `description` | **Always set.** English user story, see [Writing the task](#writing-the-task)                                             |
+| "dringend", "urgent", "ASAP", "critical"                    | `priority`    | `1` (Urgent)                                                                                                              |
+| "hohe Prio", "wichtig", "high priority", "important"        | `priority`    | `2` (High)                                                                                                                |
+| "niedrige Prio", "low priority", "irgendwann", "someday"    | `priority`    | `4` (Low)                                                                                                                 |
+| "fällig", "bis", "deadline", "due"                          | `dueDate`     | `YYYY-MM-DD`                                                                                                              |
+| "ab", "Start", "beginnt", "starting", "from"                | —             | **Not supported by Linear.** Note it in the description context instead.                                                  |
+| "mir", "für mich", "me", "assign to me", "@pierre"          | `assignee`    | `"pierre"` (display name)                                                                                                 |
+| "Label X", "tagged X", "#X", "Tag X"                        | `labels`      | label **names** as array, see below                                                                                       |
+| "als Meilenstein", "as a milestone"                         | —             | use `linear_save_milestone` instead of `linear_save_issue`                                                                |
+| "Aufwand", "Schätzung", "estimate", "takes N"               | `estimate`    | number (see below)                                                                                                        |
+| "mit Subtasks: A, B, C", "with subtasks: …"                 | —             | separate `linear_save_issue` calls with `parentId`                                                                        |
+| "wiederholt sich", "jeden", "alle N", "every", "repeats"    | —             | **Not supported by Linear.** Note the recurrence in the description.                                                      |
+| "Zustand X", "Status X", "state X"                          | `state`       | state name (e.g. `"In Progress"`, `"Backlog"`)                                                                            |
+
+### Unsupported features
+
+- **Start date**: Linear issues have no start date field. When the user provides one, note it
+  in the description context.
+- **Recurrence**: Linear has no recurring issues. When the user asks for one, create a single
+  issue and note the intended recurrence in the description.
+- **Sections**: No equivalent. Offer a label or a parent issue with subtasks instead.
+- **Multiple assignees**: Linear supports only a single assignee. If the user names several,
+  assign the first and mention the others in the description.
 
 Omit any field the user did not mention — **do not invent defaults**. In particular, with
-no statement about priority, do not set `priority` at all (Quire then applies `medium`).
+no statement about priority, do not set `priority` at all (Linear then applies `0` = No priority).
 `description` is the one exception: it is always written, because the user story is the
-task's format, not extra content.
+issue's format, not extra content.
 
 ### Date resolution
 
@@ -132,81 +150,82 @@ If a date expression is ambiguous, **ask** rather than guessing.
 
 ### Estimate
 
-Convert to seconds: `1m` = 60, `1h` = 3600, `1d` = 28800 (8-hour day).
-Examples: "2h" → `7200`, "30min" → `1800`, "1.5h" → `5400`, "3 days" → `86400`.
-The 8-hour day is an assumption — when the user speaks in days, state the conversion in
-the confirmation.
+Linear uses an abstract numeric estimate (not seconds). Convert:
+- "1h" → `1`, "2h" → `2`, "30min" → `0.5`, "1.5h" → `1.5`
+- "1d" → `1`, "3 days" → `3`
+- "1w" → `5`
 
-### Assignees
+When converting from days or weeks, state the conversion in the confirmation.
 
-`assignees` takes user IDs. Resolve via `quire_list_project_members`.
-"mir"/"me"/"myself" → `quire_get_current_user`. For an unknown name, list the existing
-members and ask — **never** guess or fabricate a user.
+### Assignee
 
-### Tags
+`assignee` takes a user display name or ID. Resolve via `linear_list_users` or
+`linear_get_user`. "mir"/"me"/"myself" → `linear_get_user(query: "me")` → use the
+`displayName`. For an unknown name, list the existing members and ask — **never** guess or
+fabricate a user.
 
-`quire_create_task` expects **IDs in `tags`, not names**. Steps:
+Linear supports only a single assignee per issue.
 
-1. Call `quire_list_tags` for the project
-2. Match the given name case-insensitively → use its `oid`
-3. No match → ask whether to create it via `quire_create_tag`. Do not create it
+### Labels
+
+`linear_save_issue` accepts label **names** (not IDs) as a string array. Steps:
+
+1. Call `linear_list_issue_labels` for the team
+2. Match the given name case-insensitively
+3. No match → ask whether to create it via `linear_create_issue_label`. Do not create it
    unprompted, and do not silently drop it.
 
-### Recurrence
+### Milestones
 
-An object with `freq` (`daily`/`weekly`/`monthly`/`yearly`) and `interval` (≥1).
-**Weekdays are integers with Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6** — this is
-not the JavaScript convention.
+A milestone in Linear is a separate entity tied to a project, not an issue flag. Steps:
 
-- "daily" → `{freq:"daily", interval:1}`
-- "every 3 days after completion" → `{freq:"daily", interval:3, sincelatest:true}`
-- "every Monday and Thursday" → `{freq:"weekly", interval:1, byweekday:[0,3]}`
-- "every 2 weeks" → `{freq:"weekly", interval:2}`
-- "on the 15th of each month" → `{freq:"monthly", interval:1, bydayno:15}`
-- "last Friday of the month" → `{freq:"monthly", interval:1, byweekno:"last", byweekday:4}`
-- "quarterly" → `{freq:"monthly", interval:3}`
-- "yearly on May 12" → `{freq:"yearly", interval:1, bymonth:5, bydayno:12}`
-
-End date only via `until` (ISO). Quire has **no** count-based end — for "repeat 5 times",
-compute the equivalent `until` date yourself and mention the conversion in the result.
+1. If the user says "milestone", use `linear_save_milestone` with `project: "mu"` (or the
+   resolved project).
+2. `name` is required. Optional: `targetDate`, `description`.
+3. If the user wants to assign an issue to an existing milestone, use `linear_save_issue`
+   with `milestone` set to the milestone name.
 
 ## Error handling
 
-- **No task name derivable** → ask; do not invent one.
+- **No title derivable** → ask; do not invent one.
 - **No benefit derivable for the user story** → ask one short question. Do not fill the
   `so that` clause with a restatement of the goal ("so that X is done") or with invented
   value — both are worse than asking.
-- **Assignee or tag unresolvable** → show the available options, then ask.
-- **API error** → translate to plain language (e.g. 402 = free-plan limit); never dump
-  raw JSON at the user.
-- **Unsupported options or fields** → say so explicitly instead of ignoring them silently.
+- **Assignee or label unresolvable** → show the available options, then ask.
+- **API error** → translate to plain language; never dump raw JSON at the user.
+- **Unsupported features** → say so explicitly and offer the workaround (see
+  [Unsupported features](#unsupported-features)).
 
 ## Output
 
-On success report the task name, the fields that were set, and the URL.
-Example: `Created: "Test blob store sharding" (high, due 2026-08-07) — https://quire.io/w/mu2261/42`
+On success report the issue title, the fields that were set, and the URL.
 
-**Never** surface opaque Quire IDs (the 24-character `oid` handles) to the user. Use the
-name, the short `#id` from the URL, and the URL itself.
+Example: `Created: "Test blob store sharding" (high, due 2026-08-07) — https://linear.app/einself/issue/MU-42`
+
+For milestones: `Created milestone: "Release 1.0" (target 2026-08-31)`
+
+**Never** surface opaque Linear UUIDs to the user. Use the title, the short issue key
+(e.g. `MU-42`), and the URL.
 
 ## Examples
 
-German in, English out. The name is translated; `SPEC.md` stays verbatim.
+German in, English out. The title is translated; `SPEC.md` stays verbatim.
 
 **Input:** "Leg einen Task an: SPEC.md Abschnitt 5 überarbeiten, dringend, fällig Freitag, für mich"
 
 ```
-quire_create_task(
-  projectId: "mu2261",
-  name: "Rework SPEC.md section 5",
+linear_save_issue(
+  team: "einself",
+  project: "mu",
+  title: "Rework SPEC.md section 5",
   description: """
 **As a** developer on mu-format,
 **I want** section 5 of SPEC.md reworked,
 **so that** the normative format description stays the thing the code is checked against.
 """,
-  priority: "urgent",
-  due: "<next Friday as YYYY-MM-DD>",
-  assignees: ["pierre111"]
+  priority: 1,
+  dueDate: "<next Friday as YYYY-MM-DD>",
+  assignee: "pierre"
 )
 ```
 
@@ -217,23 +236,24 @@ Derive from context like this; if there is no such anchor, ask.
 
 Subtasks carry the breakdown, so the description has no `## Scope`.
 
-**Input:** "Quire task for the import refactoring with subtasks: lock handling, error paths, tests. Estimate 2h"
+**Input:** "Linear task for the import refactoring with subtasks: lock handling, error paths, tests. Estimate 2h"
 
 ```
-quire_create_task(
-  projectId: "mu2261",
-  name: "Refactor the import workflow",
+linear_save_issue(
+  team: "einself",
+  project: "mu",
+  title: "Refactor the import workflow",
   description: """
 **As a** developer on mu-format,
 **I want** the import workflow restructured,
 **so that** lock handling and error paths are covered by tests instead of held in one method.
 """,
-  estimate: 7200
+  estimate: 2
 )
-→ oid from the result
-quire_create_subtask(parentTaskId:<oid>, name:"Lock handling")
-quire_create_subtask(parentTaskId:<oid>, name:"Error paths")
-quire_create_subtask(parentTaskId:<oid>, name:"Tests")
+→ id from the result
+linear_save_issue(team: "einself", title: "Lock handling", parentId: <id>)
+linear_save_issue(team: "einself", title: "Error paths", parentId: <id>)
+linear_save_issue(team: "einself", title: "Tests", parentId: <id>)
 ```
 
 ---
@@ -243,11 +263,10 @@ A milestone marks a date. No user story.
 **Input:** "Milestone 'Release 1.0' by end of month"
 
 ```
-quire_create_task(
-  projectId: "mu2261",
+linear_save_milestone(
+  project: "mu",
   name: "Release 1.0",
-  milestone: true,
-  due: "<last day of the current month>"
+  targetDate: "<last day of the current month>"
 )
 ```
 
@@ -258,15 +277,39 @@ A one-line request still gets a user story, and nothing beyond it.
 **Input:** "Jeden Montag: Abhängigkeiten prüfen, niedrige Prio"
 
 ```
-quire_create_task(
-  projectId: "mu2261",
-  name: "Check dependencies",
+linear_save_issue(
+  team: "einself",
+  project: "mu",
+  title: "Check dependencies",
   description: """
 **As a** developer on mu-format,
 **I want** the project's dependencies reviewed every Monday,
 **so that** outdated or vulnerable versions surface early instead of at the next upgrade.
+
+Recurrence: every Monday (not natively supported by Linear).
 """,
-  priority: "low",
-  recurrence: { freq: "weekly", interval: 1, byweekday: [0] }
+  priority: 4
+)
+```
+
+---
+
+Unsupported features are handled transparently.
+
+**Input:** "Task: UI design, starting next Monday, assign to me and Alex"
+
+```
+linear_save_issue(
+  team: "einself",
+  project: "mu",
+  title: "UI design",
+  description: """
+**As a** developer on mu-format,
+**I want** the UI designed,
+**so that** the application has a visual foundation to build on.
+
+Start date: <next Monday>. Also assigned: Alex (Linear supports one assignee).
+""",
+  assignee: "pierre"
 )
 ```
