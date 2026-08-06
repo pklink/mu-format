@@ -202,12 +202,12 @@ A milestone in Linear is a separate entity tied to a project, not an issue flag.
 
 On success report the issue title, the fields that were set, and the URL.
 
-Example: `Created: "Test blob store sharding" (high, due 2026-08-07) — https://linear.app/einself/issue/MU-42`
+Example: `Created: "Test blob store sharding" (high, due 2026-08-07) — https://linear.app/einself/issue/111-42`
 
 For milestones: `Created milestone: "Release 1.0" (target 2026-08-31)`
 
 **Never** surface opaque Linear UUIDs to the user. Use the title, the short issue key
-(e.g. `MU-42`), and the URL.
+(e.g. `111-42`), and the URL.
 
 ## Examples
 
