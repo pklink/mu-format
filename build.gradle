@@ -41,7 +41,7 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.6.1'
 
     // Architecture support
-    implementation 'org.jmolecules:jmolecules-ddd:1.10.0'
+    implementation 'org.jmolecules:jmolecules-ddd:2.0.1'
     
     // Testing
     testImplementation platform('org.junit:junit-bom:6.1.3')
