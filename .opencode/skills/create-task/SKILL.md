@@ -41,6 +41,17 @@ Context (snapshot from workspace — the API wins on conflict):
 No dry run and no pre-confirmation: the user already asked for the task to be created.
 Above 5 subtasks, show the list for approval first.
 
+## Plan mode
+
+When plan mode is active (system reminder indicates READ-ONLY phase), do NOT call
+`linear_save_issue`, `linear_save_milestone`, or any other write tool. Instead:
+
+1. Parse and resolve the input as usual.
+2. Show the fully-formed issue (title, description, fields) as a preview.
+3. State: "Plan mode active — task not created. Exit plan mode to create it."
+
+This overrides the "No dry run" rule above.
+
 ## Writing the task
 
 ### Always English
