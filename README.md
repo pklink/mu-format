@@ -59,7 +59,7 @@ The implementation is a **modulith** — a single-module Gradle project organize
 | `shared`        | Shared kernel: `ExitCode`, `MuException`                 | none (Java stdlib only)                       |
 | `collection`    | Collection root discovery, format version, advisory lock | shared                                        |
 | `storage`       | Content-addressed blob store (SHA-256)                   | shared, collection                            |
-| `metadata`      | TOML entity files, `Release` model, repositories         | shared, collection                            |
+| `metadata`      | TOML entity files, `Release` model, repositories         | shared, collection, naming                    |
 | `naming`        | NFC normalization, name sanitizing, extension derivation | shared                                        |
 | `importcontext` | `mu import` workflow and orchestration                   | shared, collection, storage, metadata, naming |
 | `searchcontext` | `mu search` workflow and query matching                  | shared, collection, metadata                  |
@@ -153,9 +153,9 @@ Domain model and repository for releases and artists. Provides:
 
 - **`Release`** — aggregate root with credits, tracks, assets, cover references, and origin paths (SPEC.md section 4.8)
 - **`ReleaseRepository`** — loads/saves `.mu` files from `meta/releases/`, scans for entities
-- **TOML writing** — LF line endings, no BOM, deterministic serialization
+- **TOML writing** — LF line endings, no BOM, deterministic serialization with NFC normalization
 
-Releases are immutable records. The repository handles all TOML parsing and serialization, keeping the format details isolated from domain logic.
+Releases are immutable records. The repository handles all TOML parsing and serialization, keeping the format details isolated from domain logic. Uses `naming` module for NFC normalization required by SPEC.md section 4.3.
 
 #### `naming` — Name sanitization and normalization
 
