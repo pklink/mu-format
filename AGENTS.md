@@ -101,6 +101,10 @@ Commit messages are conventional commits with a **subject line only — never a 
 Types in use: `docs`, `chore`, `feat`, `test`, `refactor`. Put everything the reader needs
 into the subject; if it does not fit, the commit is doing too much.
 
+When an issue ticket exists (Linear ID like `111-123` or GitHub issue like `#42`), include
+it at the end of the subject: `feat: add search command (111-123)` or
+`fix: handle missing meta file (#42)`. Multiple IDs are allowed: `(111-123, #42)`.
+
 ## Status
 
 `mu import` and `mu search` work. `build`, `lint` and `verify` from the README's CLI table
