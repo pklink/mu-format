@@ -184,9 +184,9 @@ Coordinates `storage`, `metadata`, and `naming` modules. The workflow is transac
 
 Implements the `mu search` command. Provides:
 
-- **Parallel search** — scans artists, releases, and tracks simultaneously
+- **Entity scanning** — scans artists, releases, and tracks sequentially
 - **Query matching** — case-insensitive substring match on names, titles, album titles, file paths
-- **Result aggregation** — returns structured results with entity type, path, matching field
+- **Result aggregation** — returns structured results with entity type, path, matching field, deduplicates across entity types
 
 Reads TOML files directly (no write path). Searches are read-only and take no lock.
 
