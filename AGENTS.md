@@ -70,6 +70,8 @@ another module's `.internal`. Do not use the existing CLI commands as a template
 ## Conventions
 
 - Tasks: only close/complete tasks when explicitly asked by the user.
+- Planning mode: when in planning mode (read-only), do NOT commit to git, create Linear
+  tickets, or create pull requests. Planning is for analysis and design only.
 - Errors: throw `MuException(ExitCode, message[, details])`. `Main`'s `ExceptionHandler`
   turns it into the exit code and prints `mu: <message>` plus indented detail lines; anything
   else becomes `IO_ERROR`. Do not call `System.exit` outside `Main.main`.
