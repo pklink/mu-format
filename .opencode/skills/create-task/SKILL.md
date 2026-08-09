@@ -28,9 +28,10 @@ Context (snapshot from workspace — the API wins on conflict):
 1. **Parse** — decompose the input using the reference table below.
 2. **Resolve** — turn names into identifiers (assignee, labels, parent, milestone, project).
    Never guess, never invent.
-3. **Write** — phrase `title` and `description` in English as a user story.
-4. **Ask** — only when the title is missing, a reference cannot be resolved, or the user
-   story has no honest benefit.
+3. **Write** — phrase `title` and `description` in English as a user story with **mandatory
+   acceptance criteria**.
+4. **Ask** — only when the title is missing, a reference cannot be resolved, the user story
+   has no honest benefit, or no reasonable acceptance criteria can be derived.
 5. **Create** — a single `linear_save_issue` call carrying every parameter at once.
 6. **Subtasks** — afterwards, one `linear_save_issue` per item with `parentId` set to the
    parent issue's ID.
@@ -85,16 +86,22 @@ Reply to the user in the language they used; only the Linear content is English.
   and keep it factual. Never invent business value, revenue or user demand that was not
   stated. If no honest benefit can be derived, ask one short question instead of padding.
 
-Then add only the sections the input actually supports:
+Then **always add** `## Acceptance criteria`:
+
+- `## Acceptance criteria` — **Required.** A checklist of observable outcomes that verify the
+  work is done. Prefer verifiable ones; for this repo `./gradlew test` passes is the usual
+  anchor (see AGENTS.md — it is the only verification step that exists). If the user's request
+  does not provide clear acceptance criteria, derive them from the goal and context. For test
+  tasks, add the specific test passing; for refactoring, include tests still passing; for
+  features, include both implementation and tests.
+
+Then add these sections only when the input actually supports them:
 
 - `## Context` — background, root cause, findings, file references as `path:line`.
 - `## Scope` — a numbered list of the work, when it decomposes into several steps.
-- `## Acceptance criteria` — a checklist of observable outcomes. Prefer verifiable ones;
-  for this repo `./gradlew test` passes is the usual anchor (see AGENTS.md — it is the only
-  verification step that exists).
 
-Omit any section you would have to make up. A one-line request yields a user story and
-nothing else — that is a complete task, not a deficient one.
+Acceptance criteria are **mandatory**. A task without observable completion conditions is
+incomplete. Omit `Context` and `Scope` if you would have to make them up.
 
 Keep the story to three lines. Detail belongs under `## Context`, never inside the
 `As a … I want … so that …` sentence.
@@ -204,6 +211,9 @@ A milestone in Linear is a separate entity tied to a project, not an issue flag.
 - **No benefit derivable for the user story** → ask one short question. Do not fill the
   `so that` clause with a restatement of the goal ("so that X is done") or with invented
   value — both are worse than asking.
+- **No acceptance criteria derivable** → ask one short question about what observable outcomes
+  verify completion. Do not proceed without them; every task needs verifiable completion
+  conditions.
 - **Assignee or label unresolvable** → show the available options, then ask.
 - **API error** → translate to plain language; never dump raw JSON at the user.
 - **Unsupported features** → say so explicitly and offer the workaround (see
@@ -235,6 +245,12 @@ linear_save_issue(
 **As a** developer on mu-format,
 **I want** section 5 of SPEC.md reworked,
 **so that** the normative format description stays the thing the code is checked against.
+
+## Acceptance criteria
+
+- [ ] SPEC.md section 5 is updated
+- [ ] Code references to section 5 still match the updated content
+- [ ] `./gradlew test` passes
 """,
   priority: 1,
   dueDate: "<next Friday as YYYY-MM-DD>",
@@ -260,6 +276,13 @@ linear_save_issue(
 **As a** developer on mu-format,
 **I want** the import workflow restructured,
 **so that** lock handling and error paths are covered by tests instead of held in one method.
+
+## Acceptance criteria
+
+- [ ] Lock handling is extracted to a separate component
+- [ ] Error paths are covered by tests
+- [ ] `./gradlew test` passes
+- [ ] All subtasks are completed
 """,
   estimate: 2,
   assignee: "pierre"
@@ -301,6 +324,12 @@ linear_save_issue(
 **so that** outdated or vulnerable versions surface early instead of at the next upgrade.
 
 Recurrence: every Monday (not natively supported by Linear).
+
+## Acceptance criteria
+
+- [ ] Dependencies are reviewed for updates
+- [ ] Vulnerable or outdated dependencies are identified
+- [ ] Decision made on which dependencies to update
 """,
   priority: 4,
   assignee: "pierre"
@@ -324,6 +353,12 @@ linear_save_issue(
 **so that** the application has a visual foundation to build on.
 
 Start date: <next Monday>. Also assigned: Alex (Linear supports one assignee).
+
+## Acceptance criteria
+
+- [ ] UI design is complete
+- [ ] Design reviewed by Alex
+- [ ] Design decisions are documented
 """,
   assignee: "pierre"
 )
