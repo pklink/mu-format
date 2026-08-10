@@ -35,7 +35,8 @@ class ModulithArchitectureTest {
                                         .that().resideInAPackage("net.einself.mu.shared")
                                         .should().onlyDependOnClassesThat()
                                         .resideInAnyPackage("net.einself.mu.shared", "java..", "org.jspecify..")
-                                        .because("Shared kernel must be dependency-free")
+                                        .because("Shared kernel must be free of project dependencies "
+                                                                        + "(org.jspecify is an annotation-only exception)")
                                         .check(classes);
     }
 
