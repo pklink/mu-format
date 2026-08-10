@@ -3,6 +3,7 @@ package net.einself.mu.metadata.api;
 import io.github.wasabithumb.jtoml.value.TomlValue;
 import io.github.wasabithumb.jtoml.value.primitive.TomlPrimitive;
 import io.github.wasabithumb.jtoml.value.table.TomlTable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 
@@ -20,7 +21,7 @@ public final class Tomls {
      * The string primitive mapped to {@code key}, or null when absent or not a
      * string.
      */
-    public static String string(TomlTable table, String key) {
+    public static @Nullable String string(TomlTable table, String key) {
         TomlValue value = table.get(key);
         if (value == null || !value.isPrimitive()) {
             return null;
@@ -33,7 +34,7 @@ public final class Tomls {
      * Any primitive mapped to {@code key} rendered as a string — for the dual-typed
      * {@code disc} (integer or string, SPEC.md section 4.2) and similar cases.
      */
-    public static String scalar(TomlTable table, String key) {
+    public static @Nullable String scalar(TomlTable table, String key) {
         TomlValue value = table.get(key);
         if (value == null || !value.isPrimitive()) {
             return null;
@@ -55,7 +56,7 @@ public final class Tomls {
      * Adds {@code key → value} to {@code fields} unless {@code value} is null,
      * keeping display maps free of absent attributes.
      */
-    public static void put(Map<String, String> fields, String key, String value) {
+    public static void put(Map<String, String> fields, String key, @Nullable String value) {
         if (value != null) {
             fields.put(key, value);
         }

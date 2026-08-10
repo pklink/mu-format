@@ -6,6 +6,7 @@ import net.einself.mu.metadata.api.Tomls;
 import net.einself.mu.searchcontext.api.EntityType;
 import net.einself.mu.searchcontext.api.SearchOptions;
 import net.einself.mu.searchcontext.api.SearchResult;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -60,7 +61,7 @@ public class ReleaseSearcher {
         return passesFilters(data, options);
     }
 
-    private static boolean equalsIgnoreCase(TomlTable data, String key, String expected) {
+    private static boolean equalsIgnoreCase(TomlTable data, String key, @Nullable String expected) {
         if (expected == null) {
             return true;
         }

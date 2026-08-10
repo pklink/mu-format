@@ -5,4 +5,7 @@
  * <p>
  * <b>Dependencies:</b> all module APIs, Picocli
  */
+@NullMarked
 package net.einself.mu.cli;
+
+import org.jspecify.annotations.NullMarked;

@@ -4,6 +4,7 @@ import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.collection.api.LockHandle;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -53,7 +54,7 @@ public class CollectionLock implements LockHandle {
         }
     }
 
-    private static MuException locked(Path lockFile, FileChannel channel) {
+    private static MuException locked(Path lockFile, @Nullable FileChannel channel) {
         closeQuietly(channel);
         return new MuException(ExitCode.LOCK_HELD,
                                         "Another mu process holds the lock: " + lockFile);
@@ -69,7 +70,7 @@ public class CollectionLock implements LockHandle {
         closeQuietly(channel);
     }
 
-    private static void closeQuietly(FileChannel channel) {
+    private static void closeQuietly(@Nullable FileChannel channel) {
         if (channel == null) {
             return;
         }

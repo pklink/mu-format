@@ -1,6 +1,7 @@
 package net.einself.mu.importcontext.internal;
 
 import net.einself.mu.naming.api.Nfc;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -56,7 +57,7 @@ public class TrackPrefixParser {
         return Optional.empty();
     }
 
-    private static Optional<TrackPosition> position(Object disc, String number, String title, String stem) {
+    private static Optional<TrackPosition> position(@Nullable Object disc, String number, String title, String stem) {
         int parsed = Integer.parseInt(number);
         if (parsed < 1) {
             // SPEC.md section 4.7 requires number >= 1; "00 Intro" carries no usable

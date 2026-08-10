@@ -1,5 +1,7 @@
 package net.einself.mu.importcontext.internal;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 
 /**
@@ -13,7 +15,7 @@ import java.util.Optional;
  * @param title
  *            the remainder of the filename
  */
-public record TrackPosition(Object disc, int number, String title) {
+public record TrackPosition(@Nullable Object disc, int number, String title) {
 
     public Optional<Object> discValue() {
         return Optional.ofNullable(disc);

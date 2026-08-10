@@ -4,6 +4,7 @@ import net.einself.mu.metadata.api.Release;
 import net.einself.mu.naming.api.ExtensionDeriver;
 import net.einself.mu.naming.api.Nfc;
 import net.einself.mu.storage.api.Blob;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -32,10 +33,10 @@ public class ReleaseAssembler {
 
     public Release assemble(String id,
                                     String title,
-                                    String artistId,
+                                    @Nullable String artistId,
                                     List<SourceFile> files,
                                     Map<SourceFile, Blob> blobs,
-                                    String originDir) {
+                                    @Nullable String originDir) {
         Optional<SourceFile> cover = coverFrontSelector.select(files);
         List<SourceFile> audio = files.stream()
                                         .filter(file -> file.kind() == FileKind.AUDIO)
@@ -54,7 +55,7 @@ public class ReleaseAssembler {
 
     private List<Release.Track> tracks(List<SourceFile> audio,
                                     Map<SourceFile, Blob> blobs,
-                                    String originDir) {
+                                    @Nullable String originDir) {
         List<TrackPosition> positions = parsePositions(audio);
         List<Release.Track> tracks = new ArrayList<>();
         for (int i = 0; i < audio.size(); i++) {
@@ -106,7 +107,7 @@ public class ReleaseAssembler {
     private List<Release.Asset> assets(List<SourceFile> files,
                                     Optional<SourceFile> cover,
                                     Map<SourceFile, Blob> blobs,
-                                    String originDir) {
+                                    @Nullable String originDir) {
         return files.stream()
                                         .filter(file -> file.kind() != FileKind.AUDIO)
                                         .filter(file -> cover.filter(file::equals).isEmpty())
@@ -118,10 +119,11 @@ public class ReleaseAssembler {
     }
 
     private String reference(SourceFile file, Map<SourceFile, Blob> blobs) {
-        return extensionDeriver.reference(blobs.get(file).hash(), file.filename());
+        Blob blob = Objects.requireNonNull(blobs.get(file), () -> "no blob stored for " + file.filename());
+        return extensionDeriver.reference(blob.hash(), file.filename());
     }
 
-    private static String originPath(SourceFile file, String originDir) {
+    private static @Nullable String originPath(SourceFile file, @Nullable String originDir) {
         return originDir == null ? null : file.relativePath();
     }
 
