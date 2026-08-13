@@ -6,6 +6,7 @@ import net.einself.mu.collection.api.CollectionService;
 import net.einself.mu.searchcontext.api.*;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
+import org.jspecify.annotations.Nullable;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -28,9 +29,13 @@ public class SearchCommand implements Callable<Integer> {
                                     EntityType.ARTIST, "Artists",
                                     EntityType.TRACK, "Tracks");
 
+    // Populated by Picocli via reflection before call(); never null when used.
+    @SuppressWarnings("NullAway.Init")
     @ParentCommand
     private Main parent;
 
+    // Populated by Picocli via reflection before call(); never null when used.
+    @SuppressWarnings("NullAway.Init")
     @Parameters(index = "0", paramLabel = "<query>", description = "Case-insensitive substring to search for.")
     String query;
 
@@ -38,15 +43,19 @@ public class SearchCommand implements Callable<Integer> {
     String type = "all";
 
     @Option(names = {"-f", "--field"}, paramLabel = "<field>", description = "Restrict matching to one TOML attribute.")
+    @Nullable
     String field;
 
     @Option(names = "--year", paramLabel = "<year>", description = "Keep only releases with this release-year-original.")
+    @Nullable
     String year;
 
     @Option(names = "--medium", paramLabel = "<medium>", description = "Keep only releases with this source-medium.")
+    @Nullable
     String medium;
 
     @Option(names = "--role", paramLabel = "<role>", description = "Credit matching counts only this role (e.g. main, feat).")
+    @Nullable
     String role;
 
     @Option(names = {"-n", "--limit"}, paramLabel = "<num>", description = "Maximum number of results (0 = unlimited).")

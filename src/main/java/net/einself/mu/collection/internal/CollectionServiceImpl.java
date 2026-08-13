@@ -5,6 +5,7 @@ import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.collection.api.CollectionService;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,7 +27,7 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
-    public CollectionRoot findRoot(Path explicitRoot, Path workingDirectory) {
+    public CollectionRoot findRoot(@Nullable Path explicitRoot, Path workingDirectory) {
         return explicitRoot != null
                                         ? fromExplicit(explicitRoot)
                                         : searchUpwards(workingDirectory);

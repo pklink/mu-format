@@ -1,5 +1,7 @@
 package net.einself.mu.searchcontext.api;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Set;
 
 /**
@@ -23,10 +25,10 @@ import java.util.Set;
  */
 public record SearchOptions(
                                 Set<EntityType> scope,
-                                String field,
-                                String year,
-                                String medium,
-                                String role,
+                                @Nullable String field,
+                                @Nullable String year,
+                                @Nullable String medium,
+                                @Nullable String role,
                                 int limit) {
 
     public boolean searches(EntityType type) {

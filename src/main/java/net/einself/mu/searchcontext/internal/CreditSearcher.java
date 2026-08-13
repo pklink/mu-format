@@ -6,6 +6,7 @@ import net.einself.mu.metadata.api.EntityFile;
 import net.einself.mu.metadata.api.Tomls;
 import net.einself.mu.searchcontext.api.SearchOptions;
 import net.einself.mu.searchcontext.api.SearchResult;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -93,7 +94,7 @@ public class CreditSearcher {
         }
     }
 
-    private boolean roleAccepted(String role) {
+    private boolean roleAccepted(@Nullable String role) {
         return options.role() == null || options.role().equals(role);
     }
 

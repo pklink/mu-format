@@ -6,6 +6,7 @@ import net.einself.mu.collection.api.CollectionService;
 import net.einself.mu.importcontext.api.*;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
+import org.jspecify.annotations.Nullable;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -23,13 +24,17 @@ import java.util.concurrent.Callable;
 @Command(name = "import", description = "Take files into the store and create a meta skeleton.")
 public class ImportCommand implements Callable<Integer> {
 
+    // Populated by Picocli via reflection before call(); never null when used.
+    @SuppressWarnings("NullAway.Init")
     @ParentCommand
     private Main parent;
 
     @Option(names = "--release", paramLabel = "<id>", description = "Import into an existing release. Not implemented yet.")
+    @Nullable
     String releaseId;
 
     @Option(names = "--artist", paramLabel = "<id>", description = "Artist identifier for the main credit.")
+    @Nullable
     String artistId;
 
     @Option(names = "--origin", description = "Record origin-dir and origin-path (SPEC.md section 4.9).")
@@ -38,6 +43,8 @@ public class ImportCommand implements Callable<Integer> {
     @Option(names = "--dry-run", description = "Report what would happen, write nothing.")
     boolean dryRun;
 
+    // Populated by Picocli via reflection before call(); never null when used.
+    @SuppressWarnings("NullAway.Init")
     @Parameters(arity = "1..*", paramLabel = "<path>", description = "Files or directories to import.")
     List<Path> paths;
 

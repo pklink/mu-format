@@ -6,6 +6,7 @@ import net.einself.mu.shared.MuException;
 import net.einself.mu.storage.api.Blob;
 import net.einself.mu.storage.api.BlobRepository;
 import org.apache.commons.io.file.PathUtils;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -130,7 +131,7 @@ public class FileSystemBlobStore implements BlobRepository {
      * Streams {@code source} through a digest, writing to {@code target} when it is
      * not null.
      */
-    private String copyAndHash(Path source, Path target) throws IOException {
+    private String copyAndHash(Path source, @Nullable Path target) throws IOException {
         MessageDigest digest = sha256();
         byte[] buffer = new byte[BUFFER_SIZE];
         try (InputStream in = Files.newInputStream(source);

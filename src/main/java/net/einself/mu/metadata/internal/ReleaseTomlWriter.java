@@ -9,6 +9,7 @@ import net.einself.mu.metadata.api.Release;
 import net.einself.mu.naming.api.Nfc;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -101,7 +102,7 @@ public class ReleaseTomlWriter {
     /**
      * {@code disc} is the only dual-typed attribute (SPEC.md section 4.2).
      */
-    private static void putDisc(TomlTable table, Object disc) {
+    private static void putDisc(TomlTable table, @Nullable Object disc) {
         if (disc instanceof Integer number) {
             table.put("disc", TomlPrimitive.of(number.intValue()));
         } else if (disc instanceof String side) {
@@ -119,7 +120,7 @@ public class ReleaseTomlWriter {
         table.put(key, array);
     }
 
-    private static void putString(TomlTable table, String key, String value) {
+    private static void putString(TomlTable table, String key, @Nullable String value) {
         if (value != null) {
             table.put(key, TomlPrimitive.of(Nfc.normalize(value)));
         }

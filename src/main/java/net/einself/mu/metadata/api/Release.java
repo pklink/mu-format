@@ -1,5 +1,7 @@
 package net.einself.mu.metadata.api;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -28,9 +30,9 @@ public record Release(
                                 List<Credit> credits,
                                 List<Track> tracks,
                                 List<Asset> assets,
-                                String coverFront,
-                                String coverFrontOriginPath,
-                                String originDir) {
+                                @Nullable String coverFront,
+                                @Nullable String coverFrontOriginPath,
+                                @Nullable String originDir) {
 
     /**
      * @param role
@@ -40,7 +42,7 @@ public record Release(
      *            incomplete release, which is what {@code import} writes without
      *            {@code --artist}
      */
-    public record Credit(String role, String artist) {
+    public record Credit(String role, @Nullable String artist) {
     }
 
     /**
@@ -56,7 +58,7 @@ public record Release(
      * @param originPath
      *            original path, or null
      */
-    public record Track(Object disc, int number, String blob, String title, String originPath) {
+    public record Track(@Nullable Object disc, int number, String blob, String title, @Nullable String originPath) {
     }
 
     /**
@@ -67,7 +69,7 @@ public record Release(
      * @param originPath
      *            original path, or null
      */
-    public record Asset(String kind, String blob, String originPath) {
+    public record Asset(String kind, String blob, @Nullable String originPath) {
     }
 
 }

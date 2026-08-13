@@ -18,6 +18,7 @@ import net.einself.mu.shared.MuException;
 import net.einself.mu.storage.api.Blob;
 import net.einself.mu.storage.api.BlobRepository;
 import net.einself.mu.storage.api.StorageModule;
+import org.jspecify.annotations.Nullable;
 
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -62,6 +63,9 @@ public class ImportServiceImpl implements ImportService {
     private String deriveTitle(List<Path> paths) {
         Path first = paths.get(0);
         Path source = paths.size() == 1 && Files.isDirectory(first) ? first : first.toAbsolutePath().getParent();
+        if (source == null) {
+            throw new MuException(ExitCode.USAGE, "Cannot import files from the filesystem root");
+        }
         return directoryName(source);
     }
 
@@ -90,7 +94,7 @@ public class ImportServiceImpl implements ImportService {
 
     private Release importForReal(CollectionRoot root,
                                     List<SourceFile> files,
-                                    String originDir,
+                                    @Nullable String originDir,
                                     ImportResult report,
                                     ImportOptions options,
                                     String releaseTitle) {
@@ -113,7 +117,7 @@ public class ImportServiceImpl implements ImportService {
 
     private Release importDryRun(CollectionRoot root,
                                     List<SourceFile> files,
-                                    String originDir,
+                                    @Nullable String originDir,
                                     ImportResult report,
                                     ImportOptions options,
                                     String releaseTitle) {
@@ -137,7 +141,7 @@ public class ImportServiceImpl implements ImportService {
 
     private Release buildRelease(List<SourceFile> files,
                                     Map<SourceFile, Blob> blobs,
-                                    String originDir,
+                                    @Nullable String originDir,
                                     ImportResult report,
                                     ImportOptions options,
                                     String releaseTitle) {

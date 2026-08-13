@@ -7,6 +7,7 @@ import net.einself.mu.metadata.api.Tomls;
 import net.einself.mu.searchcontext.api.EntityType;
 import net.einself.mu.searchcontext.api.SearchOptions;
 import net.einself.mu.searchcontext.api.SearchResult;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -68,7 +69,7 @@ public class ArtistSearcher {
         return new SearchResult(EntityType.ARTIST, artist.id(), artist.path(), fields);
     }
 
-    private static String join(TomlTable data, String key) {
+    private static @Nullable String join(TomlTable data, String key) {
         TomlValue value = data.get(key);
         if (value == null || !value.isArray()) {
             return null;

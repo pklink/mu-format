@@ -7,6 +7,7 @@ import io.github.wasabithumb.jtoml.option.prop.LineSeparator;
 import io.github.wasabithumb.jtoml.option.prop.OrderMarkPolicy;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
+import org.jspecify.annotations.Nullable;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -30,7 +31,7 @@ public class Main implements Callable<Integer> {
 
     @Option(names = "--root", scope = ScopeType.INHERIT, paramLabel = "<path>", description = "Collection root. Default: search upwards for a directory "
                                     + "containing meta/.mu.")
-    public Path root;
+    public @Nullable Path root;
 
     @Option(names = "--format", scope = ScopeType.INHERIT, paramLabel = "<format>", description = "Output format: text, json (default: text).")
     public String format = "text";
@@ -39,6 +40,11 @@ public class Main implements Callable<Integer> {
 
     private PrintStream err = System.err;
 
+    /**
+     * Set right after construction in {@link #execute}; only unset for the instant
+     * between {@code new Main()} and that assignment, which no other code observes.
+     */
+    @SuppressWarnings("NullAway.Init")
     private CommandLine commandLine;
 
     public static void main(String[] args) {
