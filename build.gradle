@@ -45,7 +45,7 @@ dependencies {
     implementation 'org.jmolecules:jmolecules-ddd:2.0.1'
 
     // Null safety
-    implementation 'org.jspecify:jspecify:1.0.0'
+    implementation 'org.jspecify:jspecify:1.0.1'
     errorprone 'com.uber.nullaway:nullaway:0.12.7'
     errorprone 'com.google.errorprone:error_prone_core:2.38.0'
 
