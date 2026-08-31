@@ -9,7 +9,8 @@ import org.jspecify.annotations.Nullable;
 import java.util.*;
 
 /**
- * Assembles the release entity from the imported files.
+ * Assembles every audio, image and other file into the release entity
+ * ({@code meta/releases/<id>.mu}).
  */
 public class ReleaseAssembler {
 

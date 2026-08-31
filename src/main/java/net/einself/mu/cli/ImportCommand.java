@@ -19,8 +19,8 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
- * {@code mu import} — takes files into the store and creates a release
- * skeleton.
+ * {@code mu import} — takes files into the store and creates a release entity
+ * ({@code meta/releases/<id>.mu}).
  */
 @Command(name = "import", description = "Take files into the store and create a meta skeleton.")
 public class ImportCommand implements Callable<Integer> {
