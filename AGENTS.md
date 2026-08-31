@@ -7,90 +7,51 @@ code, not the spec, unless the task is explicitly a spec change.
 
 ## Commands
 
-```
-./gradlew test                                    # full suite
-./gradlew test --tests '*ImportCommandTest*'      # one class
-./gradlew test --tests '*ImportCommandTest.import_storesEveryFileAndCreatesTheRelease*'
-./gradlew build                                   # compile + test
-```
+`./gradlew test` is the verification step. `./gradlew build` additionally runs
+`spotlessCheck` and fails on unformatted code — run `./gradlew spotlessApply` first.
 
-No lint, formatter, typecheck, codegen or CI configuration exists. `./gradlew test` is the
-only verification step.
-
-Java 25 toolchain, pinned by `mise.toml` and `build.gradle`. Gradle 9.6.1 via wrapper.
-
-## Running the CLI
-
-`./gradlew run` starts the CLI. When no command is given, `./gradlew run` prints usage and exits with code 2
-(USAGE) — pass args via `./gradlew run --args="subcommand ..."`. For testing, exercise the
-CLI through the test seam:
+CLI-level tests go through the seam `Main.execute(String[], PrintStream, PrintStream)`,
+which takes injected streams; `main()` only wraps it with `System.exit`:
 
 ```java
 int exitCode = Main.execute(new String[]{"import", "--root", root, path}, out, err);
 ```
 
-`Main.execute(String[], PrintStream, PrintStream)` (`src/main/java/net/einself/mu/cli/Main.java:52`)
-takes injected streams; `main()` only wraps it with `System.exit`. All CLI-level tests use it.
-
-`./gradlew build` also produces a fat jar at `build/libs/mu-format-1.0-SNAPSHOT-all.jar`
-that bundles all runtime dependencies. Run it directly:
-
-```
-java -jar build/libs/mu-format-1.0-SNAPSHOT-all.jar
-```
-
 ## Architecture
 
-Modulith inside one Gradle module. Module roles and dependencies are documented in
-[README.md](README.md#architecture); each module has a README under
+Modulith inside one Gradle module. Roles and dependencies are documented in
+[README.md](README.md#architecture) and per-module READMEs under
 `src/main/java/net/einself/mu/<module>/README.md`.
 
-Each module splits into `<module>.api` (public, jMolecules `@Module` on `package-info.java`)
-and `<module>.internal` (private). `<Module>Module` classes in `api` are the intended
-factories (e.g. `StorageModule.createRepository(root)`).
-
-### Module boundaries are enforced by arch tests
-
-`ModulithArchitectureTest` and `DddArchitectureTest` use ArchUnit 1.4.1 to verify that
-`.internal` packages are not accessed from outside their module and that the CLI only depends
-on module APIs.
-
-For new code: go through `<module>.api` types and `<Module>Module` factories, never through
-another module's `.internal`. Do not use the existing CLI commands as a template for layering.
+Go through `<module>.api` types and `<Module>Module` factories, never another module's
+`.internal` — arch tests enforce it. Do not use the existing CLI commands as a template
+for layering.
 
 ## Conventions
 
 - Tasks: only close/complete tasks when explicitly asked by the user.
-- Planning mode: when in planning mode (read-only), do NOT commit to git, create Linear
-  tickets, or create pull requests. Planning is for analysis and design only.
-- Errors: throw `MuException(ExitCode, message[, details])`. `Main`'s `ExceptionHandler`
-  turns it into the exit code and prints `mu: <message>` plus indented detail lines; anything
-  else becomes `IO_ERROR`. Do not call `System.exit` outside `Main.main`.
-- Exit codes are fixed: `SUCCESS 0`, `PROBLEMS 1`, `USAGE 2`, `LOCK_HELD 3`, `IO_ERROR 4`.
-- Paths inside a collection come from `CollectionRoot` accessors (`store()`, `meta()`,
-  `releases()`, `staging()`, `lock()`), not string concatenation.
+- Planning mode (read-only): no commits, no Linear tickets, no pull requests.
+- Errors: throw `MuException(ExitCode, message[, details])`. Do not call `System.exit`
+  outside `Main.main`.
+- Paths inside a collection come from `CollectionRoot` accessors, not string concatenation.
 - TOML is written through the single configured `JToml` instance from `Main.toml()`
   (LF separators, no BOM — required by SPEC.md section 4). Do not build your own.
-- Unimplemented options fail loudly (`--release` throws `USAGE`) rather than degrading.
-- Writes take the advisory lock via `CollectionModule.acquireLock(root)` in try-with-resources; a
-  second process aborts with `LOCK_HELD` instead of waiting. Dry runs take no lock.
+- Unimplemented options fail loudly with `USAGE` rather than degrading.
+- Writes take the advisory lock via `CollectionModule.acquireLock(root)` in
+  try-with-resources; a second process aborts with `LOCK_HELD` instead of waiting. Dry runs
+  take no lock.
 
 ## Testing
 
-- JUnit 5 + AssertJ. Test classes live in `net.einself.mu.<module>` (flat, no `.internal`
-  mirror) and may reach into `internal` classes directly.
-- Naming: `method_expectedBehaviour()`; subject field named `underTest`; `// arrange`,
-  `// act`, `// assert` comments in the larger tests.
-- Fixtures use `@TempDir`. A minimal collection root is a directory with `meta/.mu`
-  containing `format = 1`; CLI tests then pass `--root <path>`.
-- `BlobStoreTest` uses `Assumptions` to skip POSIX-permission assertions on unsupported
-  filesystems.
+JUnit 5 + AssertJ. Test classes live in `net.einself.mu.<module>` (flat, no `.internal`
+mirror) and may reach into `internal` classes directly. Naming: `method_expectedBehaviour()`;
+subject field named `underTest`; `// arrange`, `// act`, `// assert` in the larger tests.
+Fixtures use `@TempDir`; a minimal collection root is a directory with `meta/.mu` containing
+`format = 1`, and CLI tests then pass `--root <path>`.
 
 ## Git
 
-Commit messages are conventional commits with a **subject line only — never a body**.
-Types in use: `docs`, `chore`, `feat`, `test`, `refactor`. Put everything the reader needs
-into the subject; if it does not fit, the commit is doing too much.
+Conventional commits with a **subject line only — never a body**.
 
 ## Status
 
