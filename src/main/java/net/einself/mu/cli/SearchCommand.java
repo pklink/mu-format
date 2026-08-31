@@ -16,6 +16,7 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 /**
  * {@code mu search} — searches releases, artists and tracks in the meta layer.
@@ -81,14 +82,13 @@ public class SearchCommand implements Callable<Integer> {
 
         Path rootPath = root.path();
         Map<EntityType, List<SearchResult>> grouped = group(results);
-        SearchData data = new SearchData(
-                                        results.size(),
-                                        toItems(grouped, EntityType.RELEASE, rootPath),
-                                        toItems(grouped, EntityType.ARTIST, rootPath),
-                                        toItems(grouped, EntityType.TRACK, rootPath));
+        List<SearchResultItem> releases = toItems(grouped, EntityType.RELEASE, rootPath);
+        List<SearchResultItem> artists = toItems(grouped, EntityType.ARTIST, rootPath);
+        List<SearchResultItem> tracks = toItems(grouped, EntityType.TRACK, rootPath);
+        SearchData data = new SearchData(results.size(), releases, artists, tracks);
 
-        outputFormatter.write(parent.format, "search", data,
-                                        out -> formatText(grouped, rootPath, out));
+        Consumer<PrintStream> printStreamConsumer = out -> formatText(grouped, rootPath, out);
+        outputFormatter.write(parent.format, "search", data, printStreamConsumer);
         return ExitCode.SUCCESS.value();
     }
 
@@ -98,41 +98,40 @@ public class SearchCommand implements Callable<Integer> {
             case "release" -> EnumSet.of(EntityType.RELEASE);
             case "artist" -> EnumSet.of(EntityType.ARTIST);
             case "track" -> EnumSet.of(EntityType.TRACK);
-            default -> throw new MuException(ExitCode.USAGE,
-                                            "Invalid --type: must be release, artist, track, or all");
+            default -> throw new MuException(ExitCode.USAGE, "Invalid --type: must be release, artist, track, or all");
         };
         if (limit < 0) {
             throw new MuException(ExitCode.USAGE, "--limit must be ≥ 0");
         }
         if (role != null && !scope.contains(EntityType.RELEASE)) {
-            throw new MuException(ExitCode.USAGE,
-                                            "--role applies to release credits; --type must include release");
+            throw new MuException(ExitCode.USAGE, "--role applies to release credits; --type must include release");
         }
-        if ((year != null || medium != null) && !scope.contains(EntityType.RELEASE)
-                                        && !scope.contains(EntityType.TRACK)) {
-            throw new MuException(ExitCode.USAGE,
-                                            "--year/--medium apply to releases and tracks of releases");
+        if ((year != null || medium != null) && !scope.contains(EntityType.RELEASE) && !scope.contains(EntityType.TRACK)) {
+            throw new MuException(ExitCode.USAGE, "--year/--medium apply to releases and tracks of releases");
         }
+
         return new SearchOptions(scope, field, year, medium, role, limit);
     }
 
-    private void formatText(Map<EntityType, List<SearchResult>> grouped,
-                                    Path root, PrintStream out) {
+    private void formatText(Map<EntityType, List<SearchResult>> grouped, Path root, PrintStream out) {
         if (grouped.values().stream().allMatch(List::isEmpty)) {
             out.println("No matches.");
             return;
         }
+
         for (EntityType type : EntityType.values()) {
             List<SearchResult> group = grouped.get(type);
             if (group == null || group.isEmpty()) {
                 continue;
             }
+
             out.printf("%s (%d found):%n", GROUP_LABELS.get(type), group.size());
             for (SearchResult result : group) {
                 out.println("  " + result.id());
                 result.fields().forEach((key, value) -> out.println("    " + key + ": " + value));
                 out.println("    path: " + relative(result.path(), root));
             }
+
             out.println();
         }
     }
@@ -140,8 +139,7 @@ public class SearchCommand implements Callable<Integer> {
     private Map<EntityType, List<SearchResult>> group(List<SearchResult> results) {
         Map<EntityType, List<SearchResult>> grouped = new EnumMap<>(EntityType.class);
         for (SearchResult result : results) {
-            grouped.computeIfAbsent(result.type(), ignored -> new ArrayList<>())
-                                            .add(result);
+            grouped.computeIfAbsent(result.type(), ignored -> new ArrayList<>()).add(result);
         }
         return grouped;
     }
@@ -149,8 +147,7 @@ public class SearchCommand implements Callable<Integer> {
     private List<SearchResultItem> toItems(Map<EntityType, List<SearchResult>> grouped,
                                     EntityType type, Path root) {
         return grouped.getOrDefault(type, List.of()).stream()
-                                        .map(result -> new SearchResultItem(result.id(), result.fields(),
-                                                                        relative(result.path(), root)))
+                                        .map(result -> new SearchResultItem(result.id(), result.fields(), relative(result.path(), root)))
                                         .toList();
     }
 

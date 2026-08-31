@@ -16,6 +16,7 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 /**
  * {@code mu import} — takes files into the store and creates a release
@@ -56,52 +57,56 @@ public class ImportCommand implements Callable<Integer> {
 
     @Override
     public Integer call() {
-        return run(parent.out(), parent.err());
-    }
-
-    int run(PrintStream out, PrintStream err) {
+        PrintStream err = parent.err();
         OutputFormatter.validate(parent.format);
         rejectUnimplementedOptions();
 
         CollectionService collectionService = CollectionModule.createService(parent.toml());
-        CollectionRoot root = collectionService.findRoot(parent.root, Path.of("").toAbsolutePath());
-        collectionService.readFormatVersion(root);
+        CollectionRoot collectionRoot = collectionService.findRoot(parent.root, Path.of("").toAbsolutePath());
+        collectionService.readFormatVersion(collectionRoot);
 
-        ImportOptions options = new ImportOptions(dryRun, origin, artistId, releaseId);
+        ImportOptions importOptions = new ImportOptions(dryRun, origin, artistId, releaseId);
         ImportService importService = ImportModule.createImportService(parent.toml(), err);
-        ImportReport report = importService.importPaths(root, paths, options);
+        ImportReport report = importService.importPaths(collectionRoot, paths, importOptions);
 
-        String relPath = root.path().relativize(
-                                        root.releases().resolve(report.release().id() + ".mu")).toString();
+        String relPath = releaseMetaPath(collectionRoot, report.release().id());
         ImportData data = new ImportData(relPath, dryRun, report.result().files(),
                                         report.result().stored(), report.result().deduplicated(),
                                         report.result().warnings());
 
-        outputFormatter.write(parent.format, "import", data,
-                                        printer -> {
-                                            report.result().warnings().forEach(w -> err.println("warning: " + w));
-                                            if (dryRun) {
-                                                printer.println("--- meta/releases/" + report.release().id() + ".mu (dry run) ---");
-                                                printer.print(importService.renderRelease(report.release()));
-                                                printer.println("--- end ---");
-                                            }
-                                            printer.println(summary(root, report.release()));
-                                            printer.println(report.result().files() + " file(s): "
-                                                                            + report.result().stored() + " stored, "
-                                                                            + report.result().deduplicated() + " deduplicated");
-                                        });
+        Consumer<PrintStream> printStreamConsumer = printer -> print(printer, report, err, importService, collectionRoot);
+        outputFormatter.write(parent.format, "import", data, printStreamConsumer);
         return ExitCode.SUCCESS.value();
     }
 
-    private String summary(CollectionRoot root, net.einself.mu.metadata.api.Release release) {
-        String path = root.path().relativize(root.releases().resolve(release.id() + ".mu")).toString();
+    private void print(PrintStream printer, ImportReport report, PrintStream err, ImportService importService, CollectionRoot collectionRoot) {
+        report.result().warnings().forEach(w -> err.println("warning: " + w));
+
+        if (dryRun) {
+            printer.printf("--- meta/releases/%s.mu (dry run) ---%n", report.release().id());
+            printer.print(importService.renderRelease(report.release()));
+            printer.println("--- end ---");
+        }
+
+        printer.println(summary(collectionRoot, report.release()));
+        printer.println(report.result().files() + " file(s): "
+                                        + report.result().stored() + " stored, "
+                                        + report.result().deduplicated() + " deduplicated");
+    }
+
+    private String summary(CollectionRoot collectionRoot, net.einself.mu.metadata.api.Release release) {
+        String path = releaseMetaPath(collectionRoot, release.id());
         return (dryRun ? "would create " : "created ") + path;
+    }
+
+    private String releaseMetaPath(CollectionRoot root, String releaseId) {
+        Path muPath = root.releases().resolve(releaseId + ".mu");
+        return root.path().relativize(muPath).toString();
     }
 
     private void rejectUnimplementedOptions() {
         if (releaseId != null) {
-            throw new MuException(ExitCode.USAGE,
-                                            "--release is not implemented yet; import creates a new release");
+            throw new MuException(ExitCode.USAGE, "--release is not implemented yet; import creates a new release");
         }
     }
 }
