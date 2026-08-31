@@ -46,9 +46,39 @@ mu search <query>          search releases, artists and tracks in meta
 mu build [view]            regenerate views
 mu lint [--strict]         check meta consistency
 mu verify [--quick]        check store integrity
+
+Global options: --root <path>, --format text|json
 ```
 
-`import` and `search` are implemented; the rest are sketches.
+### Implemented
+
+**`mu import`**
+Adds files to a collection. Walks directories, stores blobs under SHA-256, writes one
+`meta/releases/<id>.mu` per import.
+
+| Option           | Description                                              |
+|------------------|----------------------------------------------------------|
+| `--artist <id>`  | Artist identifier for the main credit                    |
+| `--origin`       | Record origin-dir and origin-path (SPEC.md section 4.9)  |
+| `--dry-run`      | Report what would happen, write nothing                  |
+
+**`mu search`**
+Scans entity files and prints matching releases, artists and tracks. Read-only.
+
+| Option                | Description                                          |
+|-----------------------|------------------------------------------------------|
+| `-t`, `--type <type>` | Restrict to release, artist, track, or all (default) |
+| `-f`, `--field <fld>` | Match only one TOML attribute                        |
+| `--year <year>`       | Keep only releases with this release-year-original   |
+| `--medium <medium>`   | Keep only releases with this source-medium           |
+| `--role <role>`       | Credit matching counts only this role (e.g. feat)    |
+| `-n`, `--limit <num>` | Maximum results (0 = unlimited)                      |
+
+Both commands support JSON output via `--format json`.
+
+### Unimplemented
+
+`build`, `lint` and `verify` are sketches without code behind them.
 
 ## Architecture
 
@@ -99,7 +129,8 @@ Exit codes are fixed: `SUCCESS` (0), `PROBLEMS` (1), `USAGE` (2), `LOCK_HELD` (3
 
 **Path resolution**
 
-All collection paths come from `CollectionRoot` accessors (`.store()`, `.meta()`, `.releases()`, `.staging()`, `.lock()`), never string concatenation. This keeps path construction centralized and correct.
+All collection paths come from `CollectionRoot` accessors (`.store()`, `.meta()`,
+  `.releases()`, `.artists()`, `.staging()`, `.lock()`, `.marker()`), never string concatenation. This keeps path construction centralized and correct.
 
 **TOML writing**
 
@@ -125,6 +156,10 @@ Early development. The format specification is settling. `mu import` and `mu sea
 ./gradlew build            compile, test, check formatting
 ./gradlew installGitHook   install the pre-commit hook (auto-formats on commit)
 ```
+
+Spotless enforces Eclipse 4.34 formatting at build time and via the pre-commit hook.
+Error Prone + NullAway run at compile time (NullAway is a hard error on `compileJava`).
+CI is configured at `.github/workflows/pr-check.yml`; DeepSource at `.deepsource.toml`.
 
 ## License
 
