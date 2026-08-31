@@ -5,20 +5,20 @@ import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
 import net.einself.mu.storage.api.Blob;
 import net.einself.mu.storage.api.BlobRepository;
-import org.apache.commons.io.file.PathUtils;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermission;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.EnumSet;
+import java.util.HexFormat;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,8 +40,6 @@ public class FileSystemBlobStore implements BlobRepository {
                                     PosixFilePermission.GROUP_READ,
                                     PosixFilePermission.OTHERS_READ);
 
-    private static final int BUFFER_SIZE = 8192;
-
     private final CollectionRoot root;
 
     public FileSystemBlobStore(CollectionRoot root) {
@@ -57,8 +55,10 @@ public class FileSystemBlobStore implements BlobRepository {
         if (!Files.isDirectory(staging)) {
             return;
         }
-        try {
-            PathUtils.cleanDirectory(staging);
+        try (var entries = Files.list(staging)) {
+            for (Path p : entries.toList()) {
+                Files.delete(p);
+            }
         } catch (IOException e) {
             throw new MuException(ExitCode.IO_ERROR,
                                             "Cannot clear staging directory " + staging + ": " + e.getMessage(), e);
@@ -133,16 +133,11 @@ public class FileSystemBlobStore implements BlobRepository {
      */
     private String copyAndHash(Path source, @Nullable Path target) throws IOException {
         MessageDigest digest = sha256();
-        byte[] buffer = new byte[BUFFER_SIZE];
-        try (InputStream in = Files.newInputStream(source);
+        try (DigestInputStream in = new DigestInputStream(Files.newInputStream(source), digest);
                                         OutputStream out = target == null ? OutputStream.nullOutputStream() : Files.newOutputStream(target)) {
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                digest.update(buffer, 0, read);
-                out.write(buffer, 0, read);
-            }
+            in.transferTo(out);
         }
-        return toHex(digest.digest());
+        return HexFormat.of().formatHex(digest.digest());
     }
 
     /**
@@ -163,15 +158,6 @@ public class FileSystemBlobStore implements BlobRepository {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 is required by the Java platform", e);
         }
-    }
-
-    private static String toHex(byte[] bytes) {
-        StringBuilder hex = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            hex.append(Character.forDigit((b >> 4) & 0xf, 16));
-            hex.append(Character.forDigit(b & 0xf, 16));
-        }
-        return hex.toString();
     }
 
     private static void deleteQuietly(Path path) {

@@ -32,7 +32,6 @@ tasks.named('shadowDistZip') { enabled = false }
 
 dependencies {
     // Core dependencies
-    implementation 'commons-io:commons-io:2.22.0'
     implementation 'io.github.wasabithumb:jtoml:1.5.2'
     implementation 'info.picocli:picocli:4.7.7'
     implementation 'com.google.code.gson:gson:2.14.0'

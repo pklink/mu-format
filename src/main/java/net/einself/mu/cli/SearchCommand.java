@@ -75,7 +75,7 @@ public class SearchCommand implements Callable<Integer> {
 
         CollectionService collectionService = CollectionModule.createService(parent.toml());
         CollectionRoot root = collectionService.findRoot(parent.root, Path.of("").toAbsolutePath());
-        collectionService.readFormatVersion(root);
+        collectionService.checkFormatVersion(root);
 
         SearchService searchService = SearchModule.createSearchService(parent.toml(), parent.err());
         List<SearchResult> results = searchService.search(query, options, root);

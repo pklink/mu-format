@@ -10,13 +10,4 @@ package net.einself.mu.storage.api;
  *            whether the blob was already present (SPEC.md section 3.3)
  */
 public record Blob(String hash, boolean deduplicated) {
-
-    /**
-     * The store path of this blob, relative to the collection root (SPEC.md section
-     * 3.2).
-     */
-    public String relativePath() {
-        return "store/" + hash.substring(0, 2) + "/" + hash;
-    }
-
 }
