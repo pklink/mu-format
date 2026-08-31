@@ -1,6 +1,7 @@
 # cli
 
-CLI adapter: Picocli commands that translate CLI invocations into module service calls.
+CLI adapter: Picocli commands that translate CLI invocations into module service calls,
+format output as text or JSON, and hold the single `JToml` writer instance.
 
 ## Dependencies
 
@@ -9,7 +10,6 @@ CLI adapter: Picocli commands that translate CLI invocations into module service
 - searchcontext
 - metadata
 - shared
-- Picocli
 
 ## SPEC.md references
 
