@@ -1,4 +1,4 @@
-package net.einself.mu.shared;
+package net.einself.mu.cli;
 
 public record Envelope<T>(String command, T data) {
 }

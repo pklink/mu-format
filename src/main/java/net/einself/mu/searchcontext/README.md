@@ -5,7 +5,6 @@ credits, and tracks against query strings with optional field/year/medium/role f
 
 ## Dependencies
 
-- shared
 - collection
 - metadata
 - naming
