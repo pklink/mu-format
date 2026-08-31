@@ -59,15 +59,6 @@ music/
     │           ├── 01 Feeling Plain.flac -> ../../../../store/ab/abcd3f…
     │           ├── cover.jpg             -> ../../../../store/3f/3f0a91…
     │           └── log.txt               -> ../../../../store/1a/1a2b3c…
-    ├── by-credit/
-    │   └── feat/
-    │       └── Anz/
-    │           └── Overmono - Good Lies -> ../../../by-artist/Overmono/Good Lies [2023]
-    ├── by-release-year-original/
-    │   └── 2023/
-    │       └── Overmono - Good Lies -> ../../by-artist/Overmono/Good Lies [2023]
-    ├── by-source-medium/
-    │   └── vinyl/…
     └── by-origin/
         └── Overmono - Good Lies (2023) [FLAC]/
             ├── 01 Overmono - Feeling Plain.flac -> ../../../store/7d/7d44e2…
@@ -162,18 +153,18 @@ A collection may mix both. The examples in this document use readable identifier
 
 ### 4.2 Value conventions
 
-- A value is an **integer** when it is a count, or a quantity in a fixed implied unit that admits exactly one spelling: `track.number`, `track.duration` (seconds), `bit-depth` (bits), `sample-rate` (hertz). The point is that such a fact must not be expressible in two ways — with an integer the TOML parser enforces the canonical form, whereas a string would accept `"44100"`, `"44.1 kHz"` and `"44,1kHz"` as three distinct values for one sample rate.
-- All other attribute values are **strings**, apart from flags. Descriptive values stay strings even when they look numeric: `release-year-original` and `release-year-medium` (incomplete years such as `"197?"` occur in practice, and the value is used verbatim as a path segment, section 5.4), `bitrate` (VBR presets such as `"V0"`, averages such as `"~245"`, or `"lossless"`) and `channel-mode`.
+- A value is an **integer** when it is a count, or a quantity in a fixed implied unit that admits exactly one spelling: `track.number`, `track.duration` (seconds).
+- All other attribute values are **strings**, apart from flags.
 - **Flag** = boolean `true` (`is-group = true`).
 - **Dual-typed**: `track.disc` is the only attribute that accepts two types — an integer for numbered discs, a string for medium sides (`"A"`, `"B"`). Section 4.7.
-- **Multiple value** = string array, inherently ordered (`member = ["id1", "id2"]`). There is no ordered/unordered distinction; arrays are always ordered.
+- **Multiple value** = string array, inherently ordered (`member = ["id1", "id2"]`).
 - **Multi-line value** = TOML multi-line string (`notes = """ … """`).
-- **Credit** = table (`[[credit]]`, `[[track.credit]]`), section 4.6. Credits are the only structure that is neither scalar nor array.
+- **Credit** = table (`[[credit]]`, `[[track.credit]]`), section 4.6.
 - References are strings without any path component (section 4.5).
 
 ### 4.3 Unicode normalization
 
-String values are normalized to NFC on write and normalized to NFC again on read. The repository must have `core.precomposeunicode=true` (section 6).
+String values are normalized to NFC on write and normalized to NFC again on read.
 
 ### 4.4 Cardinality
 
@@ -214,10 +205,9 @@ Artist participation is expressed through **credits**. A credit is a TOML table:
 | `role`   | single              | yes      | role, lowercase, words separated by `-`                   |
 | `artist` | single (ref artist) | yes      | reference to `meta/artists/<id>.mu`                       |
 | `as`     | single              | no       | name as printed on **this** release                       |
-| `join`   | single              | no       | join phrase that follows **after** this name              |
 | `detail` | single              | no       | free-form role qualifier (`"additional"`, `"uncredited"`) |
 
-A credit therefore bridges two layers: `artist` is the entity (queryable, linkable), while `as` and `join` record how the participation is actually printed on the release.
+A credit therefore bridges two layers: `artist` is the entity (queryable, linkable), while `as` records how the participation was actually printed on the release.
 
 #### Rules
 
@@ -225,11 +215,10 @@ A credit therefore bridges two layers: `artist` is the entity (queryable, linkab
 2. **No `artist` attribute at entity level.** A release has no `artist = [...]`; participation lives exclusively in credits.
 3. **Requirement.** Every release has at least one credit with `role = "main"`.
 4. **Order is authoritative.** The file order of credits determines the order of the billing line. The builder does **not** reorder credits (unlike `[[track]]`, section 4.7).
-5. **Billing line.** It is reconstructed from all credits with `role = "main"`, in file order: for each credit `as` (falling back to the `name` of the referenced artist), followed by `join` if present. If `join` is absent and a further `main` credit follows, `", "` is used. The `join` of the last `main` credit is ignored.
+5. **Billing line.** It is reconstructed from all credits with `role = "main"`, in file order: for each credit `as` (falling back to the `name` of the referenced artist), joined with `", "`.
 6. **Inheritance applies to `main` only.** If a track contains no credit with `role = "main"`, the release's `main` credits apply. All other roles apply exclusively at the level where they appear: release credits describe the release as a whole, track credits describe the track. There is no merging, no per-role overriding, and no empty list to disable an inherited role.
-7. **`join` only on `main`.** On other roles it is meaningless and should not be used.
-8. **`title` stays untouched.** The builder **never** synthesizes credit information into a title. If `(feat. …)` is part of the printed title, it lives in `title`; if it is not, it does not appear in the view either. Credits are additional information, never a replacement.
-9. **Write form.** The canonical write form is the block table (`[[credit]]`). Inline tables are additionally accepted on read, since TOML defines them as equivalent.
+7. **`title` stays untouched.** The builder **never** synthesizes credit information into a title. If `(feat. …)` is part of the printed title, it lives in `title`; if it is not, it does not appear in the view either. Credits are additional information, never a replacement.
+8. **Write form.** The canonical write form is the block table (`[[credit]]`). Inline tables are additionally accepted on read, since TOML defines them as equivalent.
 
 #### Role vocabulary
 
@@ -257,7 +246,6 @@ source-medium = "vinyl"
 role = "main"
 artist = "eloquenz"
 as = "Eloquenz"            # as printed
-join = " & "
 
 [[credit]]
 role = "main"
@@ -283,7 +271,7 @@ role = "feat"
 artist = "umse"
 ```
 
-Reconstructed billing line: `Eloquenz & Hulk Hodn`. Track 2 inherits both `main` credits and adds a `feat` credit; its `title` stays exactly as printed on the record.
+Reconstructed billing line: `Eloquenz, Hulk Hodn`. Track 2 inherits both `main` credits and adds a `feat` credit; its `title` stays exactly as printed on the record.
 
 ### 4.7 Tracks and discs
 
@@ -320,47 +308,24 @@ Participating artists are not stored in an attribute but in `[[track.credit]]` t
 
 **Artist** (`meta/artists/<id>.mu`)
 
-| Attribute           | Cardinality           | Required |
-|---------------------|-----------------------|----------|
-| `name`              | single                | yes      |
-| `alias`             | multiple              | no       |
-| `is-group`          | flag                  | no       |
-| `member`            | multiple (ref artist) | no       |
-| `notes`             | single (multi-line)   | no       |
-| `sort-name`         | single                | no       |
-| `discogs-artist-id` | single                | no       |
+| Attribute | Cardinality | Required |
+|-----------|-------------|----------|
+| `name`    | single      | yes      |
 
 **Release** (`meta/releases/<id>.mu`)
 
-| Attribute                                             | Cardinality                                             | Required                       |
-|-------------------------------------------------------|---------------------------------------------------------|--------------------------------|
-| `title`                                               | single                                                  | yes                            |
-| `credit`                                              | credit tables                                           | yes (≥ 1 with `role = "main"`) |
-| `type`                                                | single (`album`, `ep`, `single`, `compilation`, `live`) | no                             |
-| `release-year-original`                               | single                                                  | no                             |
-| `release-year-medium`                                 | single                                                  | no                             |
-| `source-medium`                                       | single (`cd`, `vinyl`, `file`, `web`, `tape`)           | no                             |
-| `source-store`                                        | single                                                  | no                             |
-| `rip-result`                                          | single                                                  | no                             |
-| `bit-depth`                                           | single (int)                                            | no                             |
-| `sample-rate`                                         | single (int)                                            | no                             |
-| `bitrate`, `channel-mode`                             | single                                                  | no                             |
-| `discogs-master-id`, `discogs-release-id`             | single                                                  | no                             |
-| `cover-front`, `cover-back`                           | single (ref blob)                                       | no                             |
-| `cover-front-origin-path`, `cover-back-origin-path`   | single                                                  | no                             |
-| `origin-dir`                                          | single                                                  | no                             |
-| `asset`                                               | asset tables                                            | no                             |
-| `notes`                                               | single (multi-line)                                     | no                             |
+| Attribute                           | Cardinality                           | Required                       |
+|-------------------------------------|---------------------------------------|--------------------------------|
+| `title`                             | single                                | yes                            |
+| `credit`                            | credit tables                         | yes (≥ 1 with `role = "main"`) |
+| `cover-front`                       | single (ref blob)                     | no                             |
+| `cover-front-origin-path`           | single                                | no                             |
+| `origin-dir`                        | single                                | no                             |
+| `asset`                             | asset tables                          | no                             |
 
-`release-year-original` is the year the release was **first** published; `release-year-medium` is the year of the edition actually held. `release-year-medium` is set **only if it differs** from `release-year-original` — a first pressing carries `release-year-original` alone. Views derive the edition year from the two (section 5.3).
+`origin-dir` and `cover-front-origin-path` record the artefact the release was received as. Section 4.9 defines them, together with the constraints their values must satisfy.
 
-`bit-depth` and `sample-rate` are integers and **must be ≥ 1**. `sample-rate` is given in hertz (`44100`, not `44.1`), `bit-depth` in bits. `bitrate` stays a string because it is not always a number: VBR encoders record presets (`"V0"`) or averages (`"~245"`), and a lossless source has no meaningful single value.
-
-`origin-dir` and the two `cover-*-origin-path` keys record the artefact the release was received as. Section 4.9 defines them, together with the constraints their values must satisfy.
-
-The value lists given for `type` and `source-medium` are **open vocabularies**, like `role` (section 4.6) and `asset.kind`. Unknown values are valid and are preserved verbatim; a tool may warn but must not reject them.
-
-Unknown attributes are **allowed** and preserved verbatim; they are ignored when sorting for deterministic builds.
+Unknown attributes are **allowed** and preserved verbatim; they are ignored when sorting for deterministic builds. Appendix A lists conventional attributes that tools may read and write.
 
 #### Assets
 
@@ -383,9 +348,9 @@ Kind vocabulary: `log`, `booklet`, `scan`, `cue`, `other`. The vocabulary is **o
 
 Assets attach to the release, not to individual tracks: rip logs and booklets describe the medium as a whole. They are materialized in `views/` alongside the tracks of the release (section 5.4).
 
-The file order of the `[[asset]]` tables is **authoritative**: where two assets would produce the same view filename, it decides which of them keeps it (section 5.4). Assets behave like credits here (section 4.6, rule 4), not like tracks, whose file order the builder ignores.
-
 #### Example release (multi-CD)
+
+Attributes beyond the schema above — `type`, `release-year-original`, `source-medium`, `bit-depth`, `sample-rate`, `notes`, `duration` — are conventional (Appendix A).
 
 ```toml
 title = "Good Lies"
@@ -433,16 +398,6 @@ role = "feat"
 artist = "anz"
 ```
 
-#### Example artist
-
-```toml
-name = "Overmono"
-is-group = true
-member = ["tom-russell", "ed-russell"]
-sort-name = "Overmono"
-discogs-artist-id = "1234567"
-```
-
 ### 4.9 Origin paths
 
 Content addressing keeps a file's bytes and discards its name (section 3.1). Usually that is the point: the name was noise, and section 5.4 builds a better one out of metadata. For an artefact that arrived **as a whole** — a purchased download, an archived bundle, any directory that came with a playlist or a checksum file — the names are not noise. They are part of what was received, the files shipped alongside refer to them, and once dropped they cannot be recovered from the store.
@@ -452,7 +407,7 @@ Two optional attributes record them:
 - `origin-dir` on the release: the name of the directory the release arrived as, a **single** path segment.
 - `origin-path` beside a blob reference: that file's path within the directory, relative to it, `/` as separator.
 
-`origin-path` sits on `[[track]]` (section 4.7) and `[[asset]]` (section 4.8). `cover-front` and `cover-back` are scalars with no room for a companion key, so they take theirs from the release-level `cover-front-origin-path` and `cover-back-origin-path`.
+`origin-path` sits on `[[track]]` (section 4.7) and `[[asset]]` (section 4.8). `cover-front` is a scalar with no room for a companion key, so it takes its origin path from the release-level `cover-front-origin-path`.
 
 #### Constraints
 
@@ -469,7 +424,7 @@ Rule 2 is the device section 4.1 already applies to identifiers: a value that su
 
 #### Uniqueness and pairing
 
-Within one release, `origin-path` values are unique, compared after NFC normalization **and** case folding, for the reason given in section 4.1, rule 5. There is no collision ladder here: two files claiming the same original path contradict each other about what was received, which is not a naming accident. Unlike an asset title (section 5.4), an origin path must never be decorated to make it fit.
+Within one release, `origin-path` values are unique, compared after NFC normalization **and** case folding, for the reason given in section 4.1, rule 5. Two files claiming the same original path contradict each other about what was received, which is not a naming accident.
 
 The two attributes are independent and either may stand alone:
 
@@ -477,6 +432,8 @@ The two attributes are independent and either may stand alone:
 - `origin-dir` without an `origin-path` on every file: the tree is materialized from those files that carry one, and the rest are left out. The format never invents a name to fill a gap — a synthesized name would misrepresent the artefact, and section 5.4 already provides synthesized names in `by-artist`.
 
 #### Example
+
+`type`, `release-year-original` and `source-medium` are conventional (Appendix A).
 
 ```toml
 title = "Good Lies"
@@ -512,7 +469,7 @@ The `kind` values `playlist` and `checksums` are not in the vocabulary listed in
 
 Nothing here changes how the release is presented anywhere else: `title` stays the curated title, `[[track]]` keeps its own numbering, and `by-artist` names its files as section 5.4 prescribes. The origin tree is a second, parallel presentation of the same blobs, not a replacement for the first.
 
-One artefact is one release. The album above is the same one as in section 4.8, held a second time: different bytes, different blobs, a different medium, and therefore a **second** entity with an identifier of its own — `good-lies` and `good-lies-web`, not one file trying to describe both. Section 5.3 tells the two apart in `by-artist` by their `source-medium`, which is what the third step of its ladder exists for.
+One artefact is one release. The album above is the same one as in section 4.8, held a second time: different bytes, different blobs, a different medium, and therefore a **second** entity with an identifier of its own — `good-lies` and `good-lies-web`, not one file trying to describe both. Section 5.3 tells the two apart in `by-artist` by their identifier.
 
 ## 5. Views
 
@@ -533,82 +490,58 @@ Filesystem names are derived from attribute values with the following sanitizati
 
 ### 5.3 Collisions
 
-Two releases by the same artist with the same title produce the same view path. Resolved in this order until unique:
+Two releases by the same artist with the same title produce the same view path. Resolved in two steps:
 
 1. `Title`
-2. `Title [<edition-year>]`
-3. `Title [<edition-year>, <source-medium>]`
-4. `Title [<edition-year>, <source-medium>] (<id-prefix>)`
+2. `Title (<identifier>)`
 
-`<edition-year>` is the **derived edition year**: `release-year-medium` if present, otherwise `release-year-original`.
+Step 2 is guaranteed unique: identifiers are pairwise distinct and section 5.2 leaves them unchanged (section 4.1), so the full identifier is always an available fallback. Colliding releases are sorted by identifier in NFC code point order and processed in that order.
 
-`<id-prefix>` is the shortest prefix of the release identifier that is at least **8 codepoints** long — or the whole identifier, if it is shorter — never splitting a codepoint, and long enough that the prefixes of all releases colliding at this step in this directory are pairwise distinct under the comparison of section 4.1, rule 5. One length is used for the entire colliding group, so all its entries carry a prefix of the same length.
-
-Step 4 is guaranteed unique: the identifiers of one directory are pairwise distinct, an identifier is at most 200 bytes and section 5.2 leaves it unchanged (section 4.1), so the full identifier is always an available fallback. Colliding releases are sorted by identifier in NFC code point order and processed in that order.
-
-#### Collisions in the other views
-
-`by-credit`, `by-release-year-original` and `by-source-medium` key on `<billing> - <title>`, which can collide independently of `by-artist` — two different releases may share a billing line, a title and a year. Resolved in two steps:
-
-1. `<billing> - <title>`
-2. `<billing> - <title> (<id-prefix>)`
-
-Step 2 is guaranteed unique, for the reason given above, and `<id-prefix>` is formed the same way — over the releases colliding at this step in this directory. As above, colliding releases are sorted by identifier in NFC code point order and processed in that order. This ladder is independent of the one above; the `by-artist` name is not reused here.
-
-The ladder is applied **per directory**, not per view: the collision scope is the single year directory, medium directory or `<role>/<artist-name>` directory in which the entry is created. Two releases that collide under one role but not under another therefore carry the suffix only where it is needed.
+The ladder is applied **per directory**, not per view: the collision scope is the single artist directory in which the entry is created.
 
 #### Collisions in `by-origin`
 
-`by-origin` keys on `origin-dir` (section 4.9), which is neither of the names above, and two releases may well carry the same one — the same bundle taken in twice, or two artefacts a source named identically. Two steps:
+`by-origin` keys on `origin-dir` (section 4.9), and two releases may carry the same one — the same bundle taken in twice, or two artefacts a source named identically. Two steps:
 
 1. `<origin-dir>`
-2. `<origin-dir> (<id-prefix>)`
+2. `<origin-dir> (<identifier>)`
 
-Step 2 is guaranteed unique for the reason given above, `<id-prefix>` is formed the same way, and the colliding releases are sorted by identifier in NFC code point order. The collision scope is `by-origin/` itself, which has only one level of directories.
+Step 2 is guaranteed unique for the reason given above, colliding releases sorted by identifier in NFC code point order. The collision scope is `by-origin/` itself, which has only one level of directories.
 
 The suffix lands on the **directory** and never on a file inside it. That is the point of putting it there: a checksum file or playlist refers to the names beside it, not to the name of the directory it sits in, so decorating the directory keeps the tree usable while renaming a file would not.
 
 ### 5.4 Standard views
 
-| View                       | Structure                                                                                                                                                                  |
-|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `by-artist`                | `by-artist/<artist-name>/<release-name>/<NN Title.ext>` — names built from metadata; a release appears under **every** one of its `main` artists                           |
-| `by-credit`                | `by-credit/<role>/<artist-name>/<billing> - <title>` → symlink to the `by-artist` directory                                                                                |
-| `by-release-year-original` | `by-release-year-original/<release-year-original>/<billing> - <title>` → symlink to the `by-artist` directory                                                              |
-| `by-source-medium`         | `by-source-medium/<source-medium>/<billing> - <title>` → symlink to the `by-artist` directory                                                                              |
-| `by-origin`                | `by-origin/<origin-dir>/<origin-path>` — the release as it was received, names verbatim (section 4.9)                                                                      |
+| View        | Structure                                                                                                                        |
+|-------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `by-artist` | `by-artist/<artist-name>/<release-name>/<NN Title.ext>` — names built from metadata; a release appears under **every** one of its `main` artists |
+| `by-origin` | `by-origin/<origin-dir>/<origin-path>` — the release as it was received, names verbatim (section 4.9)                            |
 
-`by-artist` and `by-origin` are the two views that symlink directly into the store, and they are complements: `by-artist` names every file from metadata, `by-origin` names none of them. The remaining three views link to `by-artist` directories and create no file symlinks of their own.
+`by-artist` and `by-origin` are the two views that symlink directly into the store, and they are complements: `by-artist` names every file from metadata, `by-origin` names none of them.
 
 #### Credits in views
 
-- **Grouping in `by-artist` is based exclusively on credits with `role = "main"`.** An artist who participates only as `feat`, `remixer`, `producer` or similar does **not** get their own `by-artist` directory; that participation is carried by `by-credit` instead.
-- `by-artist/<artist-name>` and `by-credit/<role>/<artist-name>` use the `name` attribute of the **artist entity**, not `as`. The directory represents the artist, not a single billing.
-- `<billing>` in `by-credit`, `by-release-year-original` and `by-source-medium` is the **reconstructed billing line** of the release (section 4.6, rule 5), i.e. including `as` names and `join` phrases — not a join of entity names.
-- A release lacking the attribute a view is keyed on is **omitted from that view** — no `unknown/` bucket, no `_` placeholder. It stays reachable through `by-artist/`.
-
-#### `by-credit`
-
-`by-credit` is the counterpart to `by-artist`: it makes every participation reachable that does not form a billing line.
-
-1. **Scope.** `by-credit` covers every credit whose `role` is **not** `main`, at release level (`[[credit]]`) and at track level (`[[track.credit]]`) alike. `main` is excluded because `by-artist` already covers it; including it would duplicate that view under a second name.
-2. **Granularity.** The entry is the **release**, never the individual track. A track credit therefore places the whole release under `<role>/<artist-name>/`. A release appears exactly **once** per `(role, artist)` pair, however many of its tracks carry that credit and whether the credit sits at release or at track level.
-3. **Multiple roles.** An artist credited on one release under two roles gets an entry under each of them.
-4. **Inheritance does not apply.** Section 4.6, rule 6 inherits `main` credits only, and `main` is out of scope here — a track never inherits a `feat` or `remixer` credit, so nothing is materialized that is not written down.
-5. **`<role>`** is the credit's `role` value, sanitized per section 5.2. Since the vocabulary is open (section 4.6), an unknown role yields a directory just like a known one.
-6. **Ordering.** Roles are iterated by NFC code point, artists by NFC-normalized `name`, releases by identifier (section 5.6).
+- **Grouping in `by-artist` is based exclusively on credits with `role = "main"`.** An artist who participates only as `feat`, `remixer`, `producer` or similar does **not** get their own `by-artist` directory.
+- Directory names use the `name` attribute of the **artist entity**, not `as`. The directory represents the artist, not a single billing.
+- A release lacking the attribute a view is keyed on is **omitted from that view** — no `unknown/` bucket, no `_` placeholder.
 
 #### Track filenames
 
 `<sortkey> <sanitized track-title>.<ext of the blob reference>`, e.g. `01 Feeling Plain.flac`, or `2-05 Kink.m4a` for multi-disc releases. If the reference carries no extension (section 4.5), the name is written without a suffix and **without** a trailing dot: `01 Feeling Plain`. The sort key is derived by the builder from `disc`/`number` (`[<disc>-]<number>`, number zero-padded to **at least** two digits — a `number` of 100 or more keeps all its digits and is not truncated). A string `disc` is inserted verbatim after sanitization (section 5.2), so a vinyl side yields `A-01 Feeling Plain.flac`; zero-padding applies to `number` only.
 
-`title` is taken **verbatim**. The builder never appends `(feat. …)` or any other credit information (section 4.6, rule 8).
+`title` is taken **verbatim**. The builder never appends `(feat. …)` or any other credit information (section 4.6, rule 7).
 
 Compilation exception: if a track's `main` credits differ from the release's, the filename becomes
 
 `<sortkey> <billing of the track> - <sanitized track-title>.<ext>`
 
 e.g. `03 Kuhn Fu - Waffle House.m4a`. Without that prefix a compilation directory would be unusable. If the track inherits the release credits, the prefix is omitted.
+
+`<billing>` here is the reconstructed billing line (section 4.6, rule 5), i.e. including `as` names — not a join of entity names.
+
+#### Cover filename
+
+Cover art is materialized as `cover.<ext of the blob reference>`, e.g. `cover.jpg`. The extension rule is the one for tracks: it comes from the blob reference, and a reference without an extension yields `cover` without a suffix and without a trailing dot.
 
 #### Asset filenames
 
@@ -620,29 +553,16 @@ e.g. `Booklet page 3.jpg` for an asset carrying a `title`, and `log.txt` for one
 
 There is no `assets/` subdirectory and no grouping by `kind`. A rip log sits next to the tracks it describes, which is where a player, a tag editor and a human all look for it.
 
-Because the name is derived from a free-form value, it can collide — with another asset of the same `kind`, with cover art, or with a track. The colliding asset gets ` (<n>)` appended before the extension, `<n>` counting up from `2` until the name is free:
-
-```
-log.txt
-log (2).txt
-log (3).txt
-```
-
-The counter is unbounded, so a free name is always reached. Two rules make the outcome unambiguous:
-
-1. **An asset never displaces a track or cover art.** In a collision with either, the asset is the one that gets the suffix.
-2. **Among assets, file order decides.** The asset that appears earlier in the release file keeps the undecorated name; later ones are suffixed in file order (section 4.8).
-
-Of the views that build filenames, `by-artist` is the only one that materializes assets; the other three link to its directories and therefore carry the assets with them. `by-origin` builds no filenames at all — there an asset is simply another file at its recorded path, under the name it was received with.
+An asset's view name must be unique within the release and must not equal a track filename or the cover filename. A release where derived asset names collide, or collide with a track or the cover, is **invalid** — same treatment as `origin-path` (section 4.9), no decoration.
 
 #### `by-origin`
 
 `by-origin` reproduces the artefact a release was received as (section 4.9). It is the one view that contributes no naming of its own.
 
-1. **Scope.** A release appears if and only if it carries `origin-dir`; one that does not is omitted, like any release lacking the attribute a view keys on. A file appears if and only if it carries an `origin-path` — for cover art, if the release carries the matching `cover-front-origin-path` or `cover-back-origin-path`.
+1. **Scope.** A release appears if and only if it carries `origin-dir`; one that does not is omitted, like any release lacking the attribute a view keys on. A file appears if and only if it carries an `origin-path` — for cover art, if the release carries `cover-front-origin-path`.
 2. **Names verbatim.** Every path segment is used exactly as recorded. Section 5.2 is **not** applied here, and not applying it changes nothing: section 4.9 already requires each segment to pass it unchanged. That is the whole point of the constraint — a checksum file or playlist carried along in the tree still resolves against the names beside it.
 3. **Structure.** All segments but the last become real directories, created as needed. Only the last segment is a symlink, and it points into the store, relative like every other link (section 5.1).
-4. **No suffixes, no ladder.** Origin paths are unique within a release (section 4.9), so nothing can collide. The ` (2)` rule for asset names above does not apply: in this view assets hold no privilege over tracks and take no penalty against them.
+4. **No suffixes, no ladder.** Origin paths are unique within a release (section 4.9), so nothing can collide.
 5. **The two filename rules above do not apply.** No sort key, no compilation prefix, no asset title, and no extension taken from the blob reference — the recorded path already carries whatever suffix the file had.
 6. **Ordering.** Releases by `origin-dir`, files by `origin-path`, both in NFC code point order (section 5.6).
 
@@ -658,9 +578,9 @@ How a builder produces the tree, and whether it rebuilds from scratch or updates
 
 Building twice against the same meta state must produce byte-identical trees. All directory iteration is explicitly sorted (by identifier or by NFC-normalized name, in NFC code point order); directory-listing order is never inherited from the filesystem.
 
-In `by-origin` the sort keys are `origin-dir` for releases and `origin-path` for files, again in NFC code point order. Both are total orders, because origin paths are unique within a release and colliding `origin-dir` values are separated by section 5.3 before the tree is written.
+In `by-origin` the sort keys are `origin-dir` for releases and `origin-path` for files, again in NFC code point order. Both are total orders: origin paths are unique within a release, and colliding `origin-dir` values are separated by section 5.3 before the tree is written.
 
-Credits and assets are exempt: their order comes from the file (section 4.6, rule 4; section 4.8) and is therefore already deterministic.
+Credits are exempt: their order comes from the file (section 4.6, rule 4) and is therefore already deterministic.
 
 ## 6. Git integration
 
@@ -681,7 +601,7 @@ To keep the LF line endings of section 4 stable across platforms, add a `.gitatt
 *.mu text eol=lf
 ```
 
-The repository must be configured for precomposed Unicode, matching the NFC rule in section 4.3:
+The repository should be configured for precomposed Unicode, matching the NFC rule in section 4.3:
 
 ```sh
 git config core.precomposeunicode true
@@ -694,3 +614,57 @@ diff --git a/meta/releases/b27e….mu b/meta/releases/b27e….mu
 -title = "Good Lise"
 +title = "Good Lies"
 ```
+
+## Appendix A: conventional attributes
+
+This appendix lists keys that the format itself prescribes no behaviour for, but that the reference implementation reads and writes. Tools that share a collection should use the same spelling to keep metadata portable.
+
+Unknown attributes are valid everywhere (section 4.8); the keys below are not normative — a collection is valid without them, and a tool may read, write or ignore them freely.
+
+### Artist
+
+| Attribute           | Cardinality           | Type                      |
+|---------------------|-----------------------|---------------------------|
+| `alias`             | multiple              | string array              |
+| `is-group`          | flag                  | boolean                   |
+| `member`            | multiple (ref artist) | string array              |
+| `notes`             | single (multi-line)   | string                    |
+| `sort-name`         | single                | string                    |
+| `discogs-artist-id` | single                | string                    |
+
+Example:
+
+```toml
+name = "Overmono"
+is-group = true
+member = ["tom-russell", "ed-russell"]
+sort-name = "Overmono"
+discogs-artist-id = "1234567"
+```
+
+### Release
+
+| Attribute                     | Cardinality       | Type                                                     |
+|-------------------------------|-------------------|----------------------------------------------------------|
+| `type`                        | single            | string (`album`, `ep`, `single`, `compilation`, `live`)  |
+| `release-year-original`       | single            | string                                                   |
+| `release-year-medium`         | single            | string                                                   |
+| `source-medium`               | single            | string (`cd`, `vinyl`, `file`, `web`, `tape`)            |
+| `source-store`                | single            | string                                                   |
+| `rip-result`                  | single            | string                                                   |
+| `bit-depth`                   | single (int)      | integer, ≥ 1                                             |
+| `sample-rate`                 | single (int)      | integer, ≥ 1, in hertz (`44100`, not `44.1`)             |
+| `bitrate`                     | single            | string (VBR presets, averages or `"lossless"`)            |
+| `channel-mode`                | single            | string                                                   |
+| `notes`                       | single (multi-line)| string                                                   |
+| `discogs-release-id`          | single            | string                                                   |
+| `discogs-master-id`           | single            | string                                                   |
+
+Vocabularies for `type` and `source-medium` are **open**; unknown values are valid and preserved verbatim.
+
+### Track
+
+| Attribute  | Cardinality   | Type    |
+|------------|---------------|---------|
+| `duration` | single (int)  | integer |
+| `isrc`     | single        | string  |
