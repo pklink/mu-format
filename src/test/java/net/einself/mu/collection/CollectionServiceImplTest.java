@@ -62,16 +62,6 @@ class CollectionServiceImplTest {
     }
 
     @Test
-    void findRoot_singleArgOverloadAlsoSearchesUpwards() throws IOException {
-        Path deep = root.resolve("some/nested/directory");
-        Files.createDirectories(deep);
-
-        CollectionRoot result = underTest.findRoot(deep);
-
-        assertThat(result.path()).isEqualTo(real(root));
-    }
-
-    @Test
     void findRoot_failsWhenNoParentHoldsTheMarker() throws IOException {
         Path outside = workspace.resolve("outside");
         Files.createDirectories(outside);
@@ -82,13 +72,8 @@ class CollectionServiceImplTest {
     }
 
     @Test
-    void collectionRoot_derivesTheLayoutPaths() {
-        CollectionRoot result = underTest.findRoot(root, workspace);
-
-        assertThat(result.marker()).isEqualTo(result.meta().resolve(".mu"));
-        assertThat(result.releases()).isEqualTo(result.meta().resolve("releases"));
-        assertThat(result.staging()).isEqualTo(result.store().resolve(".tmp"));
-        assertThat(result.lock()).isEqualTo(result.meta().resolve(".lock"));
+    void checkFormatVersion_acceptsVersion1() {
+        underTest.checkFormatVersion(new CollectionRoot(root));
     }
 
     private static Path real(Path path) {

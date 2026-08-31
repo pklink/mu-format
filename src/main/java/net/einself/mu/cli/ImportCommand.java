@@ -63,7 +63,7 @@ public class ImportCommand implements Callable<Integer> {
 
         CollectionService collectionService = CollectionModule.createService(parent.toml());
         CollectionRoot collectionRoot = collectionService.findRoot(parent.root, Path.of("").toAbsolutePath());
-        collectionService.readFormatVersion(collectionRoot);
+        collectionService.checkFormatVersion(collectionRoot);
 
         ImportOptions importOptions = new ImportOptions(dryRun, origin, artistId, releaseId);
         ImportService importService = ImportModule.createImportService(parent.toml(), err);

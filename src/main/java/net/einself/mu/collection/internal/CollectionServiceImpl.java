@@ -1,6 +1,8 @@
 package net.einself.mu.collection.internal;
 
 import io.github.wasabithumb.jtoml.JToml;
+import io.github.wasabithumb.jtoml.value.TomlValue;
+import io.github.wasabithumb.jtoml.value.table.TomlTable;
 import net.einself.mu.collection.api.CollectionRoot;
 import net.einself.mu.collection.api.CollectionService;
 import net.einself.mu.shared.ExitCode;
@@ -13,17 +15,12 @@ import java.nio.file.Path;
 
 public class CollectionServiceImpl implements CollectionService {
 
-    private static final Path MARKER = Path.of("meta", ".mu");
+    private static final long IMPLEMENTED_VERSION = 1L;
 
     private final JToml toml;
 
     public CollectionServiceImpl(JToml toml) {
         this.toml = toml;
-    }
-
-    @Override
-    public CollectionRoot findRoot(Path workingDirectory) {
-        return findRoot(null, workingDirectory);
     }
 
     @Override
@@ -34,9 +31,29 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
-    public long readFormatVersion(CollectionRoot root) {
-        FormatVersionReader reader = new FormatVersionReader(toml);
-        return reader.read(root);
+    public void checkFormatVersion(CollectionRoot root) {
+        long format = parseFormat(root);
+        if (format > IMPLEMENTED_VERSION) {
+            throw new MuException(ExitCode.USAGE,
+                                            "Collection uses format " + format + ", this tool implements "
+                                                                            + IMPLEMENTED_VERSION + ": " + root.marker());
+        }
+    }
+
+    private long parseFormat(CollectionRoot root) {
+        TomlTable marker;
+        try {
+            marker = toml.read(root.marker());
+        } catch (RuntimeException e) {
+            throw new MuException(ExitCode.USAGE, "Cannot read " + root.marker() + ": " + e.getMessage(), e);
+        }
+
+        TomlValue value = marker.get("format");
+        if (value == null || !value.isPrimitive() || !value.asPrimitive().isInteger()) {
+            throw new MuException(ExitCode.USAGE,
+                                            "Missing or non-integer 'format' in " + root.marker());
+        }
+        return value.asPrimitive().asLong();
     }
 
     private CollectionRoot fromExplicit(Path explicitRoot) {
