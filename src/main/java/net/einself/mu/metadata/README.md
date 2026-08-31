@@ -7,10 +7,12 @@ TOML entity file reading and writing.
 
 - shared
 - collection
+- naming
 
 ## SPEC.md references
 
-- Section 1 — TOML types, null/absent tolerance
+- Section 4.2 — value conventions
+- Section 4.4 — cardinality
 - Section 4 — entity file format (UTF-8, LF, no BOM)
 - Section 4.2 — disc dual-typing (integer/string)
 - Section 4.6 — credit rules (at least one `role = "main"`)

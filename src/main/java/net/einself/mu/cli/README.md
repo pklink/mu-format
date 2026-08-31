@@ -4,7 +4,12 @@ CLI adapter: Picocli commands that translate CLI invocations into module service
 
 ## Dependencies
 
-All module APIs, Picocli.
+- collection
+- importcontext
+- searchcontext
+- metadata
+- shared
+- Picocli
 
 ## SPEC.md references
 
