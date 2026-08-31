@@ -13,7 +13,7 @@ public final class CollectionModule {
         return new CollectionServiceImpl(toml);
     }
 
-    public static LockHandle acquireLock(CollectionRoot root) {
-        return CollectionLock.acquire(root);
+    public static LockHandle acquireLock(CollectionRoot collectionRoot) {
+        return CollectionLock.acquire(collectionRoot);
     }
 }
