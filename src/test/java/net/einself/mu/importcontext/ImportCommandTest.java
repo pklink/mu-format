@@ -323,7 +323,7 @@ class ImportCommandTest {
 
     /**
      * Every invocation passes {@code --root} explicitly; the upward search is
-     * covered by {@link net.einself.mu.collection.CollectionRootFinderTest}.
+     * covered by {@link net.einself.mu.collection.CollectionServiceImplTest}.
      */
     private int run(String... args) {
         String[] withRoot = Stream.concat(
