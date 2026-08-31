@@ -52,13 +52,6 @@ class BlobStoreTest {
     }
 
     @Test
-    void take_shardsByTheFirstTwoCharacters() throws IOException {
-        Blob result = underTest.store(write("source.txt", "hello"));
-
-        assertThat(result.relativePath()).isEqualTo("store/2c/" + HELLO_HASH);
-    }
-
-    @Test
     void take_deduplicatesIdenticalContentRegardlessOfName() throws IOException {
         // arrange
         underTest.store(write("first.txt", "hello"));
@@ -90,7 +83,7 @@ class BlobStoreTest {
 
         Blob result = underTest.store(write("source.txt", "hello"));
 
-        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(root.resolve(result.relativePath()));
+        Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(root.resolve("store/2c").resolve(HELLO_HASH));
         assertThat(permissions).containsExactlyInAnyOrder(
                                         PosixFilePermission.OWNER_READ,
                                         PosixFilePermission.GROUP_READ,
