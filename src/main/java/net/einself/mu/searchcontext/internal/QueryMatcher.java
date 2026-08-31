@@ -21,9 +21,6 @@ public class QueryMatcher {
         this.query = Nfc.normalize(query).toLowerCase(Locale.ROOT);
     }
 
-    /**
-     * True when {@code value} contains the query.
-     */
     public boolean matches(String value) {
         if (value == null) {
             return false;

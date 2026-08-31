@@ -1,8 +1,5 @@
 package net.einself.mu.shared;
 
-/**
- * Exit codes of the {@code mu} tool.
- */
 public enum ExitCode {
 
     SUCCESS(0),
