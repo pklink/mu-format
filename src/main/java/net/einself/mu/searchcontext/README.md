@@ -8,6 +8,7 @@ credits, and tracks against query strings with optional field/year/medium/role f
 - shared
 - collection
 - metadata
+- naming
 
 ## SPEC.md references
 

@@ -41,18 +41,9 @@ java -jar build/libs/mu-format-1.0-SNAPSHOT-all.jar
 
 ## Architecture
 
-Modulith inside one Gradle module. Packages under `net.einself.mu`:
-
-| Package         | Role                                                      |
-|-----------------|-----------------------------------------------------------|
-| `shared`        | shared kernel: `ExitCode`, `MuException`. No dependencies |
-| `collection`    | collection root discovery, `meta/.mu` version, write lock |
-| `storage`       | content-addressed blob store (SHA-256)                    |
-| `metadata`      | TOML entity files, `Release` model, repositories          |
-| `naming`        | NFC normalization, name sanitizing, extension deriving    |
-| `importcontext` | `mu import` workflow                                      |
-| `searchcontext` | `mu search` workflow                                      |
-| `cli`           | Picocli commands, adapter layer only                      |
+Modulith inside one Gradle module. Module roles and dependencies are documented in
+[README.md](README.md#architecture); each module has a README under
+`src/main/java/net/einself/mu/<module>/README.md`.
 
 Each module splits into `<module>.api` (public, jMolecules `@Module` on `package-info.java`)
 and `<module>.internal` (private). `<Module>Module` classes in `api` are the intended
@@ -81,7 +72,7 @@ another module's `.internal`. Do not use the existing CLI commands as a template
 - TOML is written through the single configured `JToml` instance from `Main.toml()`
   (LF separators, no BOM — required by SPEC.md section 4). Do not build your own.
 - Unimplemented options fail loudly (`--release` throws `USAGE`) rather than degrading.
-- Writes take the advisory lock via `CollectionLock.acquire(root)` in try-with-resources; a
+- Writes take the advisory lock via `CollectionModule.acquireLock(root)` in try-with-resources; a
   second process aborts with `LOCK_HELD` instead of waiting. Dry runs take no lock.
 
 ## Testing
