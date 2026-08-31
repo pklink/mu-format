@@ -36,7 +36,90 @@ A release has no location. It has attributes. Where it shows up is the view's de
 
 | Document                               | Contents                                                                           |
 |----------------------------------------|------------------------------------------------------------------------------------|
-| [SPEC.md](SPEC.md)                     | normative on-disk format: store, meta, schema, views, git. Implementation-neutral. |
+| [SPEC.md](SPEC.md)                     | normative on-disk format: store, meta, schema, git. Implementation-neutral.        |
+| [DESIGN.md](DESIGN.md)                 | rationale, conventional attributes, and design notes. Not normative.               |
+
+## Views
+
+Views are symlink trees for browsing and playback, generated from `meta/` + `store/`. The format does not prescribe view layout ([SPEC.md](SPEC.md) section 5); the layout below is what the reference implementation produces.
+
+### Name construction
+
+Attribute values are converted to filesystem names in six steps:
+
+1. NFC normalization.
+2. `/` → `_` (U+005F).
+3. Strip control characters (U+0000–U+001F).
+4. Trim leading and trailing spaces and dots.
+5. Truncate to 200 bytes (respecting UTF-8 character boundaries, never mid-codepoint). Truncation occurs after trimming spaces.
+6. If the result is empty, use `_`.
+
+### by-artist
+
+```
+by-artist/<artist-name>/<release-name>/<sortkey> <track-title>.<ext>
+```
+
+A release appears under every one of its `main` artists. Grouping is based exclusively on `role = "main"`; an artist who participates only as `feat`, `remixer` or similar does not get a directory. Directory names use the `name` attribute of the artist entity, not `as`.
+
+A release lacking the attribute a view is keyed on is omitted — no `unknown/` bucket, no `_` placeholder.
+
+#### Track filenames
+
+The sort key is `[<disc>-]<number>`, with `number` zero-padded to at least two digits (100 or more keeps all digits). Example: `01`, `2-05`, `101`.
+
+```
+<sortkey> <track-title>.<blob-ref-extension>
+```
+
+Compilation exception: if a track's `main` credits differ from the release's, the filename becomes:
+
+```
+<sortkey> <billing-line> - <track-title>.<ext>
+```
+
+where `<billing-line>` is reconstructed from `main` credits ([SPEC.md](SPEC.md) section 4.5, rule 5). Without this prefix a compilation directory would be unusable.
+
+#### Asset filenames
+
+Assets are materialized flat in the release directory, beside the tracks:
+
+```
+<sanitized asset-title, or kind if absent>.<ext>
+```
+
+Example: `Booklet page 3.jpg` (has `title`), `log.txt` (falls back to `kind`). No sort key is prefixed. An asset's derived name must be unique within the release and must not equal a track filename or `cover.<ext>`.
+
+#### Cover filename
+
+Cover art (asset with `kind = "cover-front"`) is materialized as `cover.<ext>`.
+
+### Collision ladder
+
+Two releases by the same artist with the same title produce the same `by-artist` path. Resolved in two steps:
+
+1. `Title`
+2. `Title (<identifier>)`
+
+Step 2 is guaranteed unique because identifiers are pairwise distinct. Colliding releases are sorted by identifier in NFC code point order. The ladder is applied per directory.
+
+### by-origin
+
+Reproduces the artefact a release was received as (`origin-dir` / `origin-path`, [SPEC.md](SPEC.md) section 4.8):
+
+```
+by-origin/<origin-dir>/<origin-path>
+```
+
+A release appears only if it carries `origin-dir`; a file appears only if it carries `origin-path`. Path segments are used exactly as recorded — name construction is not applied here because [SPEC.md](SPEC.md) section 4.8 already requires each segment to be a portable name. All segments but the last become real directories; only the last segment is a symlink.
+
+Two releases with the same `origin-dir` collide, resolved by the same ladder:
+1. `<origin-dir>`
+2. `<origin-dir> (<identifier>)`
+
+### Determinism
+
+Building twice against the same meta state produces byte-identical trees. All directory iteration is explicitly sorted (by identifier or NFC-normalized name, in NFC code point order); directory-listing order is never inherited from the filesystem. Credits are exempt: their order comes from the file and is already deterministic.
 
 ## CLI
 
