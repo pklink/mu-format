@@ -1,7 +1,6 @@
 package net.einself.mu.cli;
 
 import com.google.gson.Gson;
-import net.einself.mu.shared.Envelope;
 import net.einself.mu.shared.ExitCode;
 import net.einself.mu.shared.MuException;
 

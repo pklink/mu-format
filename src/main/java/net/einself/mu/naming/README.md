@@ -5,7 +5,7 @@ for blob rendering hints.
 
 ## Dependencies
 
-- shared
+None.
 
 ## SPEC.md references
 
