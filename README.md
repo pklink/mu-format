@@ -18,7 +18,7 @@ Three layers, each with one job:
 | `meta/`  | metadata, references, structure         | yes, by hand or via the CLI       | yes    |
 | `views/` | symlink trees for browsing and playback | generated, disposable at any time | no     |
 
-Media files go into the store under the SHA-256 of their content and are never written to again — no tags, no renaming, no conversion. All metadata lives beside them in one plain TOML file per release or artist, small enough to edit by hand and to diff in git. Everything you actually browse (`by-artist/`, `by-credit/`, `by-release-year-original/`, `by-source-medium/`, `by-origin/`) is a tree of symlinks, regenerated from the other two layers and disposable at any time.
+Media files go into the store under the SHA-256 of their content and are never written to again — no tags, no renaming, no conversion. All metadata lives beside them in one plain TOML file per release or artist, small enough to edit by hand and to diff in git. Everything you actually browse (`by-artist/`, `by-origin/`) is a tree of symlinks, regenerated from the other two layers and disposable at any time.
 
 Content addressing drops a file's name, which is usually the point — but not when the release arrived as a unit, with a playlist or a checksum file that only resolves against the original filenames. Those names and the directory they came in are kept in the metadata, and `by-origin/` puts the tree back together exactly as it was received.
 
