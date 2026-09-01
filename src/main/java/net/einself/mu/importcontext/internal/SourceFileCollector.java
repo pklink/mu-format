@@ -66,7 +66,7 @@ public class SourceFileCollector {
 
     /**
      * Always {@code /}-separated, independent of the platform separator (SPEC.md
-     * section 4.9).
+     * section 4.8).
      */
     private static String relativize(Path directory, Path file) {
         Path relative = directory.relativize(file);
