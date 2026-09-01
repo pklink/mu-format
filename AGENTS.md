@@ -30,6 +30,7 @@ for layering.
 ## Conventions
 
 - Tasks: only close/complete tasks when explicitly asked by the user.
+- No `var` — always use explicit types.
 - Planning mode (read-only): no commits, no Linear tickets, no pull requests.
 - Errors: throw `MuException(ExitCode, message[, details])`. Do not call `System.exit`
   outside `Main.main`.
