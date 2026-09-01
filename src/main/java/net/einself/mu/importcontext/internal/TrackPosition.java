@@ -16,9 +16,4 @@ import java.util.Optional;
  *            the remainder of the filename
  */
 public record TrackPosition(@Nullable Object disc, int number, String title) {
-
-    public Optional<Object> discValue() {
-        return Optional.ofNullable(disc);
-    }
-
 }
