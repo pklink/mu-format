@@ -38,7 +38,7 @@ public class ReleaseAssembler {
                                     List<SourceFile> files,
                                     Map<SourceFile, Blob> blobs,
                                     @Nullable String originDir) {
-        Optional<SourceFile> cover = coverFrontSelector.select(files);
+        SourceFile cover = coverFrontSelector.select(files).orElse(null);
         List<SourceFile> audio = files.stream()
                                         .filter(file -> file.kind() == FileKind.AUDIO)
                                         .toList();
@@ -80,7 +80,7 @@ public class ReleaseAssembler {
     private List<TrackPosition> parsePositions(List<SourceFile> audio) {
         List<TrackPosition> parsed = new ArrayList<>(audio.size());
         for (SourceFile file : audio) {
-            Optional<TrackPosition> position = trackPrefixParser.parse(stem(file));
+            Optional<TrackPosition> position = trackPrefixParser.parse(CoverFrontSelector.stem(file.filename()));
             if (position.isEmpty()) {
                 return sequential(audio);
             }
@@ -92,7 +92,7 @@ public class ReleaseAssembler {
     private static List<TrackPosition> sequential(List<SourceFile> audio) {
         List<TrackPosition> positions = new ArrayList<>(audio.size());
         for (int i = 0; i < audio.size(); i++) {
-            positions.add(new TrackPosition(null, i + 1, Nfc.normalize(stem(audio.get(i)))));
+            positions.add(new TrackPosition(null, i + 1, Nfc.normalize(CoverFrontSelector.stem(audio.get(i).filename()))));
         }
         return positions;
     }
@@ -104,13 +104,13 @@ public class ReleaseAssembler {
     }
 
     private List<Release.Asset> assets(List<SourceFile> files,
-                                    Optional<SourceFile> cover,
+                                    @Nullable SourceFile cover,
                                     Map<SourceFile, Blob> blobs,
                                     @Nullable String originDir) {
         return files.stream()
                                         .filter(file -> file.kind() != FileKind.AUDIO)
                                         .map(file -> new Release.Asset(
-                                                                        cover.filter(file::equals).isPresent()
+                                                                        file.equals(cover)
                                                                                                         ? "cover-front"
                                                                                                         : assetKindMapper.map(file.filename()),
                                                                         reference(file, blobs),
@@ -126,9 +126,4 @@ public class ReleaseAssembler {
     private static @Nullable String originPath(SourceFile file, @Nullable String originDir) {
         return originDir == null ? null : file.relativePath();
     }
-
-    private static String stem(SourceFile file) {
-        return CoverFrontSelector.stem(file.filename());
-    }
-
 }

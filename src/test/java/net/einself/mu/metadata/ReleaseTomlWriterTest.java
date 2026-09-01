@@ -98,10 +98,9 @@ class ReleaseTomlWriterTest {
         TomlTable parsed = TOML.readFromString(rendered);
 
         assertThat(parsed.get("title").asPrimitive().asString()).isEqualTo("Good Lies");
-        assertThat(parsed.get("asset").asArray().get(0).asTable().get("kind").asPrimitive().asString())
-                                        .isEqualTo("cover-front");
-        assertThat(parsed.get("asset").asArray().get(0).asTable().get("blob").asPrimitive().asString())
-                                        .isEqualTo("3f0a91.jpg");
+        var coverAsset = parsed.get("asset").asArray().get(0).asTable();
+        assertThat(coverAsset.get("kind").asPrimitive().asString()).isEqualTo("cover-front");
+        assertThat(coverAsset.get("blob").asPrimitive().asString()).isEqualTo("3f0a91.jpg");
         assertThat(parsed.get("credit").asArray().size()).isEqualTo(1);
 
         var tracks = parsed.get("track").asArray();

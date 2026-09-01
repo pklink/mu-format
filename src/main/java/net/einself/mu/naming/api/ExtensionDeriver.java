@@ -17,7 +17,7 @@ public class ExtensionDeriver {
 
     private static final Pattern VALID = Pattern.compile("[a-z0-9]{1,8}");
 
-    static final String FALLBACK = "bin";
+    private static final String FALLBACK = "bin";
 
     public Optional<String> derive(String filename) {
         int dot = filename.lastIndexOf('.');

@@ -39,7 +39,7 @@ public class OriginPathValidator {
     }
 
     private List<String> directoryProblems(String originDir) {
-        return isValidSegment(originDir)
+        return nameSanitizer.isPortableName(originDir)
                                         ? List.of()
                                         : List.of("origin-dir: " + originDir);
     }
@@ -48,7 +48,7 @@ public class OriginPathValidator {
         List<String> problems = new ArrayList<>();
         for (SourceFile file : files) {
             for (String segment : file.relativePath().split("/", -1)) {
-                if (!isValidSegment(segment)) {
+                if (!nameSanitizer.isPortableName(segment)) {
                     problems.add("origin-path: " + file.relativePath() + " (segment: '" + segment + "')");
                     break;
                 }
@@ -73,10 +73,6 @@ public class OriginPathValidator {
             }
         }
         return problems;
-    }
-
-    private boolean isValidSegment(String segment) {
-        return nameSanitizer.isPortableName(segment);
     }
 
 }
