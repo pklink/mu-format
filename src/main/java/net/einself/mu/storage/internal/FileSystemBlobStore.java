@@ -21,6 +21,7 @@ import java.util.EnumSet;
 import java.util.HexFormat;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * Takes files into the store.
@@ -55,7 +56,7 @@ public class FileSystemBlobStore implements BlobRepository {
         if (!Files.isDirectory(staging)) {
             return;
         }
-        try (var entries = Files.list(staging)) {
+        try (Stream<Path> entries = Files.list(staging)) {
             for (Path p : entries.toList()) {
                 Files.delete(p);
             }

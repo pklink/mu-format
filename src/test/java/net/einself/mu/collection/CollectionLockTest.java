@@ -43,7 +43,7 @@ class CollectionLockTest {
         Files.createFile(root.lock());
 
         // act
-        var lock = CollectionLock.acquire(root);
+        CollectionLock lock = CollectionLock.acquire(root);
 
         // assert
         assertThat(root.lock()).isRegularFile();
@@ -53,7 +53,7 @@ class CollectionLockTest {
     @Test
     void acquire_failsWhenTheLockIsAlreadyHeld() {
         // arrange
-        var first = CollectionLock.acquire(root);
+        CollectionLock first = CollectionLock.acquire(root);
 
         // act / assert
         assertThatThrownBy(() -> CollectionLock.acquire(root))
@@ -68,7 +68,7 @@ class CollectionLockTest {
 
     @Test
     void acquire_succeedsAgainAfterRelease() {
-        try (var ignored = CollectionLock.acquire(root)) {
+        try (CollectionLock ignored = CollectionLock.acquire(root)) {
             // lock held
         }
         // re-acquire succeeds — would throw if close didn't work
@@ -77,7 +77,7 @@ class CollectionLockTest {
 
     @Test
     void close_isIdempotent() {
-        var lock = CollectionLock.acquire(root);
+        CollectionLock lock = CollectionLock.acquire(root);
         lock.close();
         lock.close();
     }
@@ -95,7 +95,7 @@ class CollectionLockTest {
 
     @Test
     void acquire_leavesTheLockFileInPlaceAfterRelease() throws IOException {
-        try (var ignored = CollectionLock.acquire(root)) {
+        try (CollectionLock ignored = CollectionLock.acquire(root)) {
             // lock held
         }
 
@@ -106,7 +106,7 @@ class CollectionLockTest {
     @Test
     void acquire_failingSecondAcquireMustNotReleaseTheFirstLock() throws Exception {
         // arrange
-        var first = CollectionLock.acquire(root);
+        CollectionLock first = CollectionLock.acquire(root);
         try {
             CollectionLock.acquire(root);
         } catch (MuException expected) {
@@ -124,13 +124,13 @@ class CollectionLockTest {
     }
 
     private int runLockHelper() throws Exception {
-        var java = ProcessHandle.current().info().command().orElse("java");
-        var classpath = System.getProperty("java.class.path");
-        var pb = new ProcessBuilder(
+        String java = ProcessHandle.current().info().command().orElse("java");
+        String classpath = System.getProperty("java.class.path");
+        ProcessBuilder pb = new ProcessBuilder(
                                         java, "-cp", classpath,
                                         LockTestHelper.class.getName(),
                                         root.path().toString());
-        var process = pb.start();
+        Process process = pb.start();
         if (!process.waitFor(10, TimeUnit.SECONDS)) {
             process.destroyForcibly();
             fail("LockTestHelper timed out");

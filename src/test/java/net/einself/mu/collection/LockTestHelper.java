@@ -9,9 +9,9 @@ import net.einself.mu.shared.MuException;
 public class LockTestHelper {
 
     public static void main(String[] args) {
-        var root = new CollectionRoot(Path.of(args[0]));
+        CollectionRoot root = new CollectionRoot(Path.of(args[0]));
         try {
-            var lock = CollectionLock.acquire(root);
+            CollectionLock lock = CollectionLock.acquire(root);
             lock.close();
             System.exit(0);
         } catch (MuException e) {
