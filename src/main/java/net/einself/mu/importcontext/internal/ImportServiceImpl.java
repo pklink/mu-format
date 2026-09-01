@@ -3,6 +3,7 @@ package net.einself.mu.importcontext.internal;
 import io.github.wasabithumb.jtoml.JToml;
 import net.einself.mu.collection.api.CollectionModule;
 import net.einself.mu.collection.api.CollectionRoot;
+import net.einself.mu.collection.api.LockHandle;
 import net.einself.mu.importcontext.api.ImportOptions;
 import net.einself.mu.importcontext.api.ImportReport;
 import net.einself.mu.importcontext.api.ImportResult;
@@ -98,7 +99,7 @@ public class ImportServiceImpl implements ImportService {
                                     ImportResult report,
                                     ImportOptions options,
                                     String releaseTitle) {
-        try (var ignored = CollectionModule.acquireLock(root)) {
+        try (LockHandle ignored = CollectionModule.acquireLock(root)) {
             BlobRepository store = StorageModule.createRepository(root);
             store.clearStaging();
 

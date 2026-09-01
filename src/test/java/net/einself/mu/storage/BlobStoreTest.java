@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
@@ -62,7 +63,7 @@ class BlobStoreTest {
         // assert
         assertThat(result.deduplicated()).isTrue();
         assertThat(result.hash()).isEqualTo(HELLO_HASH);
-        try (var entries = Files.list(root.resolve("store/2c"))) {
+        try (Stream<Path> entries = Files.list(root.resolve("store/2c"))) {
             assertThat(entries).hasSize(1);
         }
     }
@@ -72,7 +73,7 @@ class BlobStoreTest {
         underTest.store(write("first.txt", "hello"));
         underTest.store(write("second.txt", "hello"));
 
-        try (var entries = Files.list(collectionRoot.staging())) {
+        try (Stream<Path> entries = Files.list(collectionRoot.staging())) {
             assertThat(entries).isEmpty();
         }
     }
@@ -100,7 +101,7 @@ class BlobStoreTest {
         underTest.clearStaging();
 
         // assert
-        try (var entries = Files.list(collectionRoot.staging())) {
+        try (Stream<Path> entries = Files.list(collectionRoot.staging())) {
             assertThat(entries).isEmpty();
         }
     }

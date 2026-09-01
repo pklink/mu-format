@@ -5,6 +5,7 @@ import io.github.wasabithumb.jtoml.option.JTomlOption;
 import io.github.wasabithumb.jtoml.option.JTomlOptions;
 import io.github.wasabithumb.jtoml.option.prop.LineSeparator;
 import io.github.wasabithumb.jtoml.option.prop.OrderMarkPolicy;
+import io.github.wasabithumb.jtoml.value.array.TomlArray;
 import io.github.wasabithumb.jtoml.value.table.TomlTable;
 import net.einself.mu.metadata.api.Release;
 import net.einself.mu.metadata.internal.ReleaseTomlWriter;
@@ -98,12 +99,12 @@ class ReleaseTomlWriterTest {
         TomlTable parsed = TOML.readFromString(rendered);
 
         assertThat(parsed.get("title").asPrimitive().asString()).isEqualTo("Good Lies");
-        var coverAsset = parsed.get("asset").asArray().get(0).asTable();
+        TomlTable coverAsset = parsed.get("asset").asArray().get(0).asTable();
         assertThat(coverAsset.get("kind").asPrimitive().asString()).isEqualTo("cover-front");
         assertThat(coverAsset.get("blob").asPrimitive().asString()).isEqualTo("3f0a91.jpg");
         assertThat(parsed.get("credit").asArray().size()).isEqualTo(1);
 
-        var tracks = parsed.get("track").asArray();
+        TomlArray tracks = parsed.get("track").asArray();
         assertThat(tracks.size()).isEqualTo(2);
         assertThat(tracks.get(0).asTable().get("number").asPrimitive().asLong()).isEqualTo(1);
         assertThat(tracks.get(1).asTable().get("title").asPrimitive().asString()).isEqualTo("Arla Fearn");
