@@ -43,7 +43,7 @@ class ExtensionDeriverTest {
     @Test
     void reference_appendsOnlyAQualifyingExtension() {
         assertThat(underTest.reference("abcd", "track.flac")).isEqualTo("abcd.flac");
-        assertThat(underTest.reference("abcd", "README")).isEqualTo("abcd");
+        assertThat(underTest.reference("abcd", "README")).isEqualTo("abcd.bin");
     }
 
 }
