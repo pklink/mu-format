@@ -66,7 +66,7 @@ A release lacking the attribute a view is keyed on is omitted — no `unknown/` 
 
 #### Track filenames
 
-The sort key is `[<disc>-]<number>`, with `number` zero-padded to at least two digits (100 or more keeps all digits). Example: `01`, `2-05`, `101`.
+The sort key is `[<disc>-]<number>`, with `number` zero-padded to at least two digits (100 or more keeps all digits). A string `disc` is inserted verbatim after name construction is applied. Example: `01`, `2-05`, `101`, `A-01`.
 
 ```
 <sortkey> <track-title>.<blob-ref-extension>
