@@ -8,10 +8,10 @@ import net.einself.mu.shared.MuException;
 import java.util.*;
 
 /**
- * Checks the values {@code --origin} would record (SPEC.md section 4.9).
+ * Checks the values {@code --origin} would record (SPEC.md section 4.8).
  *
  * <p>
- * Every segment must pass name construction unchanged, and origin paths must be
+ * Every segment must be a portable name (section 4.1), and origin paths must be
  * unique within a release. Violations are collected and reported together:
  * importing the rest would produce exactly the half-tree the option exists to
  * prevent.
@@ -76,10 +76,7 @@ public class OriginPathValidator {
     }
 
     private boolean isValidSegment(String segment) {
-        if (segment.isEmpty() || ".".equals(segment) || "..".equals(segment)) {
-            return false;
-        }
-        return nameSanitizer.isUnchanged(segment);
+        return nameSanitizer.isPortableName(segment);
     }
 
 }
