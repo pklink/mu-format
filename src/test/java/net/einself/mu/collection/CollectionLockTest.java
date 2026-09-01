@@ -14,7 +14,6 @@ import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CollectionLockTest {
@@ -58,22 +57,10 @@ class CollectionLockTest {
         // act / assert
         assertThatThrownBy(() -> CollectionLock.acquire(root))
                                         .isInstanceOf(MuException.class)
-                                        .extracting(e -> ((MuException) e).exitCode())
-                                        .isEqualTo(ExitCode.LOCK_HELD);
-
-        first.close();
-    }
-
-    @Test
-    void acquire_failsWhenTheLockIsAlreadyHeld_messageContainsLockPath() {
-        // arrange
-        var first = CollectionLock.acquire(root);
-
-        // act / assert
-        assertThatThrownBy(() -> CollectionLock.acquire(root))
-                                        .isInstanceOf(MuException.class)
-                                        .hasMessageContaining("Another mu process holds the lock")
-                                        .hasMessageContaining(root.lock().toString());
+                                        .satisfies(e -> assertThat(((MuException) e).exitCode())
+                                                                        .isEqualTo(ExitCode.LOCK_HELD))
+                                        .hasMessageContaining("Another mu process holds the lock",
+                                                                        root.lock().toString());
 
         first.close();
     }
@@ -83,20 +70,15 @@ class CollectionLockTest {
         try (var ignored = CollectionLock.acquire(root)) {
             // lock held
         }
-
-        assertThatCode(() -> {
-            try (var ignored2 = CollectionLock.acquire(root)) {
-                // lock re-acquired after release
-            }
-        }).doesNotThrowAnyException();
+        // re-acquire succeeds — would throw if close didn't work
+        CollectionLock.acquire(root).close();
     }
 
     @Test
     void close_isIdempotent() {
         var lock = CollectionLock.acquire(root);
         lock.close();
-
-        assertThatCode(lock::close).doesNotThrowAnyException();
+        lock.close();
     }
 
     @Test
@@ -105,16 +87,8 @@ class CollectionLockTest {
 
         assertThatThrownBy(() -> CollectionLock.acquire(root))
                                         .isInstanceOf(MuException.class)
-                                        .extracting(e -> ((MuException) e).exitCode())
-                                        .isEqualTo(ExitCode.IO_ERROR);
-    }
-
-    @Test
-    void acquire_failsWithIoErrorWhenMetaCannotBeCreated_message() throws IOException {
-        Files.createFile(workspace.resolve("meta"));
-
-        assertThatThrownBy(() -> CollectionLock.acquire(root))
-                                        .isInstanceOf(MuException.class)
+                                        .satisfies(e -> assertThat(((MuException) e).exitCode())
+                                                                        .isEqualTo(ExitCode.IO_ERROR))
                                         .hasMessageContaining("Cannot open lock file");
     }
 
@@ -155,7 +129,6 @@ class CollectionLockTest {
                                         java, "-cp", classpath,
                                         LockTestHelper.class.getName(),
                                         root.path().toString());
-        pb.directory(workspace.toFile());
         var process = pb.start();
         process.waitFor(10, TimeUnit.SECONDS);
         return process.exitValue();

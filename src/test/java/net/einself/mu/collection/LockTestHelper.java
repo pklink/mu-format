@@ -9,9 +9,6 @@ import net.einself.mu.shared.MuException;
 public class LockTestHelper {
 
     public static void main(String[] args) {
-        if (args.length != 1) {
-            System.exit(99);
-        }
         var root = new CollectionRoot(Path.of(args[0]));
         try {
             var lock = CollectionLock.acquire(root);

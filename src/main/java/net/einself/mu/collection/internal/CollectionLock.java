@@ -13,6 +13,7 @@ import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -25,8 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CollectionLock implements LockHandle {
 
-    private static final ConcurrentHashMap<Path, Object> locks = new ConcurrentHashMap<>();
-    private static final Object SENTINEL = new Object();
+    private static final Set<Path> locks = ConcurrentHashMap.newKeySet();
 
     private final Path lockFile;
     private final FileChannel channel;
@@ -38,7 +38,7 @@ public class CollectionLock implements LockHandle {
 
     public static CollectionLock acquire(CollectionRoot root) {
         Path lockFile = root.lock();
-        if (locks.putIfAbsent(lockFile, SENTINEL) != null) {
+        if (!locks.add(lockFile)) {
             throw new MuException(ExitCode.LOCK_HELD,
                                             "Another mu process holds the lock: " + lockFile);
         }
