@@ -8,10 +8,10 @@ import net.einself.mu.shared.MuException;
 import java.util.*;
 
 /**
- * Checks the values {@code --origin} would record (SPEC.md section 4.9).
+ * Checks the values {@code --origin} would record (SPEC.md section 4.8).
  *
  * <p>
- * Every segment must pass name construction unchanged, and origin paths must be
+ * Every segment must be a portable name (section 4.1), and origin paths must be
  * unique within a release. Violations are collected and reported together:
  * importing the rest would produce exactly the half-tree the option exists to
  * prevent.
@@ -33,13 +33,13 @@ public class OriginPathValidator {
         if (!problems.isEmpty()) {
             throw new MuException(ExitCode.PROBLEMS,
                                             "Cannot record origin paths, " + problems.size() + " value(s) are invalid "
-                                                                            + "(SPEC.md section 4.9); nothing was written",
+                                                                            + "(SPEC.md section 4.8); nothing was written",
                                             problems);
         }
     }
 
     private List<String> directoryProblems(String originDir) {
-        return isValidSegment(originDir)
+        return nameSanitizer.isPortableName(originDir)
                                         ? List.of()
                                         : List.of("origin-dir: " + originDir);
     }
@@ -48,7 +48,7 @@ public class OriginPathValidator {
         List<String> problems = new ArrayList<>();
         for (SourceFile file : files) {
             for (String segment : file.relativePath().split("/", -1)) {
-                if (!isValidSegment(segment)) {
+                if (!nameSanitizer.isPortableName(segment)) {
                     problems.add("origin-path: " + file.relativePath() + " (segment: '" + segment + "')");
                     break;
                 }
@@ -58,7 +58,7 @@ public class OriginPathValidator {
     }
 
     /**
-     * Compared after NFC normalization and case folding (SPEC.md sections 4.9, 4.1
+     * Compared after NFC normalization and case folding (SPEC.md sections 4.8, 4.2
      * rule 5).
      */
     private List<String> duplicateProblems(List<SourceFile> files) {
@@ -73,13 +73,6 @@ public class OriginPathValidator {
             }
         }
         return problems;
-    }
-
-    private boolean isValidSegment(String segment) {
-        if (segment.isEmpty() || ".".equals(segment) || "..".equals(segment)) {
-            return false;
-        }
-        return nameSanitizer.isUnchanged(segment);
     }
 
 }

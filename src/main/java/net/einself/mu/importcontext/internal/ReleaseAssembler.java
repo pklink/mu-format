@@ -38,7 +38,7 @@ public class ReleaseAssembler {
                                     List<SourceFile> files,
                                     Map<SourceFile, Blob> blobs,
                                     @Nullable String originDir) {
-        Optional<SourceFile> cover = coverFrontSelector.select(files);
+        SourceFile cover = coverFrontSelector.select(files).orElse(null);
         List<SourceFile> audio = files.stream()
                                         .filter(file -> file.kind() == FileKind.AUDIO)
                                         .toList();
@@ -49,8 +49,6 @@ public class ReleaseAssembler {
                                         List.of(new Release.Credit("main", artistId)),
                                         tracks(audio, blobs, originDir),
                                         assets(files, cover, blobs, originDir),
-                                        cover.map(file -> reference(file, blobs)).orElse(null),
-                                        cover.map(file -> originPath(file, originDir)).orElse(null),
                                         originDir);
     }
 
@@ -75,14 +73,14 @@ public class ReleaseAssembler {
     /**
      * Parses the position of every audio file, falling back to sequential numbering
      * in filename order for the whole release if any filename carries no usable
-     * prefix or if the parsed positions are not unique. SPEC.md section 4.7
+     * prefix or if the parsed positions are not unique. SPEC.md section 4.6
      * requires {@code number} to be present and unique per disc, so a partially
      * parsed set would produce an invalid entity file.
      */
     private List<TrackPosition> parsePositions(List<SourceFile> audio) {
         List<TrackPosition> parsed = new ArrayList<>(audio.size());
         for (SourceFile file : audio) {
-            Optional<TrackPosition> position = trackPrefixParser.parse(stem(file));
+            Optional<TrackPosition> position = trackPrefixParser.parse(CoverFrontSelector.stem(file.filename()));
             if (position.isEmpty()) {
                 return sequential(audio);
             }
@@ -94,7 +92,7 @@ public class ReleaseAssembler {
     private static List<TrackPosition> sequential(List<SourceFile> audio) {
         List<TrackPosition> positions = new ArrayList<>(audio.size());
         for (int i = 0; i < audio.size(); i++) {
-            positions.add(new TrackPosition(null, i + 1, Nfc.normalize(stem(audio.get(i)))));
+            positions.add(new TrackPosition(null, i + 1, Nfc.normalize(CoverFrontSelector.stem(audio.get(i).filename()))));
         }
         return positions;
     }
@@ -106,14 +104,15 @@ public class ReleaseAssembler {
     }
 
     private List<Release.Asset> assets(List<SourceFile> files,
-                                    Optional<SourceFile> cover,
+                                    @Nullable SourceFile cover,
                                     Map<SourceFile, Blob> blobs,
                                     @Nullable String originDir) {
         return files.stream()
                                         .filter(file -> file.kind() != FileKind.AUDIO)
-                                        .filter(file -> cover.filter(file::equals).isEmpty())
                                         .map(file -> new Release.Asset(
-                                                                        assetKindMapper.map(file.filename()),
+                                                                        file.equals(cover)
+                                                                                                        ? "cover-front"
+                                                                                                        : assetKindMapper.map(file.filename()),
                                                                         reference(file, blobs),
                                                                         originPath(file, originDir)))
                                         .toList();
@@ -127,9 +126,4 @@ public class ReleaseAssembler {
     private static @Nullable String originPath(SourceFile file, @Nullable String originDir) {
         return originDir == null ? null : file.relativePath();
     }
-
-    private static String stem(SourceFile file) {
-        return CoverFrontSelector.stem(file.filename());
-    }
-
 }

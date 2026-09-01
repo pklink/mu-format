@@ -5,7 +5,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * A track position parsed from a filename prefix (SPEC.md section 4.7).
+ * A track position parsed from a filename prefix (SPEC.md section 4.6).
  *
  * @param disc
  *            {@code null} when the filename carried no disc, an {@link Integer}
@@ -16,9 +16,4 @@ import java.util.Optional;
  *            the remainder of the filename
  */
 public record TrackPosition(@Nullable Object disc, int number, String title) {
-
-    public Optional<Object> discValue() {
-        return Optional.ofNullable(disc);
-    }
-
 }

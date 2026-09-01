@@ -13,7 +13,7 @@ import java.util.*;
 
 /**
  * Matches artists by {@code name}, {@code sort-name}, the {@code alias} array
- * and {@code notes} (SPEC.md section 4.8).
+ * and {@code notes} (SPEC.md section 4.7).
  */
 public class ArtistSearcher {
 

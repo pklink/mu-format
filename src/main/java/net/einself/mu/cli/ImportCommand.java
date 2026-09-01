@@ -38,7 +38,7 @@ public class ImportCommand implements Callable<Integer> {
     @Nullable
     String artistId;
 
-    @Option(names = "--origin", description = "Record origin-dir and origin-path (SPEC.md section 4.9).")
+    @Option(names = "--origin", description = "Record origin-dir and origin-path (SPEC.md section 4.8).")
     boolean origin;
 
     @Option(names = "--dry-run", description = "Report what would happen, write nothing.")

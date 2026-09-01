@@ -11,10 +11,9 @@ TOML entity file reading/writing (`EntityFile`) and entity scanning (`MetadataSc
 
 ## SPEC.md references
 
-- Section 4.2 — value conventions, disc dual-typing (integer/string)
-- Section 4.4 — cardinality
+- Section 4.3 — value conventions and cardinality, disc dual-typing (integer/string)
 - Section 4 — entity file format (UTF-8, LF, no BOM)
-- Section 4.6 — credit rules (at least one `role = "main"`)
-- Section 4.8 — release/artist entity schema
-- Section 4.9 — origin path on tracks and assets
+- Section 4.5 — credit rules (at least one `role = "main"`)
+- Section 4.7 — release/artist entity schema
+- Section 4.8 — origin path on tracks and assets
 - Section 6 — versioned `meta/` directory

@@ -27,7 +27,7 @@ class ReleaseTomlWriterTest {
     void render_writesCreditsAndTracksAsBlockTables() {
         String result = underTest.render(release());
 
-        // SPEC.md section 4.6 rule 9: the canonical write form is the block table
+        // SPEC.md section 4.5 rule 8: the canonical write form is the block table
         assertThat(result).contains("[[credit]]");
         assertThat(result).contains("[[track]]");
         assertThat(result).doesNotContain("credit = [");
@@ -50,8 +50,7 @@ class ReleaseTomlWriterTest {
 
     @Test
     void render_escapesStringValues() {
-        Release release = new Release("id", "Quote \" and \\ and \n", List.of(), List.of(), List.of(),
-                                        null, null, null);
+        Release release = new Release("id", "Quote \" and \\ and \n", List.of(), List.of(), List.of(), null);
 
         String result = underTest.render(release);
 
@@ -60,8 +59,7 @@ class ReleaseTomlWriterTest {
 
     @Test
     void render_normalizesStringValuesToNfc() {
-        Release release = new Release("id", "Caf\u0065\u0301", List.of(), List.of(), List.of(),
-                                        null, null, null);
+        Release release = new Release("id", "Caf\u0065\u0301", List.of(), List.of(), List.of(), null);
 
         String result = underTest.render(release);
 
@@ -71,12 +69,11 @@ class ReleaseTomlWriterTest {
     @Test
     void render_omitsAbsentOptionalAttributes() {
         Release release = new Release("id", "Title",
-                                        List.of(new Release.Credit("main", null)), List.of(), List.of(), null, null, null);
+                                        List.of(new Release.Credit("main", null)), List.of(), List.of(), null);
 
         String result = underTest.render(release);
 
         assertThat(result).doesNotContain("artist");
-        assertThat(result).doesNotContain("cover-front");
         assertThat(result).doesNotContain("origin-dir");
     }
 
@@ -86,7 +83,7 @@ class ReleaseTomlWriterTest {
                                         List.of(
                                                                         new Release.Track(2, 5, "beef01.flac", "Kink", null),
                                                                         new Release.Track("A", 1, "abcd3f.flac", "Feeling Plain", null)),
-                                        List.of(), null, null, null);
+                                        List.of(), null);
 
         String result = underTest.render(release);
 
@@ -101,7 +98,9 @@ class ReleaseTomlWriterTest {
         TomlTable parsed = TOML.readFromString(rendered);
 
         assertThat(parsed.get("title").asPrimitive().asString()).isEqualTo("Good Lies");
-        assertThat(parsed.get("cover-front").asPrimitive().asString()).isEqualTo("3f0a91.jpg");
+        var coverAsset = parsed.get("asset").asArray().get(0).asTable();
+        assertThat(coverAsset.get("kind").asPrimitive().asString()).isEqualTo("cover-front");
+        assertThat(coverAsset.get("blob").asPrimitive().asString()).isEqualTo("3f0a91.jpg");
         assertThat(parsed.get("credit").asArray().size()).isEqualTo(1);
 
         var tracks = parsed.get("track").asArray();
@@ -125,9 +124,8 @@ class ReleaseTomlWriterTest {
                                         List.of(
                                                                         new Release.Track(null, 1, "abcd3f.flac", "Feeling Plain", null),
                                                                         new Release.Track(null, 2, "ab77e1.flac", "Arla Fearn", null)),
-                                        List.of(new Release.Asset("log", "1a2b3c.txt", null)),
-                                        "3f0a91.jpg",
-                                        null,
+                                        List.of(new Release.Asset("cover-front", "3f0a91.jpg", null),
+                                                                        new Release.Asset("log", "1a2b3c.txt", null)),
                                         null);
     }
 

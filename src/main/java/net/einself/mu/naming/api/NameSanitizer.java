@@ -4,12 +4,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.UnaryOperator;
 
 /**
- * Name construction (SPEC.md section 5.2): derives a filesystem name from an
- * attribute value.
+ * Name construction: derives a filesystem name from an attribute value.
  *
  * <p>
- * Also the test for origin values, which must pass this unchanged (SPEC.md
- * section 4.9).
+ * Also the test for portable names, which must pass this unchanged (SPEC.md
+ * section 4.1).
  */
 public class NameSanitizer implements UnaryOperator<String> {
 
@@ -28,10 +27,11 @@ public class NameSanitizer implements UnaryOperator<String> {
     }
 
     /**
-     * Whether the value survives sanitization untouched, which is what makes it
-     * safe to write to the filesystem verbatim (SPEC.md sections 4.1, 4.9).
+     * Whether the value is a portable name (SPEC.md section 4.1). A portable name
+     * survives sanitization unchanged and can be written to the filesystem
+     * verbatim.
      */
-    public boolean isUnchanged(String value) {
+    public boolean isPortableName(String value) {
         return apply(value).equals(value);
     }
 

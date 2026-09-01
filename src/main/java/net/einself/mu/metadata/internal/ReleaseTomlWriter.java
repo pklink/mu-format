@@ -65,8 +65,6 @@ public class ReleaseTomlWriter {
         TomlTable table = TomlTable.create();
         putString(table, "title", release.title());
         putString(table, "origin-dir", release.originDir());
-        putString(table, "cover-front", release.coverFront());
-        putString(table, "cover-front-origin-path", release.coverFrontOriginPath());
 
         putTables(table, "credit", release.credits(), ReleaseTomlWriter::toTable);
         putTables(table, "asset", release.assets(), ReleaseTomlWriter::toTable);
@@ -100,7 +98,7 @@ public class ReleaseTomlWriter {
     }
 
     /**
-     * {@code disc} is the only dual-typed attribute (SPEC.md section 4.2).
+     * {@code disc} is the only dual-typed attribute (SPEC.md section 4.3).
      */
     private static void putDisc(TomlTable table, @Nullable Object disc) {
         if (disc instanceof Integer number) {

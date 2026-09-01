@@ -10,7 +10,7 @@ import java.nio.file.Path;
  *
  * @param id
  *            the filename stem, which is the entity's identity (SPEC.md section
- *            4.1)
+ *            4.2)
  * @param path
  *            the entity file
  * @param data

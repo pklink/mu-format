@@ -40,7 +40,7 @@ public class QueryMatcher {
     /**
      * True when any string element of the array mapped to {@code key} in
      * {@code table} matches — for {@code alias} or {@code member} (SPEC.md section
-     * 4.2).
+     * 4.3).
      */
     public boolean matchesAnyElement(TomlTable table, String key) {
         TomlValue value = table.get(key);

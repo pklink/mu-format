@@ -149,6 +149,7 @@ An identifier is **stable**: once assigned it **must not** be changed, and it **
 
 - A value is an **integer** when it is a count, or a quantity in a fixed implied unit that admits exactly one spelling: `track.number`, `track.duration` (seconds).
 - All other attribute values are **strings**.
+- **Dual-typed**: `track.disc` accepts an integer for numbered discs or a string for medium sides (`"A"`, `"B"`). Section 4.6.
 - **Flag** = boolean `true` (`is-group = true`).
 - **Multiple value** = string array, inherently ordered (`member = ["id1", "id2"]`).
 - An attribute is either scalar or array; mixing the two is invalid.
@@ -258,8 +259,8 @@ title = "Kink"
 ```
 
 - `number` (integer): required, **must be ≥ 1**.
-- `disc` (integer): optional, defaults to `1`, **must be ≥ 1**.
-- Ordering: by `(disc, number)` numerically. The file order of the `[[track]]` tables is **not authoritative**.
+- `disc`: optional, defaults to the integer `1`. Accepts an **integer** for numbered discs or a **string** for medium sides (`disc = "A"` for vinyl). An integer `disc` must be ≥ 1.
+- Ordering: by `(disc, number)`. Integer discs sort numerically and always sort **before** string discs; string discs sort by NFC code point. `number` is always compared numerically. The file order of the `[[track]]` tables is **not authoritative**.
 - `number` is unique per `disc`.
 
 Track attributes:
@@ -267,7 +268,7 @@ Track attributes:
 | Attribute     | Cardinality   | Required       | Meaning                                |
 |---------------|---------------|----------------|----------------------------------------|
 | `number`      | single (int)  | yes            | track number                           |
-| `disc`        | single (int)  | no (default 1) | disc number                            |
+| `disc`        | single (int or string) | no (default 1) | disc number, or medium side for vinyl  |
 | `blob`        | single        | yes            | reference to the audio file            |
 | `title`       | single        | yes            | track name, as printed                 |
 | `duration`    | single (int)  | no             | length in seconds                      |

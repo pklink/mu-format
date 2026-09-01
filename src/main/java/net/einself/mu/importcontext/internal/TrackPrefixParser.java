@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 /**
  * Parses a leading track prefix such as {@code 01 }, {@code A1 } or
  * {@code 1-05 } from a filename. A letter prefix gives a string {@code disc}
- * (SPEC.md section 4.7).
+ * (SPEC.md section 4.6).
  *
  * <p>
  * The number is capped at three digits so that a filename like
@@ -60,7 +60,7 @@ public class TrackPrefixParser {
     private static Optional<TrackPosition> position(@Nullable Object disc, String number, String title, String stem) {
         int parsed = Integer.parseInt(number);
         if (parsed < 1) {
-            // SPEC.md section 4.7 requires number >= 1; "00 Intro" carries no usable
+            // SPEC.md section 4.6 requires number >= 1; "00 Intro" carries no usable
             // position.
             return Optional.empty();
         }

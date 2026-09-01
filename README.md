@@ -66,7 +66,7 @@ A release lacking the attribute a view is keyed on is omitted — no `unknown/` 
 
 #### Track filenames
 
-The sort key is `[<disc>-]<number>`, with `number` zero-padded to at least two digits (100 or more keeps all digits). Example: `01`, `2-05`, `101`.
+The sort key is `[<disc>-]<number>`, with `number` zero-padded to at least two digits (100 or more keeps all digits). A string `disc` is inserted verbatim after name construction is applied. Example: `01`, `2-05`, `101`, `A-01`.
 
 ```
 <sortkey> <track-title>.<blob-ref-extension>
@@ -142,7 +142,7 @@ Adds files to a collection. Walks directories, stores blobs under SHA-256, write
 | Option           | Description                                              |
 |------------------|----------------------------------------------------------|
 | `--artist <id>`  | Artist identifier for the main credit                    |
-| `--origin`       | Record origin-dir and origin-path (SPEC.md section 4.9)  |
+| `--origin`       | Record origin-dir and origin-path (SPEC.md section 4.8)  |
 | `--dry-run`      | Report what would happen, write nothing                  |
 
 **`mu search`**

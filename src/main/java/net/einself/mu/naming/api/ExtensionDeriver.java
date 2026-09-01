@@ -9,13 +9,15 @@ import java.util.regex.Pattern;
  *
  * <p>
  * The extension is not part of the blob's identity and has no effect on
- * resolution; it is a rendering hint (SPEC.md section 4.5). This heuristic
- * trusts the filename, but since the result lives in {@code meta/}, a wrong
- * extension is fixed by editing the entity file.
+ * resolution; it is a rendering hint (SPEC.md section 4.4). This heuristic
+ * trusts the filename. When no qualifying extension can be derived, the
+ * reference falls back to {@value #FALLBACK}.
  */
 public class ExtensionDeriver {
 
     private static final Pattern VALID = Pattern.compile("[a-z0-9]{1,8}");
+
+    private static final String FALLBACK = "bin";
 
     public Optional<String> derive(String filename) {
         int dot = filename.lastIndexOf('.');
@@ -30,7 +32,7 @@ public class ExtensionDeriver {
     public String reference(String hash, String filename) {
         return derive(filename)
                                         .map(extension -> hash + "." + extension)
-                                        .orElse(hash);
+                                        .orElse(hash + "." + FALLBACK);
     }
 
 }

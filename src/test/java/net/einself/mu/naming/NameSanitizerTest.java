@@ -64,13 +64,13 @@ class NameSanitizerTest {
     }
 
     @Test
-    void isUnchanged_holdsExactlyForValuesThatSurviveSanitization() {
-        assertThat(underTest.isUnchanged("Overmono - Good Lies (2023) [FLAC]")).isTrue();
-        assertThat(underTest.isUnchanged("01 Feeling Plain.flac")).isTrue();
-
-        assertThat(underTest.isUnchanged("with/slash")).isFalse();
-        assertThat(underTest.isUnchanged(" leading space")).isFalse();
-        assertThat(underTest.isUnchanged("trailing dot.")).isFalse();
+    void isPortableName_holdsExactlyForValuesThatSurviveSanitization() {
+        assertThat(underTest.isPortableName("Overmono - Good Lies (2023) [FLAC]")).isTrue();
+        assertThat(underTest.isPortableName("01 Feeling Plain.flac")).isTrue();
+        assertThat(underTest.isPortableName("")).isFalse();
+        assertThat(underTest.isPortableName("with/slash")).isFalse();
+        assertThat(underTest.isPortableName(" leading space")).isFalse();
+        assertThat(underTest.isPortableName("trailing dot.")).isFalse();
     }
 
 }

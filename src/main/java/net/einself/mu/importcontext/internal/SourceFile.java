@@ -7,7 +7,7 @@ package net.einself.mu.importcontext.internal;
  *            absolute path of the source file
  * @param relativePath
  *            path relative to the imported directory, {@code /} as separator
- *            (SPEC.md section 4.9); the file name alone for file arguments
+ *            (SPEC.md section 4.8); the file name alone for file arguments
  * @param kind
  *            classification by extension
  */
