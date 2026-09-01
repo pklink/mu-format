@@ -67,8 +67,10 @@ class ImportCommandTest {
         assertThat(release.get("title").asPrimitive().asString())
                                         .isEqualTo("Overmono - Good Lies (2023) [FLAC]");
         assertThat(release.get("track").asArray().size()).isEqualTo(2);
-        assertThat(release.get("asset").asArray().size()).isEqualTo(1);
-        assertThat(release.get("cover-front").asPrimitive().asString()).endsWith(".jpg");
+        assertThat(release.get("asset").asArray().size()).isEqualTo(2);
+        var coverAsset = release.get("asset").asArray().get(0).asTable();
+        assertThat(coverAsset.get("kind").asPrimitive().asString()).isEqualTo("cover-front");
+        assertThat(coverAsset.get("blob").asPrimitive().asString()).endsWith(".jpg");
     }
 
     @Test
@@ -154,7 +156,9 @@ class ImportCommandTest {
         TomlTable release = readRelease();
         assertThat(release.get("origin-dir").asPrimitive().asString())
                                         .isEqualTo("Overmono - Good Lies (2023) [FLAC]");
-        assertThat(release.get("cover-front-origin-path").asPrimitive().asString())
+        var coverAsset = release.get("asset").asArray().get(0).asTable();
+        assertThat(coverAsset.get("kind").asPrimitive().asString()).isEqualTo("cover-front");
+        assertThat(coverAsset.get("origin-path").asPrimitive().asString())
                                         .isEqualTo("artwork/cover.jpg");
         assertThat(release.get("track").asArray().get(0).asTable()
                                         .get("origin-path").asPrimitive().asString())

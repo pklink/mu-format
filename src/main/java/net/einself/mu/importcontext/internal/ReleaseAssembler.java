@@ -49,8 +49,6 @@ public class ReleaseAssembler {
                                         List.of(new Release.Credit("main", artistId)),
                                         tracks(audio, blobs, originDir),
                                         assets(files, cover, blobs, originDir),
-                                        cover.map(file -> reference(file, blobs)).orElse(null),
-                                        cover.map(file -> originPath(file, originDir)).orElse(null),
                                         originDir);
     }
 
@@ -111,9 +109,10 @@ public class ReleaseAssembler {
                                     @Nullable String originDir) {
         return files.stream()
                                         .filter(file -> file.kind() != FileKind.AUDIO)
-                                        .filter(file -> cover.filter(file::equals).isEmpty())
                                         .map(file -> new Release.Asset(
-                                                                        assetKindMapper.map(file.filename()),
+                                                                        cover.filter(file::equals).isPresent()
+                                                                                                        ? "cover-front"
+                                                                                                        : assetKindMapper.map(file.filename()),
                                                                         reference(file, blobs),
                                                                         originPath(file, originDir)))
                                         .toList();

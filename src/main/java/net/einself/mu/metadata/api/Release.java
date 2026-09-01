@@ -5,22 +5,18 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 /**
- * A release entity, as {@code import} produces it (SPEC.md section 4.8).
+ * A release entity, as {@code import} produces it (SPEC.md section 4.7).
  *
  * @param id
  *            the filename stem of {@code meta/releases/<id>.mu}
  * @param title
- *            required (SPEC.md section 4.8)
+ *            required (SPEC.md section 4.7)
  * @param credits
- *            at least one with {@code role = "main"} (SPEC.md section 4.6)
+ *            at least one with {@code role = "main"} (SPEC.md section 4.5)
  * @param tracks
  *            sorted by (disc, number)
  * @param assets
- *            in file order, which is authoritative (SPEC.md section 4.8)
- * @param coverFront
- *            blob reference, or null
- * @param coverFrontOriginPath
- *            origin path of the cover, or null (SPEC.md section 4.9)
+ *            in file order, which is authoritative (SPEC.md section 4.7)
  * @param originDir
  *            the directory the release arrived as, or null
  */
@@ -30,8 +26,6 @@ public record Release(
                                 List<Credit> credits,
                                 List<Track> tracks,
                                 List<Asset> assets,
-                                @Nullable String coverFront,
-                                @Nullable String coverFrontOriginPath,
                                 @Nullable String originDir) {
 
     /**
