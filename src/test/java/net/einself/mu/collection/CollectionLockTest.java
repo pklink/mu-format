@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class CollectionLockTest {
 
@@ -57,10 +58,10 @@ class CollectionLockTest {
         // act / assert
         assertThatThrownBy(() -> CollectionLock.acquire(root))
                                         .isInstanceOf(MuException.class)
-                                        .satisfies(e -> assertThat(((MuException) e).exitCode())
-                                                                        .isEqualTo(ExitCode.LOCK_HELD))
-                                        .hasMessageContaining("Another mu process holds the lock",
-                                                                        root.lock().toString());
+                                        .hasMessageContaining("Another mu process holds the lock")
+                                        .hasMessageContaining(root.lock().toString())
+                                        .extracting(e -> ((MuException) e).exitCode())
+                                        .isEqualTo(ExitCode.LOCK_HELD);
 
         first.close();
     }
@@ -87,9 +88,9 @@ class CollectionLockTest {
 
         assertThatThrownBy(() -> CollectionLock.acquire(root))
                                         .isInstanceOf(MuException.class)
-                                        .satisfies(e -> assertThat(((MuException) e).exitCode())
-                                                                        .isEqualTo(ExitCode.IO_ERROR))
-                                        .hasMessageContaining("Cannot open lock file");
+                                        .hasMessageContaining("Cannot open lock file")
+                                        .extracting(e -> ((MuException) e).exitCode())
+                                        .isEqualTo(ExitCode.IO_ERROR);
     }
 
     @Test
@@ -130,7 +131,10 @@ class CollectionLockTest {
                                         LockTestHelper.class.getName(),
                                         root.path().toString());
         var process = pb.start();
-        process.waitFor(10, TimeUnit.SECONDS);
+        if (!process.waitFor(10, TimeUnit.SECONDS)) {
+            process.destroyForcibly();
+            fail("LockTestHelper timed out");
+        }
         return process.exitValue();
     }
 }
