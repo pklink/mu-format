@@ -42,7 +42,7 @@ public record Release(
     /**
      * @param disc
      *            null, an {@link Integer}, or a {@link String} side (SPEC.md
-     *            section 4.7)
+     *            section 4.6)
      * @param number
      *            at least 1
      * @param blob
@@ -57,7 +57,7 @@ public record Release(
 
     /**
      * @param kind
-     *            asset category (SPEC.md section 4.8)
+     *            asset category (SPEC.md section 4.7)
      * @param blob
      *            reference to the file in the store
      * @param originPath

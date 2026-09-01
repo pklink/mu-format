@@ -27,7 +27,7 @@ class ReleaseTomlWriterTest {
     void render_writesCreditsAndTracksAsBlockTables() {
         String result = underTest.render(release());
 
-        // SPEC.md section 4.6 rule 9: the canonical write form is the block table
+        // SPEC.md section 4.5 rule 8: the canonical write form is the block table
         assertThat(result).contains("[[credit]]");
         assertThat(result).contains("[[track]]");
         assertThat(result).doesNotContain("credit = [");

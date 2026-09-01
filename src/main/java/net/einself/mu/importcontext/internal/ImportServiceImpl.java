@@ -158,7 +158,7 @@ public class ImportServiceImpl implements ImportService {
     private void warnAboutCredit(ImportResult report, ImportOptions options) {
         if (options.artistId() == null) {
             report.warn("no --artist: the main credit has no artist, "
-                                            + "the release is incomplete (SPEC.md section 4.6)");
+                                            + "the release is incomplete (SPEC.md section 4.5)");
         }
     }
 

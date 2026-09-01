@@ -142,7 +142,7 @@ Adds files to a collection. Walks directories, stores blobs under SHA-256, write
 | Option           | Description                                              |
 |------------------|----------------------------------------------------------|
 | `--artist <id>`  | Artist identifier for the main credit                    |
-| `--origin`       | Record origin-dir and origin-path (SPEC.md section 4.9)  |
+| `--origin`       | Record origin-dir and origin-path (SPEC.md section 4.8)  |
 | `--dry-run`      | Report what would happen, write nothing                  |
 
 **`mu search`**

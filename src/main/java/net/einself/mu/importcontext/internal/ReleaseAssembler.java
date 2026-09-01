@@ -73,7 +73,7 @@ public class ReleaseAssembler {
     /**
      * Parses the position of every audio file, falling back to sequential numbering
      * in filename order for the whole release if any filename carries no usable
-     * prefix or if the parsed positions are not unique. SPEC.md section 4.7
+     * prefix or if the parsed positions are not unique. SPEC.md section 4.6
      * requires {@code number} to be present and unique per disc, so a partially
      * parsed set would produce an invalid entity file.
      */

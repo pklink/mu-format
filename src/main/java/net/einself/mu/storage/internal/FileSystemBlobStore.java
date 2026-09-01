@@ -26,7 +26,7 @@ import java.util.UUID;
  * Takes files into the store.
  *
  * <p>
- * SPEC.md section 3.4 fixes only the guarantee — a blob becomes visible at its
+ * SPEC.md section 3.3 fixes only the guarantee — a blob becomes visible at its
  * final path as a whole — not the mechanism. This implementation stages inside
  * {@code store/.tmp/} so that the publishing rename stays on one filesystem,
  * and clears that directory before it starts: nothing there is reachable by the

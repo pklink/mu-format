@@ -59,7 +59,7 @@ class TrackPrefixParserTest {
 
     @Test
     void parse_rejectsANumberBelowOne() {
-        // SPEC.md section 4.7 requires number >= 1
+        // SPEC.md section 4.6 requires number >= 1
         assertThat(underTest.parse("00 Intro")).isEmpty();
     }
 

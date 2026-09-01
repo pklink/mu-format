@@ -32,7 +32,7 @@ public final class Tomls {
 
     /**
      * Any primitive mapped to {@code key} rendered as a string — for the dual-typed
-     * {@code disc} (integer or string, SPEC.md section 4.2) and similar cases.
+     * {@code disc} (integer or string, SPEC.md section 4.3) and similar cases.
      */
     public static @Nullable String scalar(TomlTable table, String key) {
         TomlValue value = table.get(key);

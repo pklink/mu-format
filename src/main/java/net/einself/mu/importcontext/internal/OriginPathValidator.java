@@ -33,7 +33,7 @@ public class OriginPathValidator {
         if (!problems.isEmpty()) {
             throw new MuException(ExitCode.PROBLEMS,
                                             "Cannot record origin paths, " + problems.size() + " value(s) are invalid "
-                                                                            + "(SPEC.md section 4.9); nothing was written",
+                                                                            + "(SPEC.md section 4.8); nothing was written",
                                             problems);
         }
     }
@@ -58,7 +58,7 @@ public class OriginPathValidator {
     }
 
     /**
-     * Compared after NFC normalization and case folding (SPEC.md sections 4.9, 4.1
+     * Compared after NFC normalization and case folding (SPEC.md sections 4.8, 4.2
      * rule 5).
      */
     private List<String> duplicateProblems(List<SourceFile> files) {

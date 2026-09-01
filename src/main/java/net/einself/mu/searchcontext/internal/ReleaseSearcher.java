@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Matches releases by their scalar attributes (SPEC.md section 4.8) and applies
+ * Matches releases by their scalar attributes (SPEC.md section 4.7) and applies
  * the {@code --year} and {@code --medium} filters. Credits are matched
  * separately ({@link CreditSearcher}).
  */

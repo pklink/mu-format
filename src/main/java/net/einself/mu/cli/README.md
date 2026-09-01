@@ -14,4 +14,4 @@ format output as text or JSON, and hold the single `JToml` writer instance.
 ## SPEC.md references
 
 - Section 4 — TOML config (UTF-8, LF, no BOM)
-- Section 4.9 — `--origin` option
+- Section 4.8 — `--origin` option

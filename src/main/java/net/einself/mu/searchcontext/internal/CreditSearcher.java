@@ -11,7 +11,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.*;
 
 /**
- * Matches releases through their credits (SPEC.md section 4.6): when the query
+ * Matches releases through their credits (SPEC.md section 4.5): when the query
  * matches an artist's {@code name} or {@code alias}, every release crediting
  * that artist is a result — a query for a band finds their records, not just
  * the artist file. {@code --role} restricts which credit roles count, both at

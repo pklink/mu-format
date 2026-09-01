@@ -98,7 +98,7 @@ public class ReleaseTomlWriter {
     }
 
     /**
-     * {@code disc} is the only dual-typed attribute (SPEC.md section 4.2).
+     * {@code disc} is the only dual-typed attribute (SPEC.md section 4.3).
      */
     private static void putDisc(TomlTable table, @Nullable Object disc) {
         if (disc instanceof Integer number) {

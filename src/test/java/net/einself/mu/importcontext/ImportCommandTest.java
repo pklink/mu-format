@@ -188,7 +188,7 @@ class ImportCommandTest {
 
     @Test
     void import_abortsBeforeWritingWhenAnOriginSegmentIsInvalid() throws IOException {
-        // arrange: a trailing space does not survive SPEC.md section 5.2
+        // arrange: a trailing space is not a portable name
         file("01 Track.flac", "audio");
         Files.createDirectories(source.resolve("bad name "));
         Files.writeString(source.resolve("bad name /note.txt"), "x");
