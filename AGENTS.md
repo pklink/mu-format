@@ -9,6 +9,8 @@ code, not the spec, unless the task is explicitly a spec change.
 
 `./gradlew test` is the verification step. `./gradlew build` additionally runs
 `spotlessCheck` and fails on unformatted code — run `./gradlew spotlessApply` first.
+Tests produce a JaCoCo coverage report at `build/reports/jacoco/test/html/index.html`
+(reporting only, no coverage threshold).
 
 CLI-level tests go through the seam `Main.execute(String[], PrintStream, PrintStream)`,
 which takes injected streams; `main()` only wraps it with `System.exit`:
