@@ -48,7 +48,8 @@ for layering.
 
 JUnit 5 + AssertJ. Test classes live in `net.einself.mu.<module>` (flat, no `.internal`
 mirror) and may reach into `internal` classes directly. Naming: `method_expectedBehaviour()`;
-subject field named `underTest`; `// arrange`, `// act`, `// assert` in the larger tests.
+subject field named `underTest`; every test follows Arrange/Act/Assert, marked with
+`// arrange`, `// act`, `// assert` comments.
 Fixtures use `@TempDir`; a minimal collection root is a directory with `meta/.mu` containing
 `format = 1`, and CLI tests then pass `--root <path>`.
 
