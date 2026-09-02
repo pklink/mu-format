@@ -67,7 +67,7 @@ test {
 
 jacoco {
     // 0.8.14+ is required for Java 25 class files
-    toolVersion = '0.8.14'
+    toolVersion = '0.8.15'
 }
 
 tasks.named('compileJava', JavaCompile) {
