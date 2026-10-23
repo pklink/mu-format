@@ -64,7 +64,7 @@ public class CreditSearcher {
         return ids;
     }
 
-    private void collectTrackMatches(TomlValue tracks, Set<String> artistIds,
+    private void collectTrackMatches(@Nullable TomlValue tracks, Set<String> artistIds,
                                     SequencedSet<String> matches) {
         if (tracks == null || !tracks.isArray()) {
             return;
@@ -76,7 +76,7 @@ public class CreditSearcher {
         }
     }
 
-    private void collectMatches(TomlValue credits, Set<String> artistIds,
+    private void collectMatches(@Nullable TomlValue credits, Set<String> artistIds,
                                     SequencedSet<String> matches) {
         if (credits == null || !credits.isArray()) {
             return;
